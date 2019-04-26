@@ -838,6 +838,9 @@ input.f
 eqwidt.f
 bsyn.f
 babsma.f
+inabs.f
+detabs.f
+spectrum.inc
 
 Modified files:
 --------------

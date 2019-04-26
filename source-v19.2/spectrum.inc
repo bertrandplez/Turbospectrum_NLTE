@@ -20,9 +20,10 @@
 *  mkomp  = max # of absorption coefficient contributors
 *  mkompr = max # of temp. indep. absorption coefficient contributors
 *
-      integer ifadim,kfadim,mkomp,mkompr,nabdim
+      integer ifadim,kfadim,mkomp,mkompr,nabdim,maxnlatb
       parameter (mkomp=52,mkompr=16,nabdim=15000,
-     &  ifadim=(mkomp-mkompr)*ndp,kfadim=ifadim*3+mkompr*ndp)
+     &  ifadim=(mkomp-mkompr)*ndp,kfadim=ifadim*3+mkompr*ndp,
+     &  maxnlatb=100)
 * number of sets for continuous opacity in common cxlset
 * this 400 is a security margin. What is needed is actually
 * at maximum lpoint/20 +1 +1.

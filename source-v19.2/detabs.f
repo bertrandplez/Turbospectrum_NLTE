@@ -174,9 +174,9 @@ C
 * ON POURRAIT CHANGER PART EN G0 G1 etc...
 ***************************************************************************
 C        H-
-* data in jonabs.dat are 10 times larger than in the past,
-* in case you would wonder about this 1.e-18 factor for H-
-      fakt(1)=(1.d-18/rhokt)*partryck(ntp,1)
+! H- data in jonabs-v19.2 are in cm^2.  BPz 26/04-2019
+!      fakt(1)=(1.d-18/rhokt)*partryck(ntp,1)
+      fakt(1)=(1.d0/rhokt)*partryck(ntp,1)
       if (nametryck(1).ne.'H -') then 
         print*,nametryck(1), 'should be H-'
         stop 'PROBLEM in detabs!'
