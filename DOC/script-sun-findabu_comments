@@ -1,0 +1,87 @@
+#!/bin/csh -f
+
+#
+# This script uses a line list with measured equivalent widths (and error bars)
+# to derive the line by line abundance of the element. The output is a list of
+# lines with an eqw measurement and the corresponding abundance bracketed 
+# by the abundance error.
+# each line in the list is treated as a single line. Blends or hyperfine
+# structure cannot yet be treated properly.
+# As the molecular equilibrium is only calculated once for the input abundances
+# specified in the script, it is highly recommended to rerun the script with
+# modified abundances close to the abundances deduced from the eqw.
+
+# As a general rule, Turbospectrum routines are fortran routines which requires 
+# some input values that are recognized by specific keywords. 
+# Some are listed in this script, but more can be changed by adding their 
+# corresponding keywords. Check the routine input.f for a list of keywords.
+
+
+date
+set mpath=models
+
+foreach MODEL (5777g4.44z+0.00a+0.00t01-ref107857)
+ 
+set lam_min    = '6700'
+set lam_max    = '6720'
+
+set deltalam   = '0.01'
+set METALLIC   = '     0.000'
+set TURBVEL    = '1.0'
+set SUFFIX     = _${lam_min}-${lam_max}_xit${TURBVEL}.findabu
+set result     = ${MODEL}${SUFFIX}
+
+# ABUNDANCES FROM THE MODEL ARE NOT USED !!!			! BEWARE! only the structure of the model is used. Abundances should be chosen  as consistent as possible with the input model. Especially if they are electron donors, to ensure as little change as possible in the atomic/molecular equilibrium, and partial pressures calculations.
+
+../exec-v19.1/babsma_lu << EOF		! calculation of continuous opacities
+'LAMBDA_MIN:'  '${lam_min}' 		! min lambda in AA for the calculation.
+'LAMBDA_MAX:'  '${lam_max}'		! max lambda. It is important that the range given here be at least that rrequired in the calculation of eqw or spectra by eqwidt.f or bsyn.f
+'LAMBDA_STEP:' '${deltalam}'		! step in lambda for the calculation. In the case of eqw, the calculation step is the smallest of 0.3*the Doppler width and deltalam.
+'MODELINPUT:' '$mpath/${MODEL}'		! model atmosphere 
+'MARCS-FILE:' '.true.'			! true if MARCS model (ascii as downloaded from the MARCS web site or binary for insiders). If false, a number of different formats are allowed, including ATLAS, STAGGER <3D>, models given as T,rho, or T,Pg , etc. All this can be checked in babsma.f.  A few such models are given as example in the models directory.
+'MODELOPAC:' 'contopac/${MODEL}opac'	! continuous opacity output file
+'METALLICITY:'    '${METALLIC}' 	! scaling factor (log10) for overall metallicity (scales all except H and He). Current defalut abundances are Asplund 2005. Check in makeabund.f, where this can be changed.
+'ALPHA/Fe   :'    '0.00'		! log10 scaling factor for alpha elements: O, Ne, Mg, Si, S, Ar, Ca and Ti
+'HELIUM     :'    '0.00'		! scaling of He abundance
+'R-PROCESS  :'    '0.00'		! scaling of r-process elements following the solar system r/s fractions. See makeabund.f
+'S-PROCESS  :'    '0.00'		! same for s-process fractions
+'INDIVIDUAL ABUNDANCES:'   '0'		! number of element abundances to modify individually. This supersedes any of the scaling above. Here is the case where we don't modify any abundance. See further down for an exemple pf modification.
+'XIFIX:' 'T'				! true means use the microturbulence given next line
+$TURBVEL				! microturbulence in km/s
+EOF
+
+########################################################################
+#here begin the routine determining the abundances determination from equivalent widths input ( in the present case linelists/vald_eqw.list)
+../exec-v14.1/eqwidt_lu <<EOF
+#input of lower wavelength for calculation in Angstroems
+'LAMBDA_MIN:'     '${lam_min}'
+#input of lower wavelength for calculation in Angstroems. It is important that the  "lam_min" and  "lam_max" range  values cover the lines of interest. 
+'LAMBDA_MAX:'     '${lam_max}'
+#fixed wavelength steps in Angstreoms at which the spectrum will be calculated. Since the code is integrating the flux of the synthesis to measure the theoretical equivalent widht and compare it to the input one, should be set to a fairly good precision in order to insure non biased results. 
+'LAMBDA_STEP:'    '${deltalam}'
+'INTENSITY/FLUX:' 'Flux' 		! Flux for flux calculation, Intensity for intensity calculations. 
+'COS(THETA)    :' '1.00'		! intensity at mu=1
+'ABFIND        :' '.true.' 		! if false, equivalent widths will be calculated. If true abundances will be iterated to match observed eqw.
+'MODELOPAC:' 'contopac/${MODEL}opac'	! input continuous opacity. Make sure it is consistent with the abundances used. It is recommended to use abundances consistent with the model atmosphere, and consistent between the babsma and bsyn or eqwidt runs.
+'RESULTFILE :' 'syntspec/${result}'	! output file
+'METALLICITY:'    '${METALLIC}'
+'ALPHA/Fe   :'    '0.00'
+'HELIUM     :'    '0.00'
+'R-PROCESS  :'    '0.00'
+'S-PROCESS  :'    '0.00'
+'INDIVIDUAL ABUNDANCES:'   '1'		! This is the case for 1 change
+3  1.05					! set Lithium abundance to 1.05
+'ISOTOPES : ' '2'			! isotopic ratios modifications. If different from 0, the following lines contain these modifications.
+3.006  0.075				! here we ask for A(6Li) = 0.075*A(Li) and
+3.007  0.925				! A(7Li) = 0.925*A(Li).   The format is ZZ.AAA  for atomic number Z and atomic mass A, ie 56Fe is 26.056
+'NFILES   :' '1'			! how many line list are used
+linelists/vald_eqw.list			! line lists 
+'SPHERICAL:'  'F'			! false if plane-parallel calculations, true is spherical symmetry.
+  30					! 4 parameters used in spherical radiative transfer calculations. Best not to touch this unless you know what you are doing
+  300.00
+  15
+  1.30
+EOF
+########################################################################
+date
+end

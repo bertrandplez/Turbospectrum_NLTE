@@ -1,0 +1,1395 @@
+Thu Apr 25 18:11:09 CEST 2019
+ 
+ ***********************
+ * BABSMA version 19.1 *
+ ***********************
+ 
+ Babsma.f HI k,edge(k)           2   3647.00082065685     
+ Babsma.f HI k,edge(k)           3   8207.00355450638     
+ Babsma.f HI k,edge(k)           4   14588.0028345939     
+ Babsma.f HI k,edge(k)           5   22794.0000477878     
+ Babsma.f HI k,edge(k)           6   32915.0027675573     
+ LAMBDA_MIN:6700
+ LAMBDA_MAX:6720
+ LAMBDA_STEP:0.01
+ MODELINPUT:
+ models/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00
+ .mod
+ MARCS-FILE:.true.
+ MODELOPAC:
+ contopac/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.
+ 00.modopac
+ METALLICITY:     0.000
+ ALPHA/Fe   :0.00
+ HELIUM     :0.00
+ R-PROCESS  :0.00
+ S-PROCESS  :0.00
+ INDIVIDUAL ABUNDANCES:0
+ XIFIX:T
+ Following atomic species included in molecular equilibrium:
+ H  He Li Be B  C  N  O  F  Ne 
+ Na Mg Al Si P  S  Cl Ar K  Ca 
+ Sc Ti V  Cr Mn Fe Co Ni Cu Zn 
+ Ga Ge As Se Br Kr Rb Sr Y  Zr 
+ Nb Mo Tc Ru Rh Pd Ag Cd In Sn 
+ Sb Te I  Xe Cs Ba La Ce Pr Nd 
+ Pm Sm Eu Gd Tb Dy Ho Er Tm Yb 
+ Lu Hf Ta W  Re Os Ir Pt Au Hg 
+ Tl Pb Bi Po At Rn Fr Ra Ac Th 
+ Pa U                          
+         121  wavelengths for continuum between:    6700.000      and 
+   6820.000    
+ metallicity changed by   0.0000000E+00  dex
+ opened unformatted
+ read record 1
+ iostat=           0
+ read record 2
+ iostat=          -1
+ mocodes5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.0
+ MARCS model format is ascii     
+ s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.0
+ This model seems to be aan ascii MARCS model
+  this model is SPHERICALLY SYMMETRIC
+ Beware !! Lambda standard assumed to be 5000 A
+  Make sure it is consistent with the model
+ injon; after inquire, model format (marcsformat) is: 
+ FORMATTED                     
+ UTPUT:          11           7
+ WARNING! we do not use the model abundances!!!
+ adopted abundances: 
+   12.00000       10.93000       8.390000       7.780000       8.660000    
+   7.840000       6.170000       7.530000       6.370000       7.510000    
+   7.140000       5.080000       6.310000       5.640000       7.450000    
+   6.230000       3.170000       4.900000       4.000000       5.390000    
+   4.920000    
+ inabs done
+ ELEMENT  ATOMIC NUMBER   LOG(ABUNDANCE)
+     H             1       12.000
+     He            2       10.930
+     Li            3        1.050
+     Be            4        1.380
+     B             5        2.700
+     C             6        8.390
+     N             7        7.780
+     O             8        8.660
+     F             9        4.560
+     Ne           10        7.840
+     Na           11        6.170
+     Mg           12        7.530
+     Al           13        6.370
+     Si           14        7.510
+     P            15        5.360
+     S            16        7.140
+     Cl           17        5.500
+     Ar           18        6.180
+     K            19        5.080
+     Ca           20        6.310
+     Sc           21        3.170
+     Ti           22        4.900
+     V            23        4.000
+     Cr           24        5.640
+     Mn           25        5.390
+     Fe           26        7.450
+     Co           27        4.920
+     Ni           28        6.230
+     Cu           29        4.210
+     Zn           30        4.600
+     Ga           31        2.880
+     Ge           32        3.580
+     As           33        2.290
+     Se           34        3.330
+     Br           35        2.560
+     Kr           36        3.250
+     Rb           37        2.600
+     Sr           38        2.920
+     Y            39        2.210
+     Zr           40        2.580
+     Nb           41        1.420
+     Mo           42        1.920
+     Ru           44        1.840
+     Rh           45        1.120
+     Pd           46        1.660
+     Ag           47        0.940
+     Cd           48        1.770
+     In           49        1.600
+     Sn           50        2.000
+     Sb           51        1.000
+     Te           52        2.190
+     I            53        1.510
+     Xe           54        2.240
+     Cs           55        1.070
+     Ba           56        2.170
+     La           57        1.130
+     Ce           58        1.700
+     Pr           59        0.580
+     Nd           60        1.450
+     Sm           62        1.000
+     Eu           63        0.520
+     Gd           64        1.110
+     Tb           65        0.280
+     Dy           66        1.140
+     Ho           67        0.510
+     Er           68        0.930
+     Tm           69        0.000
+     Yb           70        1.080
+     Lu           71        0.060
+     Hf           72        0.880
+     Ta           73       -0.170
+     W            74        1.110
+     Re           75        0.230
+     Os           76        1.250
+     Ir           77        1.380
+     Pt           78        1.640
+     Au           79        1.010
+     Hg           80        1.130
+     Tl           81        0.900
+     Pb           82        2.000
+     Bi           83        0.650
+     Th           90        0.060
+     U            92       -0.520
+ MOLECPARTF. suppressing:         205  LaH                 (unknown D00)
+ MOLECPARTF. suppressing:         208  LuH                 (unknown D00)
+ MOLECPARTF. suppressing:         211  NbN                 (unknown D00)
+ MOLECPARTF. suppressing:         230  SbH                 (unknown D00)
+ MOLECPARTF. suppressing:         251  TeCl                (unknown D00)
+ MOLECPARTF. suppressing:         266  Al+ H               (unknown D00)
+ MOLECPARTF. suppressing:         266  As+ O               (unknown D00)
+ MOLECPARTF. suppressing:         268  B + O               (unknown D00)
+ H- electron affinity will be changed by -2dxi
+  data may be added in IRWIN_molecule file
+  to update older data from Tsuji
+ using Tsuji's old data for C C C H             
+ using Tsuji's old data for C C N               
+ using Tsuji's old data for B B O               
+ using Tsuji's old data for C -                 
+ using Tsuji's old data for C H -               
+ using Tsuji's old data for N O O -             
+ using Tsuji's old data for N H H -             
+ using Tsuji's old data for N N H H             
+ using Tsuji's old data for N N H H H H         
+ using Tsuji's old data for C N N               
+ using Tsuji's old data for N C N               
+ using Tsuji's old data for C C C C N N         
+ using Tsuji's old data for N O O               
+ using Tsuji's old data for N O O O             
+ using Tsuji's old data for N N O               
+ using Tsuji's old data for N N O O O O         
+ using Tsuji's old data for H N O               
+ using Tsuji's old data for H N O O             
+ using Tsuji's old data for H N O O O           
+ using Tsuji's old data for H C N O             
+ using Tsuji's old data for O -                 
+ using Tsuji's old data for O O -               
+ using Tsuji's old data for H C H O             
+ using Tsuji's old data for AlO O               
+ using Tsuji's old data for Si-                 
+ using Tsuji's old data for SiH H               
+ using Tsuji's old data for SiH H H             
+ using Tsuji's old data for SiSiC C             
+ using Tsuji's old data for SiF F               
+ using Tsuji's old data for SiClCl              
+ using Tsuji's old data for P F F               
+ using Tsuji's old data for S S O               
+ using Tsuji's old data for S O O O             
+ using Tsuji's old data for C ClCl              
+ using Tsuji's old data for C ClClCl            
+ using Tsuji's old data for C ClClClCl          
+ using Tsuji's old data for ClO O               
+ using Tsuji's old data for ClClO               
+ using Tsuji's old data for S Cl                
+ using Tsuji's old data for S ClCl              
+ using Tsuji's old data for H ClO               
+ using Tsuji's old data for C ClO               
+ using Tsuji's old data for ScSc                
+ using Tsuji's old data for ScN                 
+ using Tsuji's old data for ScO O               
+ using Tsuji's old data for ScScO               
+ using Tsuji's old data for TiC C               
+ using Tsuji's old data for TiF                 
+ using Tsuji's old data for TiCl                
+ using Tsuji's old data for V C C               
+ using Tsuji's old data for V N                 
+ using Tsuji's old data for V F F               
+ using Tsuji's old data for V ClCl              
+ using Tsuji's old data for CrN                 
+ using Tsuji's old data for CrF                 
+ using Tsuji's old data for CrF F               
+ using Tsuji's old data for CrCl                
+ using Tsuji's old data for CrClCl              
+ using Tsuji's old data for MnO O               
+ using Tsuji's old data for MnS S               
+ using Tsuji's old data for MnF F               
+ using Tsuji's old data for MnClCl              
+ using Tsuji's old data for FeS                 
+ using Tsuji's old data for FeF F               
+ using Tsuji's old data for SrSrO               
+ using Tsuji's old data for Y C C               
+ using Tsuji's old data for Y C C C C           
+ using Tsuji's old data for Y O O               
+ using Tsuji's old data for Y Y O               
+ using Tsuji's old data for Y F F               
+ using Tsuji's old data for ZrH                 
+ using Tsuji's old data for ZrC C               
+ using Tsuji's old data for ZrS                 
+ using Tsuji's old data for ZrF                 
+ using Tsuji's old data for ZrCl                
+ using Tsuji's old data for BaBaO               
+ using Tsuji's old data for LaC C               
+ using Tsuji's old data for LaN                 
+ using Tsuji's old data for LaO O               
+ using Tsuji's old data for LaLaO               
+ using Tsuji's old data for LaLaO O             
+ using Tsuji's old data for LaF F               
+ using Tsuji's old data for CeC C               
+ using Tsuji's old data for CeO O               
+ using Tsuji's old data for CeS                 
+ using Tsuji's old data for CeF                 
+ using Tsuji's old data for NdC C               
+ using Tsuji's old data for NdO                 
+ using Tsuji's old data for NdO O               
+ using Tsuji's old data for NdF                 
+ using Tsuji's old data for NdF F               
+ using Tsuji's old data for N N N H             
+ using Tsuji's old data for C C H H H H H H     
+ using Tsuji's old data for H C C C N           
+ using Tsuji's old data for C C C C C H         
+ using Tsuji's old data for C C H H H           
+ using Tsuji's old data for C C C C H H H       
+ using Tsuji's old data for C C C C H H H H     
+ using Tsuji's old data for C C C C H           
+ using Tsuji's old data for C C C C H H         
+ using Tsuji's old data for C C C H H H         
+ using Tsuji's old data for C C C H H           
+ using Tsuji's old data for C C C C N           
+ using Tsuji's old data for C H H H C N         
+ using Tsuji's old data for C C C H H H H       
+ using Tsuji's old data for C C C N             
+ Atomic partition function data read
+ MARCS model. romod=   0.0000000E+00 rocalc=   3.8405966E-11
+ H-      
+  H      
+ FeI     
+ (H+H)   
+ H2+     
+ H2-     
+ HeI     
+ HeIff  P
+ He-     
+ C_I     
+ C_II    
+ C_Iff   
+ CIIff  P
+ C-      
+ N_I     
+ N_II    
+ N-      
+ O_I     
+ O_II    
+ O-      
+ CO-     
+ H2O-    
+ MgI    P
+ MgII   O
+ AlI    O
+ AlII   O
+ SiI    P
+ SiII   O
+ CaI   bf
+ CaII   O
+ FeII    
+ CHcont  
+ OHcont  
+ MgIff  P
+ SiIff  P
+ MeIff  O
+ H2+H2   
+ He+H2   
+ H2+H    
+ He+H    
+ e-sc    
+ H-sc    
+ H2sc    
+ He-sc   
+tau,T,Pe,Pg,ro   1  3.918E-05   3304.3  4.354E-04  8.326E+00  3.841E-11
+ MARCS model. romod=   0.0000000E+00 rocalc=   5.3604982E-11
+tau,T,Pe,Pg,ro   2  6.052E-05   3358.7  6.382E-04  1.181E+01  5.360E-11
+ MARCS model. romod=   0.0000000E+00 rocalc=   7.2661994E-11
+tau,T,Pe,Pg,ro   3  8.974E-05   3414.5  9.131E-04  1.628E+01  7.266E-11
+ MARCS model. romod=   0.0000000E+00 rocalc=   9.6818151E-11
+tau,T,Pe,Pg,ro   4  1.302E-04   3468.0  1.277E-03  2.203E+01  9.682E-11
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.2758933E-10
+tau,T,Pe,Pg,ro   5  1.867E-04   3519.7  1.758E-03  2.946E+01  1.276E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.6684930E-10
+tau,T,Pe,Pg,ro   6  2.668E-04   3570.2  2.391E-03  3.908E+01  1.668E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.1688688E-10
+tau,T,Pe,Pg,ro   7  3.812E-04   3620.2  3.225E-03  5.152E+01  2.169E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.8058794E-10
+tau,T,Pe,Pg,ro   8  5.461E-04   3670.1  4.320E-03  6.757E+01  2.806E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   3.6156264E-10
+tau,T,Pe,Pg,ro   9  7.863E-04   3720.2  5.757E-03  8.825E+01  3.616E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   4.6439835E-10
+tau,T,Pe,Pg,ro  10  1.138E-03   3770.6  7.637E-03  1.149E+02  4.644E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   5.9512678E-10
+tau,T,Pe,Pg,ro  11  1.660E-03   3820.8  1.009E-02  1.492E+02  5.951E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   6.7297057E-10
+tau,T,Pe,Pg,ro  12  2.008E-03   3846.8  1.159E-02  1.699E+02  6.730E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   7.6069245E-10
+tau,T,Pe,Pg,ro  13  2.434E-03   3872.6  1.330E-02  1.933E+02  7.607E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   8.5955754E-10
+tau,T,Pe,Pg,ro  14  2.957E-03   3898.4  1.525E-02  2.199E+02  8.596E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   9.7090624E-10
+tau,T,Pe,Pg,ro  15  3.597E-03   3924.3  1.747E-02  2.500E+02  9.709E-10
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.0963339E-09
+tau,T,Pe,Pg,ro  16  4.385E-03   3950.3  2.000E-02  2.842E+02  1.096E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.2375637E-09
+tau,T,Pe,Pg,ro  17  5.356E-03   3976.5  2.290E-02  3.229E+02  1.238E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.3965680E-09
+tau,T,Pe,Pg,ro  18  6.551E-03   4002.8  2.619E-02  3.668E+02  1.397E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.5755316E-09
+tau,T,Pe,Pg,ro  19  8.024E-03   4029.3  2.995E-02  4.165E+02  1.576E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.7772825E-09
+tau,T,Pe,Pg,ro  20  9.847E-03   4056.1  3.424E-02  4.730E+02  1.777E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.0041468E-09
+tau,T,Pe,Pg,ro  21  1.210E-02   4083.5  3.914E-02  5.370E+02  2.004E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.2598472E-09
+tau,T,Pe,Pg,ro  22  1.489E-02   4111.4  4.475E-02  6.096E+02  2.260E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.5473739E-09
+tau,T,Pe,Pg,ro  23  1.836E-02   4140.2  5.118E-02  6.920E+02  2.547E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   2.8707952E-09
+tau,T,Pe,Pg,ro  24  2.265E-02   4170.0  5.857E-02  7.855E+02  2.871E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   3.2339849E-09
+tau,T,Pe,Pg,ro  25  2.799E-02   4201.2  6.706E-02  8.915E+02  3.234E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   3.6415444E-09
+tau,T,Pe,Pg,ro  26  3.461E-02   4234.1  7.686E-02  1.012E+03  3.642E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   4.0989367E-09
+tau,T,Pe,Pg,ro  27  4.284E-02   4268.9  8.818E-02  1.148E+03  4.099E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   4.6106075E-09
+tau,T,Pe,Pg,ro  28  5.308E-02   4306.7  1.014E-01  1.303E+03  4.611E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   5.1822155E-09
+tau,T,Pe,Pg,ro  29  6.578E-02   4347.5  1.167E-01  1.478E+03  5.182E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   5.8199019E-09
+tau,T,Pe,Pg,ro  30  8.158E-02   4392.1  1.346E-01  1.677E+03  5.820E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   6.5301551E-09
+tau,T,Pe,Pg,ro  31  1.012E-01   4441.9  1.556E-01  1.903E+03  6.530E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   7.3190400E-09
+tau,T,Pe,Pg,ro  32  1.255E-01   4496.9  1.805E-01  2.160E+03  7.319E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   8.1938092E-09
+tau,T,Pe,Pg,ro  33  1.556E-01   4558.6  2.101E-01  2.451E+03  8.194E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   9.1597734E-09
+tau,T,Pe,Pg,ro  34  1.930E-01   4628.0  2.457E-01  2.782E+03  9.160E-09
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.0219851E-08
+tau,T,Pe,Pg,ro  35  2.391E-01   4706.6  2.894E-01  3.156E+03  1.022E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.1375579E-08
+tau,T,Pe,Pg,ro  36  2.961E-01   4795.4  3.447E-01  3.580E+03  1.138E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.2614943E-08
+tau,T,Pe,Pg,ro  37  3.662E-01   4896.0  4.183E-01  4.053E+03  1.261E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.3907809E-08
+tau,T,Pe,Pg,ro  38  4.526E-01   5009.8  5.233E-01  4.572E+03  1.391E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.5203362E-08
+tau,T,Pe,Pg,ro  39  5.589E-01   5137.9  6.845E-01  5.126E+03  1.520E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.6418156E-08
+tau,T,Pe,Pg,ro  40  6.901E-01   5281.7  9.471E-01  5.691E+03  1.642E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.7466341E-08
+tau,T,Pe,Pg,ro  41  8.521E-01   5442.9  1.392E+00  6.240E+03  1.747E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.8276095E-08
+tau,T,Pe,Pg,ro  42  1.053E+00   5623.5  2.169E+00  6.746E+03  1.828E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.8802808E-08
+tau,T,Pe,Pg,ro  43  1.301E+00   5826.2  3.555E+00  7.192E+03  1.880E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.9035763E-08
+tau,T,Pe,Pg,ro  44  1.608E+00   6053.3  6.069E+00  7.568E+03  1.904E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.8999835E-08
+tau,T,Pe,Pg,ro  45  1.982E+00   6307.3  1.069E+01  7.875E+03  1.900E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.8709512E-08
+tau,T,Pe,Pg,ro  46  2.437E+00   6590.8  1.927E+01  8.111E+03  1.871E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.8209825E-08
+tau,T,Pe,Pg,ro  47  2.984E+00   6908.8  3.540E+01  8.291E+03  1.821E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.7498321E-08
+tau,T,Pe,Pg,ro  48  3.635E+00   7273.9  6.681E+01  8.419E+03  1.750E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.6810842E-08
+tau,T,Pe,Pg,ro  49  4.408E+00   7611.9  1.141E+02  8.511E+03  1.681E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.6331157E-08
+tau,T,Pe,Pg,ro  50  5.336E+00   7856.7  1.634E+02  8.583E+03  1.633E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.5985115E-08
+tau,T,Pe,Pg,ro  51  6.468E+00   8042.2  2.115E+02  8.648E+03  1.599E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.5517637E-08
+tau,T,Pe,Pg,ro  52  9.592E+00   8322.0  3.055E+02  8.780E+03  1.552E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.5173114E-08
+tau,T,Pe,Pg,ro  53  1.441E+01   8552.4  4.063E+02  8.922E+03  1.517E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.4900022E-08
+tau,T,Pe,Pg,ro  54  2.193E+01   8762.2  5.200E+02  9.087E+03  1.490E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.4677650E-08
+tau,T,Pe,Pg,ro  55  3.374E+01   8964.7  6.526E+02  9.287E+03  1.468E-08
+ MARCS model. romod=   0.0000000E+00 rocalc=   1.4489622E-08
+tau,T,Pe,Pg,ro  56  5.240E+01   9167.5  8.107E+02  9.527E+03  1.449E-08
+  CONTROLE: k, R, tau, log10tau, T
+           1  1.1729501E+12  3.9183215E-05  -4.406900       3304.300    
+           2  1.1721301E+12  6.0520142E-05  -4.218100       3358.700    
+           3  1.1713700E+12  8.9742891E-05  -4.047000       3414.500    
+           4  1.1706300E+12  1.3016675E-04  -3.885500       3468.000    
+           5  1.1699201E+12  1.8672392E-04  -3.728800       3519.700    
+           6  1.1692300E+12  2.6680867E-04  -3.573800       3570.200    
+           7  1.1685301E+12  3.8115357E-04  -3.418900       3620.200    
+           8  1.1678501E+12  5.4613489E-04  -3.262700       3670.100    
+           9  1.1671600E+12  7.8632135E-04  -3.104400       3720.200    
+          10  1.1664800E+12  1.1384132E-03  -2.943700       3770.600    
+          11  1.1657900E+12  1.6595870E-03  -2.780000       3820.800    
+          12  1.1654500E+12  2.0081676E-03  -2.697200       3846.800    
+          13  1.1651200E+12  2.4344451E-03  -2.613600       3872.600    
+          14  1.1647810E+12  2.9566500E-03  -2.529200       3898.400    
+          15  1.1644430E+12  3.5974933E-03  -2.444000       3924.300    
+          16  1.1641040E+12  4.3853065E-03  -2.358000       3950.300    
+          17  1.1637640E+12  5.3555006E-03  -2.271200       3976.500    
+          18  1.1634221E+12  6.5508839E-03  -2.183700       4002.800    
+          19  1.1630791E+12  8.0241701E-03  -2.095600       4029.300    
+          20  1.1627350E+12  9.8469099E-03  -2.006700       4056.100    
+          21  1.1623891E+12  1.2100409E-02  -1.917200       4083.500    
+          22  1.1620400E+12  1.4893610E-02  -1.827000       4111.400    
+          23  1.1616901E+12  1.8356929E-02  -1.736200       4140.200    
+          24  1.1613380E+12  2.2651659E-02  -1.644900       4170.000    
+          25  1.1609840E+12  2.7989814E-02  -1.553000       4201.200    
+          26  1.1606271E+12  3.4609869E-02  -1.460800       4234.100    
+          27  1.1602681E+12  4.2844981E-02  -1.368100       4268.900    
+          28  1.1599061E+12  5.3076223E-02  -1.275100       4306.700    
+          29  1.1595421E+12  6.5780923E-02  -1.181900       4347.500    
+          30  1.1591740E+12  8.1583060E-02  -1.088400       4392.100    
+          31  1.1588020E+12  0.1011812     -0.9949000       4441.900    
+          32  1.1584260E+12  0.1254874     -0.9014000       4496.900    
+          33  1.1580451E+12  0.1556324     -0.8079000       4558.600    
+          34  1.1576581E+12  0.1929745     -0.7145000       4628.000    
+          35  1.1572671E+12  0.2391112     -0.6214000       4706.600    
+          36  1.1568700E+12  0.2960738     -0.5286000       4795.400    
+          37  1.1564711E+12  0.3661845     -0.4363000       4896.000    
+          38  1.1560751E+12  0.4525848     -0.3443000       5009.800    
+          39  1.1556905E+12  0.5588561     -0.2527000       5137.900    
+          40  1.1553288E+12  0.6900809     -0.1611000       5281.700    
+          41  1.1550000E+12  0.8521185     -6.9500007E-02   5442.900    
+          42  1.1547116E+12   1.052931      2.2399990E-02   5623.500    
+          43  1.1544663E+12   1.301368      0.1144000       5826.200    
+          44  1.1542634E+12   1.607682      0.2062000       6053.300    
+          45  1.1540996E+12   1.981983      0.2971000       6307.300    
+          46  1.1539701E+12   2.436688      0.3868000       6590.800    
+          47  1.1538701E+12   2.984008      0.4748000       6908.800    
+          48  1.1537951E+12   3.634963      0.5605000       7273.900    
+          49  1.1537390E+12   4.407578      0.6442000       7611.900    
+          50  1.1536930E+12   5.335805      0.7272000       7856.700    
+          51  1.1536510E+12   6.468447      0.8108000       8042.200    
+          52  1.1535640E+12   9.591797      0.9819000       8322.000    
+          53  1.1534681E+12   14.41451       1.158800       8552.400    
+          54  1.1533551E+12   21.93310       1.341100       8762.200    
+          55  1.1532171E+12   33.74427       1.528200       8964.700    
+          56  1.1530490E+12   52.39623       1.719300       9167.500    
+ 
+ **************************************************
+ * BSYN version 19.1                              *
+ * Warning, now Flux is so that F=sigma.Teff^4 !  *
+ * consistent with MARCS.                         *
+ * Versions 10.1 and lower give f=sigma.Teff^4/pi *
+ **************************************************
+ 
+ LAMBDA_MIN:6700
+ LAMBDA_MAX:6720
+ LAMBDA_STEP:0.01
+ INTENSITY/FLUX:Intensity
+ COS(THETA)    :1.0
+ ABFIND        :.false.
+ MODELOPAC:
+ contopac/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.
+ 00.modopac
+ RESULTFILE :
+ syntspec/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.
+ 00.mod_6700-6720_xit2.0.intensity
+ METALLICITY:     0.000
+ ALPHA/Fe   :0.00
+ HELIUM     :0.00
+ R-PROCESS  :0.00
+ S-PROCESS  :0.00
+ INDIVIDUAL ABUNDANCES:1
+           3   1.050000    
+ ISOTOPES :2
+ NFILES   :2
+ SPHERICAL:T
+ Following atomic species included in molecular equilibrium:
+ H  He Li Be B  C  N  O  F  Ne 
+ Na Mg Al Si P  S  Cl Ar K  Ca 
+ Sc Ti V  Cr Mn Fe Co Ni Cu Zn 
+ Ga Ge As Se Br Kr Rb Sr Y  Zr 
+ Nb Mo Tc Ru Rh Pd Ag Cd In Sn 
+ Sb Te I  Xe Cs Ba La Ce Pr Nd 
+ Pm Sm Eu Gd Tb Dy Ho Er Tm Yb 
+ Lu Hf Ta W  Re Os Ir Pt Au Hg 
+ Tl Pb Bi Po At Rn Fr Ra Ac Th 
+ Pa U                          
+ T  DATA/LISTE_molecules_all_v12.1.dat 
+           2  line lists:
+ DATA/Hlinedata 
+ linelists/vald-6700-6720.list 
+ T          30   300.0000              15   1.300000    
+ dummy-output.dat 
+  
+ contopac/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.
+ 00.modopac 
+ syntspec/s5000_g+2.0_m1.0_t02_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.
+ 00.mod_6700-6720_xit2.0.intensity 
+ ab. changed: elt            3   1.050000    
+    Full molecular equilibrium, using:
+       
+      DATA/LISTE_molecules_all_v12.1.dat 
+  
+  Transfer treated in the spherical scheme
+  
+ metallicity changed by   0.0000000E+00  dex
+  3.006                    
+ ISOTOPIC fraction changed from   7.5000003E-02
+ to   7.5000003E-02  for element            3
+  3.007                    
+ ISOTOPIC fraction changed from   0.9250000    
+ to   0.9250000      for element            3
+ old abundh:  0.7383165    
+ MODEL IDENTIFICATION=MRXF; MAIN PROGRAMME BSYN
+ Bsyn; k, pgmod, pg_calc, romod, ro_calc
+ ELEMENT  ATOMIC NUMBER   LOG(ABUNDANCE)
+     H             1       12.000
+     He            2       10.930
+     Li            3        1.050
+     Be            4        1.380
+     B             5        2.700
+     C             6        8.390
+     N             7        7.780
+     O             8        8.660
+     F             9        4.560
+     Ne           10        7.840
+     Na           11        6.170
+     Mg           12        7.530
+     Al           13        6.370
+     Si           14        7.510
+     P            15        5.360
+     S            16        7.140
+     Cl           17        5.500
+     Ar           18        6.180
+     K            19        5.080
+     Ca           20        6.310
+     Sc           21        3.170
+     Ti           22        4.900
+     V            23        4.000
+     Cr           24        5.640
+     Mn           25        5.390
+     Fe           26        7.450
+     Co           27        4.920
+     Ni           28        6.230
+     Cu           29        4.210
+     Zn           30        4.600
+     Ga           31        2.880
+     Ge           32        3.580
+     As           33        2.290
+     Se           34        3.330
+     Br           35        2.560
+     Kr           36        3.250
+     Rb           37        2.600
+     Sr           38        2.920
+     Y            39        2.210
+     Zr           40        2.580
+     Nb           41        1.420
+     Mo           42        1.920
+     Ru           44        1.840
+     Rh           45        1.120
+     Pd           46        1.660
+     Ag           47        0.940
+     Cd           48        1.770
+     In           49        1.600
+     Sn           50        2.000
+     Sb           51        1.000
+     Te           52        2.190
+     I            53        1.510
+     Xe           54        2.240
+     Cs           55        1.070
+     Ba           56        2.170
+     La           57        1.130
+     Ce           58        1.700
+     Pr           59        0.580
+     Nd           60        1.450
+     Sm           62        1.000
+     Eu           63        0.520
+     Gd           64        1.110
+     Tb           65        0.280
+     Dy           66        1.140
+     Ho           67        0.510
+     Er           68        0.930
+     Tm           69        0.000
+     Yb           70        1.080
+     Lu           71        0.060
+     Hf           72        0.880
+     Ta           73       -0.170
+     W            74        1.110
+     Re           75        0.230
+     Os           76        1.250
+     Ir           77        1.380
+     Pt           78        1.640
+     Au           79        1.010
+     Hg           80        1.130
+     Tl           81        0.900
+     Pb           82        2.000
+     Bi           83        0.650
+     Th           90        0.060
+     U            92       -0.520
+ MOLECPARTF. suppressing:         205  LaH                 (unknown D00)
+ MOLECPARTF. suppressing:         208  LuH                 (unknown D00)
+ MOLECPARTF. suppressing:         211  NbN                 (unknown D00)
+ MOLECPARTF. suppressing:         230  SbH                 (unknown D00)
+ MOLECPARTF. suppressing:         251  TeCl                (unknown D00)
+ MOLECPARTF. suppressing:         266  Al+ H               (unknown D00)
+ MOLECPARTF. suppressing:         266  As+ O               (unknown D00)
+ MOLECPARTF. suppressing:         268  B + O               (unknown D00)
+ H- electron affinity will be changed by -2dxi
+  data may be added in IRWIN_molecule file
+  to update older data from Tsuji
+ using Tsuji's old data for C C C H             
+ using Tsuji's old data for C C N               
+ using Tsuji's old data for B B O               
+ using Tsuji's old data for C -                 
+ using Tsuji's old data for C H -               
+ using Tsuji's old data for N O O -             
+ using Tsuji's old data for N H H -             
+ using Tsuji's old data for N N H H             
+ using Tsuji's old data for N N H H H H         
+ using Tsuji's old data for C N N               
+ using Tsuji's old data for N C N               
+ using Tsuji's old data for C C C C N N         
+ using Tsuji's old data for N O O               
+ using Tsuji's old data for N O O O             
+ using Tsuji's old data for N N O               
+ using Tsuji's old data for N N O O O O         
+ using Tsuji's old data for H N O               
+ using Tsuji's old data for H N O O             
+ using Tsuji's old data for H N O O O           
+ using Tsuji's old data for H C N O             
+ using Tsuji's old data for O -                 
+ using Tsuji's old data for O O -               
+ using Tsuji's old data for H C H O             
+ using Tsuji's old data for AlO O               
+ using Tsuji's old data for Si-                 
+ using Tsuji's old data for SiH H               
+ using Tsuji's old data for SiH H H             
+ using Tsuji's old data for SiSiC C             
+ using Tsuji's old data for SiF F               
+ using Tsuji's old data for SiClCl              
+ using Tsuji's old data for P F F               
+ using Tsuji's old data for S S O               
+ using Tsuji's old data for S O O O             
+ using Tsuji's old data for C ClCl              
+ using Tsuji's old data for C ClClCl            
+ using Tsuji's old data for C ClClClCl          
+ using Tsuji's old data for ClO O               
+ using Tsuji's old data for ClClO               
+ using Tsuji's old data for S Cl                
+ using Tsuji's old data for S ClCl              
+ using Tsuji's old data for H ClO               
+ using Tsuji's old data for C ClO               
+ using Tsuji's old data for ScSc                
+ using Tsuji's old data for ScN                 
+ using Tsuji's old data for ScO O               
+ using Tsuji's old data for ScScO               
+ using Tsuji's old data for TiC C               
+ using Tsuji's old data for TiF                 
+ using Tsuji's old data for TiCl                
+ using Tsuji's old data for V C C               
+ using Tsuji's old data for V N                 
+ using Tsuji's old data for V F F               
+ using Tsuji's old data for V ClCl              
+ using Tsuji's old data for CrN                 
+ using Tsuji's old data for CrF                 
+ using Tsuji's old data for CrF F               
+ using Tsuji's old data for CrCl                
+ using Tsuji's old data for CrClCl              
+ using Tsuji's old data for MnO O               
+ using Tsuji's old data for MnS S               
+ using Tsuji's old data for MnF F               
+ using Tsuji's old data for MnClCl              
+ using Tsuji's old data for FeS                 
+ using Tsuji's old data for FeF F               
+ using Tsuji's old data for SrSrO               
+ using Tsuji's old data for Y C C               
+ using Tsuji's old data for Y C C C C           
+ using Tsuji's old data for Y O O               
+ using Tsuji's old data for Y Y O               
+ using Tsuji's old data for Y F F               
+ using Tsuji's old data for ZrH                 
+ using Tsuji's old data for ZrC C               
+ using Tsuji's old data for ZrS                 
+ using Tsuji's old data for ZrF                 
+ using Tsuji's old data for ZrCl                
+ using Tsuji's old data for BaBaO               
+ using Tsuji's old data for LaC C               
+ using Tsuji's old data for LaN                 
+ using Tsuji's old data for LaO O               
+ using Tsuji's old data for LaLaO               
+ using Tsuji's old data for LaLaO O             
+ using Tsuji's old data for LaF F               
+ using Tsuji's old data for CeC C               
+ using Tsuji's old data for CeO O               
+ using Tsuji's old data for CeS                 
+ using Tsuji's old data for CeF                 
+ using Tsuji's old data for NdC C               
+ using Tsuji's old data for NdO                 
+ using Tsuji's old data for NdO O               
+ using Tsuji's old data for NdF                 
+ using Tsuji's old data for NdF F               
+ using Tsuji's old data for N N N H             
+ using Tsuji's old data for C C H H H H H H     
+ using Tsuji's old data for H C C C N           
+ using Tsuji's old data for C C C C C H         
+ using Tsuji's old data for C C H H H           
+ using Tsuji's old data for C C C C H H H       
+ using Tsuji's old data for C C C C H H H H     
+ using Tsuji's old data for C C C C H           
+ using Tsuji's old data for C C C C H H         
+ using Tsuji's old data for C C C H H H         
+ using Tsuji's old data for C C C H H           
+ using Tsuji's old data for C C C C N           
+ using Tsuji's old data for C H H H C N         
+ using Tsuji's old data for C C C H H H H       
+ using Tsuji's old data for C C C N             
+ Atomic partition function data read
+ new abundh:  0.7382618    
+  starting scan of linelist
+ 01.000000                 
+species: 01.000000         H                    iel:        1 ion:  1 isotopes:   0
+ nlines          133
+ Will use Stehle's tables for Hydrogen line profiles
+  starting scan of linelist
+    3.000                  
+ after getlele:            3 Li                  
+ Mass used for lines of            3 Li                   is    6.940938    
+species: 03.000            Li                   iel:        3 ion:  1 isotopes:   0
+ nlines            2
+ Li I                                                                           
+  
+           2  considered for element            3           1
+           0  lines rejected because of negative c6
+    3.006                  
+ after getlele:            3 Li                  
+ Mass used for lines of            3 Li                   is    6.015123    
+species: 03.006            Li                   iel:        3 ion:  1 isotopes:   6
+ nlines            2
+ Li I                                                                           
+  
+           2  considered for element            3           1
+           0  lines rejected because of negative c6
+    3.007                  
+ after getlele:            3 Li                  
+ Mass used for lines of            3 Li                   is    7.016005    
+species: 03.007            Li                   iel:        3 ion:  1 isotopes:   7
+ nlines            2
+ Li I                                                                           
+  
+           2  considered for element            3           1
+           0  lines rejected because of negative c6
+    6.000                  
+ after getlele:            6 C                   
+ Mass used for lines of            6 C                    is    12.01104    
+species: 06.000            C                    iel:        6 ion:  1 isotopes:   0
+ nlines            3
+ C I                                                                            
+  
+           3  considered for element            6           1
+           0  lines rejected because of negative c6
+    7.000                  
+ after getlele:            7 N                   
+ Mass used for lines of            7 N                    is    14.00672    
+species: 07.000            N                    iel:        7 ion:  1 isotopes:   0
+ nlines            5
+ N I                                                                            
+  
+           5  considered for element            7           1
+           0  lines rejected because of negative c6
+    9.000                  
+ after getlele:            9 F                   
+ Mass used for lines of            9 F                    is    18.99840    
+species: 09.000            F                    iel:        9 ion:  1 isotopes:   0
+ nlines            2
+ F I                                                                            
+  
+           2  considered for element            9           1
+           0  lines rejected because of negative c6
+   13.000                  
+ after getlele:           13 Al                  
+ Mass used for lines of           13 Al                   is    26.98154    
+species: 13.000            Al                   iel:       13 ion:  2 isotopes:   0
+ nlines            1
+ Al II                                                                          
+  
+           1  considered for element           13           2
+           0  lines rejected because of negative c6
+   14.000                  
+ after getlele:           14 Si                  
+ Mass used for lines of           14 Si                   is    28.08551    
+species: 14.000            Si                   iel:       14 ion:  1 isotopes:   0
+ nlines            8
+ Si I                                                                           
+  
+           8  considered for element           14           1
+           0  lines rejected because of negative c6
+   14.000                  
+ after getlele:           14 Si                  
+ Mass used for lines of           14 Si                   is    28.08551    
+species: 14.000            Si                   iel:       14 ion:  2 isotopes:   0
+ nlines            1
+ Si II                                                                          
+  
+ subr. anstee: Upper excit. energy .ge. ioniz. energy;
+ el,ion,wavelength,chi,I=          14           2   6716.973       16.35004    
+   16.34600    
+           1  considered for element           14           2
+           0  lines rejected because of negative c6
+   15.000                  
+ after getlele:           15 P                   
+ Mass used for lines of           15 P                    is    30.97376    
+species: 15.000            P                    iel:       15 ion:  1 isotopes:   0
+ nlines            2
+ P I                                                                            
+  
+           2  considered for element           15           1
+           0  lines rejected because of negative c6
+   15.000                  
+ after getlele:           15 P                   
+ Mass used for lines of           15 P                    is    30.97376    
+species: 15.000            P                    iel:       15 ion:  2 isotopes:   0
+ nlines            1
+ P II                                                                           
+  
+           1  considered for element           15           2
+           0  lines rejected because of negative c6
+   16.000                  
+ after getlele:           16 S                   
+ Mass used for lines of           16 S                    is    32.06439    
+species: 16.000            S                    iel:       16 ion:  2 isotopes:   0
+ nlines            1
+ S II                                                                           
+  
+           1  considered for element           16           2
+           0  lines rejected because of negative c6
+   17.000                  
+ after getlele:           17 Cl                  
+ Mass used for lines of           17 Cl                   is    35.45274    
+species: 17.000            Cl                   iel:       17 ion:  1 isotopes:   0
+ nlines            3
+ Cl I                                                                           
+  
+           3  considered for element           17           1
+           0  lines rejected because of negative c6
+   18.000                  
+ after getlele:           18 Ar                  
+ Mass used for lines of           18 Ar                   is    36.28279    
+species: 18.000            Ar                   iel:       18 ion:  1 isotopes:   0
+ nlines            1
+ Ar I                                                                           
+  
+           1  considered for element           18           1
+           0  lines rejected because of negative c6
+   20.000                  
+ after getlele:           20 Ca                  
+ Mass used for lines of           20 Ca                   is    40.07803    
+species: 20.000            Ca                   iel:       20 ion:  1 isotopes:   0
+ nlines            3
+ Ca I                                                                           
+  
+           3  considered for element           20           1
+           0  lines rejected because of negative c6
+   21.000                  
+ after getlele:           21 Sc                  
+ Mass used for lines of           21 Sc                   is    44.95591    
+species: 21.000            Sc                   iel:       21 ion:  1 isotopes:   0
+ nlines           10
+ Sc I                                                                           
+  
+          10  considered for element           21           1
+           0  lines rejected because of negative c6
+   21.000                  
+ after getlele:           21 Sc                  
+ Mass used for lines of           21 Sc                   is    44.95591    
+species: 21.000            Sc                   iel:       21 ion:  2 isotopes:   0
+ nlines            2
+ Sc II                                                                          
+  
+           2  considered for element           21           2
+           0  lines rejected because of negative c6
+   22.000                  
+ after getlele:           22 Ti                  
+ Mass used for lines of           22 Ti                   is    47.87842    
+species: 22.000            Ti                   iel:       22 ion:  1 isotopes:   0
+ nlines           34
+ Ti I                                                                           
+  
+          34  considered for element           22           1
+           0  lines rejected because of negative c6
+   22.000                  
+ after getlele:           22 Ti                  
+ Mass used for lines of           22 Ti                   is    47.87842    
+species: 22.000            Ti                   iel:       22 ion:  2 isotopes:   0
+ nlines            7
+ Ti II                                                                          
+  
+           7  considered for element           22           2
+           0  lines rejected because of negative c6
+   23.000                  
+ after getlele:           23 V                   
+ Mass used for lines of           23 V                    is    50.94146    
+species: 23.000            V                    iel:       23 ion:  1 isotopes:   0
+ nlines           22
+ V I                                                                            
+  
+          22  considered for element           23           1
+           0  lines rejected because of negative c6
+   23.000                  
+ after getlele:           23 V                   
+ Mass used for lines of           23 V                    is    50.94146    
+species: 23.000            V                    iel:       23 ion:  2 isotopes:   0
+ nlines           16
+ V II                                                                           
+  
+          16  considered for element           23           2
+           0  lines rejected because of negative c6
+   24.000                  
+ after getlele:           24 Cr                  
+ Mass used for lines of           24 Cr                   is    51.99613    
+species: 24.000            Cr                   iel:       24 ion:  1 isotopes:   0
+ nlines           12
+ Cr I                                                                           
+  
+          12  considered for element           24           1
+           0  lines rejected because of negative c6
+   24.000                  
+ after getlele:           24 Cr                  
+ Mass used for lines of           24 Cr                   is    51.99613    
+species: 24.000            Cr                   iel:       24 ion:  2 isotopes:   0
+ nlines           54
+ Cr II                                                                          
+  
+          54  considered for element           24           2
+           0  lines rejected because of negative c6
+   25.000                  
+ after getlele:           25 Mn                  
+ Mass used for lines of           25 Mn                   is    54.93805    
+species: 25.000            Mn                   iel:       25 ion:  1 isotopes:   0
+ nlines            7
+ Mn I                                                                           
+  
+           7  considered for element           25           1
+           0  lines rejected because of negative c6
+   25.000                  
+ after getlele:           25 Mn                  
+ Mass used for lines of           25 Mn                   is    54.93805    
+species: 25.000            Mn                   iel:       25 ion:  2 isotopes:   0
+ nlines           19
+ Mn II                                                                          
+  
+          19  considered for element           25           2
+           0  lines rejected because of negative c6
+   26.000                  
+ after getlele:           26 Fe                  
+ Mass used for lines of           26 Fe                   is    55.84681    
+species: 26.000            Fe                   iel:       26 ion:  1 isotopes:   0
+ nlines           81
+ Fe I                                                                           
+  
+ Special line, only upper p level          26           1   6713.195    
+          81  considered for element           26           1
+           0  lines rejected because of negative c6
+   26.000                  
+ after getlele:           26 Fe                  
+ Mass used for lines of           26 Fe                   is    55.84681    
+species: 26.000            Fe                   iel:       26 ion:  2 isotopes:   0
+ nlines          164
+ Fe II                                                                          
+  
+         164  considered for element           26           2
+           0  lines rejected because of negative c6
+   27.000                  
+ after getlele:           27 Co                  
+ Mass used for lines of           27 Co                   is    58.93319    
+species: 27.000            Co                   iel:       27 ion:  1 isotopes:   0
+ nlines            9
+ Co I                                                                           
+  
+           9  considered for element           27           1
+           0  lines rejected because of negative c6
+   27.000                  
+ after getlele:           27 Co                  
+ Mass used for lines of           27 Co                   is    58.93319    
+species: 27.000            Co                   iel:       27 ion:  2 isotopes:   0
+ nlines            9
+ Co II                                                                          
+  
+           9  considered for element           27           2
+           0  lines rejected because of negative c6
+   28.000                  
+ after getlele:           28 Ni                  
+ Mass used for lines of           28 Ni                   is    58.68789    
+species: 28.000            Ni                   iel:       28 ion:  1 isotopes:   0
+ nlines            7
+ Ni I                                                                           
+  
+           7  considered for element           28           1
+           0  lines rejected because of negative c6
+   28.000                  
+ after getlele:           28 Ni                  
+ Mass used for lines of           28 Ni                   is    58.68789    
+species: 28.000            Ni                   iel:       28 ion:  2 isotopes:   0
+ nlines           43
+ Ni II                                                                          
+  
+          43  considered for element           28           2
+           0  lines rejected because of negative c6
+   29.000                  
+ after getlele:           29 Cu                  
+ Mass used for lines of           29 Cu                   is    63.54564    
+species: 29.000            Cu                   iel:       29 ion:  2 isotopes:   0
+ nlines            2
+ Cu II                                                                          
+  
+           2  considered for element           29           2
+           0  lines rejected because of negative c6
+   39.000                  
+ after getlele:           39 Y                   
+ Mass used for lines of           39 Y                    is    88.90585    
+species: 39.000            Y                    iel:       39 ion:  1 isotopes:   0
+ nlines            7
+ Y I                                                                            
+  
+           7  considered for element           39           1
+           0  lines rejected because of negative c6
+   39.000                  
+ after getlele:           39 Y                   
+ Mass used for lines of           39 Y                    is    88.90585    
+species: 39.000            Y                    iel:       39 ion:  2 isotopes:   0
+ nlines            2
+ Y II                                                                           
+  
+           2  considered for element           39           2
+           0  lines rejected because of negative c6
+   40.000                  
+ after getlele:           40 Zr                  
+ Mass used for lines of           40 Zr                   is    91.22366    
+species: 40.000            Zr                   iel:       40 ion:  1 isotopes:   0
+ nlines            3
+ Zr I                                                                           
+  
+           3  considered for element           40           1
+           0  lines rejected because of negative c6
+   41.000                  
+ after getlele:           41 Nb                  
+ Mass used for lines of           41 Nb                   is    92.90638    
+species: 41.000            Nb                   iel:       41 ion:  1 isotopes:   0
+ nlines            1
+ Nb I                                                                           
+  
+           1  considered for element           41           1
+           0  lines rejected because of negative c6
+   42.000                  
+ after getlele:           42 Mo                  
+ Mass used for lines of           42 Mo                   is    95.93130    
+species: 42.000            Mo                   iel:       42 ion:  1 isotopes:   0
+ nlines            2
+ Mo I                                                                           
+  
+           2  considered for element           42           1
+           0  lines rejected because of negative c6
+   44.000                  
+ after getlele:           44 Ru                  
+ Mass used for lines of           44 Ru                   is    101.0697    
+species: 44.000            Ru                   iel:       44 ion:  1 isotopes:   0
+ nlines            2
+ Ru I                                                                           
+  
+           2  considered for element           44           1
+           0  lines rejected because of negative c6
+   55.000                  
+ after getlele:           55 Cs                  
+ Mass used for lines of           55 Cs                   is    132.9055    
+species: 55.000            Cs                   iel:       55 ion:  1 isotopes:   0
+ nlines            1
+ Cs I                                                                           
+  
+           1  considered for element           55           1
+           0  lines rejected because of negative c6
+   57.000                  
+ after getlele:           57 La                  
+ Mass used for lines of           57 La                   is    138.9055    
+species: 57.000            La                   iel:       57 ion:  1 isotopes:   0
+ nlines            1
+ La I                                                                           
+  
+           1  considered for element           57           1
+           0  lines rejected because of negative c6
+   57.000                  
+ after getlele:           57 La                  
+ Mass used for lines of           57 La                   is    138.9055    
+species: 57.000            La                   iel:       57 ion:  2 isotopes:   0
+ nlines            2
+ La II                                                                          
+  
+           2  considered for element           57           2
+           0  lines rejected because of negative c6
+   58.000                  
+ after getlele:           58 Ce                  
+ Mass used for lines of           58 Ce                   is    140.1149    
+species: 58.000            Ce                   iel:       58 ion:  1 isotopes:   0
+ nlines            4
+ Ce I                                                                           
+  
+           4  considered for element           58           1
+           0  lines rejected because of negative c6
+   58.000                  
+ after getlele:           58 Ce                  
+ Mass used for lines of           58 Ce                   is    140.1149    
+species: 58.000            Ce                   iel:       58 ion:  2 isotopes:   0
+ nlines           30
+ Ce II                                                                          
+  
+          30  considered for element           58           2
+           0  lines rejected because of negative c6
+   60.000                  
+ after getlele:           60 Nd                  
+ Mass used for lines of           60 Nd                   is    144.2423    
+species: 60.000            Nd                   iel:       60 ion:  1 isotopes:   0
+ nlines            1
+ Nd I                                                                           
+  
+           1  considered for element           60           1
+           0  lines rejected because of negative c6
+   60.000                  
+ after getlele:           60 Nd                  
+ Mass used for lines of           60 Nd                   is    144.2423    
+species: 60.000            Nd                   iel:       60 ion:  2 isotopes:   0
+ nlines            1
+ Nd II                                                                          
+  
+           1  considered for element           60           2
+           0  lines rejected because of negative c6
+   62.000                  
+ after getlele:           62 Sm                  
+ Mass used for lines of           62 Sm                   is    150.3602    
+species: 62.000            Sm                   iel:       62 ion:  1 isotopes:   0
+ nlines            1
+ Sm I                                                                           
+  
+           1  considered for element           62           1
+           0  lines rejected because of negative c6
+   62.000                  
+ after getlele:           62 Sm                  
+ Mass used for lines of           62 Sm                   is    150.3602    
+species: 62.000            Sm                   iel:       62 ion:  2 isotopes:   0
+ nlines            2
+ Sm II                                                                          
+  
+           2  considered for element           62           2
+           0  lines rejected because of negative c6
+   63.000                  
+ after getlele:           63 Eu                  
+ Mass used for lines of           63 Eu                   is    151.9646    
+species: 63.000            Eu                   iel:       63 ion:  1 isotopes:   0
+ nlines            2
+ Eu I                                                                           
+  
+           2  considered for element           63           1
+           0  lines rejected because of negative c6
+   64.000                  
+ after getlele:           64 Gd                  
+ Mass used for lines of           64 Gd                   is    157.2521    
+species: 64.000            Gd                   iel:       64 ion:  2 isotopes:   0
+ nlines            3
+ Gd II                                                                          
+  
+           3  considered for element           64           2
+           0  lines rejected because of negative c6
+   66.000                  
+ after getlele:           66 Dy                  
+ Mass used for lines of           66 Dy                   is    162.5009    
+species: 66.000            Dy                   iel:       66 ion:  1 isotopes:   0
+ nlines            1
+ Dy I                                                                           
+  
+           1  considered for element           66           1
+           0  lines rejected because of negative c6
+   66.000                  
+ after getlele:           66 Dy                  
+ Mass used for lines of           66 Dy                   is    162.5009    
+species: 66.000            Dy                   iel:       66 ion:  2 isotopes:   0
+ nlines            1
+ Dy II                                                                          
+  
+           1  considered for element           66           2
+           0  lines rejected because of negative c6
+   68.000                  
+ after getlele:           68 Er                  
+ Mass used for lines of           68 Er                   is    167.2557    
+species: 68.000            Er                   iel:       68 ion:  1 isotopes:   0
+ nlines            1
+ Er I                                                                           
+  
+           1  considered for element           68           1
+           0  lines rejected because of negative c6
+   69.000                  
+ after getlele:           69 Tm                  
+ Mass used for lines of           69 Tm                   is    168.9342    
+species: 69.000            Tm                   iel:       69 ion:  2 isotopes:   0
+ nlines           23
+ Tm II                                                                          
+  
+          23  considered for element           69           2
+           0  lines rejected because of negative c6
+   70.000                  
+ after getlele:           70 Yb                  
+ Mass used for lines of           70 Yb                   is    173.0342    
+species: 70.000            Yb                   iel:       70 ion:  2 isotopes:   0
+ nlines            5
+ Yb II                                                                          
+  
+           5  considered for element           70           2
+           0  lines rejected because of negative c6
+   72.000                  
+ after getlele:           72 Hf                  
+ Mass used for lines of           72 Hf                   is    178.4864    
+species: 72.000            Hf                   iel:       72 ion:  1 isotopes:   0
+ nlines            2
+ Hf I                                                                           
+  
+           2  considered for element           72           1
+           0  lines rejected because of negative c6
+   73.000                  
+ after getlele:           73 Ta                  
+ Mass used for lines of           73 Ta                   is    180.9479    
+species: 73.000            Ta                   iel:       73 ion:  1 isotopes:   0
+ nlines            2
+ Ta I                                                                           
+  
+           2  considered for element           73           1
+           0  lines rejected because of negative c6
+   78.000                  
+ after getlele:           78 Pt                  
+ Mass used for lines of           78 Pt                   is    194.8503    
+species: 78.000            Pt                   iel:       78 ion:  1 isotopes:   0
+ nlines            1
+ Pt I                                                                           
+  
+           1  considered for element           78           1
+           0  lines rejected because of negative c6
+   79.000                  
+ after getlele:           79 Au                  
+ Mass used for lines of           79 Au                   is    196.9666    
+species: 79.000            Au                   iel:       79 ion:  2 isotopes:   0
+ nlines            1
+ Au II                                                                          
+  
+           1  considered for element           79           2
+           0  lines rejected because of negative c6
+   81.000                  
+ after getlele:           81 Tl                  
+ Mass used for lines of           81 Tl                   is    204.3833    
+species: 81.000            Tl                   iel:       81 ion:  1 isotopes:   0
+ nlines            1
+ Tl I                                                                           
+  
+           1  considered for element           81           1
+           0  lines rejected because of negative c6
+   90.000                  
+ after getlele:           90 Th                  
+ Mass used for lines of           90 Th                   is    232.0381    
+species: 90.000            Th                   iel:       90 ion:  1 isotopes:   0
+ nlines            2
+ Th I                                                                           
+  
+           2  considered for element           90           1
+           0  lines rejected because of negative c6
+   90.000                  
+ after getlele:           90 Th                  
+ Mass used for lines of           90 Th                   is    232.0381    
+species: 90.000            Th                   iel:       90 ion:  2 isotopes:   0
+ nlines            1
+ Th II                                                                          
+  
+           1  considered for element           90           2
+           0  lines rejected because of negative c6
+   92.000                  
+ after getlele:           92 U                   
+ Mass used for lines of           92 U                    is    238.0160    
+species: 92.000            U                    iel:       92 ion:  2 isotopes:   0
+ nlines            1
+ U II                                                                           
+  
+           1  considered for element           92           2
+           0  lines rejected because of negative c6
+  106.000012               
+ getlele C H                 
+ after getlele:          106 C H                 
+ Mass used for lines of          106 C H                  is    13.00786    
+species: 0106.000012       C H                  iel:      106 ion:  1 isotopes:   0 12
+ nlines            4
+ CH I                                                                           
+  
+           4  considered for element          106           1
+           0  lines rejected because of negative c6
+  106.000013               
+ getlele C H                 
+ after getlele:          106 C H                 
+ Mass used for lines of          106 C H                  is    14.01121    
+species: 0106.000013       C H                  iel:      106 ion:  1 isotopes:   0 13
+ nlines            3
+ CH I                                                                           
+  
+           3  considered for element          106           1
+           0  lines rejected because of negative c6
+  108.000016               
+ getlele O H                 
+ after getlele:          108 O H                 
+ Mass used for lines of          108 O H                  is    17.00277    
+species: 0108.000016       O H                  iel:      108 ion:  1 isotopes:   0 16
+ nlines           62
+ OH I                                                                           
+  
+          62  considered for element          108           1
+           0  lines rejected because of negative c6
+  112.000024               
+ getlele MgH                 
+ after getlele:          112 MgH                 
+ Mass used for lines of          112 MgH                  is    24.99290    
+species: 0112.000024       MgH                  iel:      112 ion:  1 isotopes:   0 24
+ nlines           56
+ MgH I                                                                          
+  
+          56  considered for element          112           1
+           0  lines rejected because of negative c6
+  606.012012               
+ getlele C C                 
+ after getlele:          606 C C                 
+ Mass used for lines of          606 C C                  is    24.00000    
+species: 0606.012012       C C                  iel:      606 ion:  1 isotopes:  12 12
+ nlines          238
+ CC I                                                                           
+  
+         238  considered for element          606           1
+           0  lines rejected because of negative c6
+  607.012014               
+ getlele C N                 
+ after getlele:          607 C N                 
+ Mass used for lines of          607 C N                  is    26.00307    
+species: 0607.012014       C N                  iel:      607 ion:  1 isotopes:  12 14
+ nlines          101
+ CN I                                                                           
+  
+         101  considered for element          607           1
+           0  lines rejected because of negative c6
+  822.000048               
+ getlele TiO                 
+ after getlele:          822 TiO                 
+ Mass used for lines of          822 TiO                  is    63.94725    
+species: 0822.000048       TiO                  iel:      822 ion:  1 isotopes:   0 48
+ nlines          309
+ TiO I                                                                          
+  
+         309  considered for element          822           1
+           0  lines rejected because of negative c6
+        0 LINES WERE REJECTED, ONLY LINES BETWEEN  6698.000 AND  6722.000 A CONSIDERED
+  CENTRAL WAVELENGTH=  6710.000 A
+ now solve
+        1415  lines in the interval
+Thu Apr 25 18:11:11 CEST 2019

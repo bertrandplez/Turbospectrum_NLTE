@@ -1,0 +1,10 @@
+C  INCLUDE FILE FOR sosMARCS   version 21-avril-95   BPz
+C
+C maximum number of wavelength points 
+      INTEGER   lpoint
+      PARAMETER ( lpoint=154000 )
+C number of sets for continuous opacity in common cxlset
+      INTEGER   numbset
+      PARAMETER ( numbset=550 )
+C
+
