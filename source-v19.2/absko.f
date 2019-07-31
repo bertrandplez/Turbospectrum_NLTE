@@ -38,9 +38,10 @@ C        NTO IS THE NUMBER OF POINTS IN THOSE SCALES FOR WHICH A DETAILED
 C              PRINT-OUT IS WANTED.
       implicit none
       include 'spectrum.inc'
+      include 'tsuji.par'
 C
       integer newt,iseta,isetp,nt,ifak,kfak,jp,kp,ntp,ioutr,j,komp
-      integer ireadp,nabkof,nkompl,j1,j2,iu,index,nop,np,lunit
+      integer ireadp,nabkof,nkompl,j1,j2,iu,position,nop,np,lunit
       real pg,dum,delsum
 
       logical first
@@ -84,13 +85,19 @@ C
       real rotest,prh2o
       COMMON /DENSTY/ ROTEST(NDP),PRH2O(NDP)
 
+      doubleprecision partryck,xmettryck,xiontryck
+      character*20 nametryck
+      common/fullequilibrium/partryck(ndp,maxmol),
+     &       xmettryck(ndp,maxmet),xiontryck(ndp,maxmet),
+     &       nametryck(maxmol)
+
       doubleprecision presneutral,presion,presion2,presion3
       common/orderedpress/presneutral(ndp,100),presion(ndp,100),
      &                    presion2(ndp,100),presion3(ndp,100)
-      character species*20, comment*100
-      integer i,nline,ioniz
+      character species*20, comment*100,path*128
+      integer i,nline,ioniz,pathlen,NHtbl_unit
       doubleprecision xlambda
-      real nh1,ne,nhe1
+      real nh1,ne,nhe1,nhop,opnh
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
       real xlo(150),xup(150),gf(150),npop(150)
@@ -210,8 +217,8 @@ C        KOMPLA LESS THAN OR EQUAL TO ZERO INDICATES THAT THE ACTUAL ABSORPTION
 C        COEFFICIENT FOR THIS COMPONENT AND WAVELENGTH IS ZERO, AS FOUND IN SUB-
 C        ROUTINE INABS.
 C
-   11 INDEX=KOMPLA(IU)
-      AB(KOMP)=AFAK(KFAK)*ABKOF(INDEX)
+   11 position=KOMPLA(IU)
+      AB(KOMP)=AFAK(KFAK)*ABKOF(position)
       GO TO 13
    12 AB(KOMP)=0.
    13 KFAK=KFAK+1
@@ -222,7 +229,7 @@ C        COMPONENTS WITH T-DEPENDENT ABSORPTION COEFFICIENTS
       NOP=NOFAK(IFAK)
       IF(NOP.EQ.0)GO TO 17
       IF(KOMPLA(IU).LE.0)GO TO 17
-   15 INDEX=NPLATS(IFAK)-1+KOMPLA(IU)
+   15 position=NPLATS(IFAK)-1+KOMPLA(IU)
 C        THE VECTOR NPLATS IS DETERMINED BY SUBROUTINE TABS. IT GIVES THE ARRAY
 C        INDEX OF THE TEMPERATURE AT WHICH THE INTERPOLATION IN ABKOF
 C        BEGINS. NOFAK, GIVING INFORMATION ON THE T-INTERPOLATION AND
@@ -231,9 +238,9 @@ C
 C        INTERPOLATION
       DELSUM=0.
       DO16 NP=1,NOP
-      DELSUM=DELSUM+AFAK(KFAK)*ABKOF(INDEX)
+      DELSUM=DELSUM+AFAK(KFAK)*ABKOF(position)
       KFAK=KFAK+1
-   16 INDEX=INDEX+1
+   16 position=position+1
 C
 C        HAS THE INTERPOLATION BEEN MADE ON THE LOGARITHM
 cc      print*,'absko ifak delsum exp?',ifak,delsum,ilogta(komp)
@@ -304,6 +311,21 @@ c
       sumabs=sumabs+cont/rosav(ntp)
 !
 ! now HI bf absorption is included !
+
+! add NH continuous absorption from Stancil. BPz 24/07-2019
+      path='DATA/'
+      pathlen=index(path,' ')-1
+      NHtbl_unit=75
+      opnh=nhop(xlambda,t(ntp),path,pathlen,NHtbl_unit)
+! opnh is absorption in A^2/molecule
+      if (nametryck(13).ne.'N H') then
+        print*,nametryck(13), 'should be NH'
+        stop 'PROBLEM in absko!'
+      endif
+! convert to cm^2/g of star
+      sumabs = sumabs + opnh * 1.d-16 *
+     &    partryck(ntp,13) / (t(ntp)*1.38066d-16) / rosav(ntp)
+! NH cont included !
 C
       if (J.gt.0) then
         ABSK(NTP)=SUMABS

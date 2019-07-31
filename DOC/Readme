@@ -846,6 +846,21 @@ Modified files:
 --------------
 jonabs_vac_v07.3.dat -> jonabs_vac_v19.2.dat
 
+Addition of NH continuous opacity from Stancil et al. 
+30/07-2019
+
+Modified routine:
+----------------
+absko.f
+
+Added routine:
+-------------
+nhop.f
+
+Added data file:
+---------------
+NHcont_Stancil_2019.dat
+
 ----------------------------
 ---- ACKNOWLEDGEMENTS ------
 ----------------------------

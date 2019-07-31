@@ -13,6 +13,7 @@ SOURCE = source-v19.2
 
 babsma_luobj =  \
       ../$(SOURCE)/absko.f \
+      ../$(SOURCE)/nhop.f \
       ../$(SOURCE)/babsma.f \
       ../$(SOURCE)/detabs.f \
       ../$(SOURCE)/getinfospecies.f \
