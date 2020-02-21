@@ -2,3 +2,4 @@
 	     Created new branch to make NLTE edits and test them
              Created this readme file
 	     Successfully created new branch and pushed to git
+21.02.2020 - Renamed branch from 'jgerber_lnx-d-0012_branch' to 'NLTE_branch'
