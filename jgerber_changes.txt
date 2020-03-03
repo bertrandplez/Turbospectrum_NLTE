@@ -4,3 +4,4 @@
 	     Successfully created new branch and pushed to git
 21.02.2020 - Renamed branch from 'jgerber_lnx-d-0012_branch' to 'NLTE_branch'
 03.03.2020 - Successfully pulled branch to work laptop. Testing a commit
+             Uploaded files for Ca and Mg models from MULTI. These both include a csv file with the departure coefficients, and a file with "ID, energy, configuration, and stat. weight for every level". The b-b and b-f transitions are not in this file, but Ekaterina can include them later if needed. If Mg is too difficult to use for debugging, we can use Ca.
