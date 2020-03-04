@@ -301,8 +301,8 @@ c
 c try something different
         if (.not.converge) then
           pg=pgin
-          do i=5,1,-1
-            temtemp=tem*(1.+float(i)/10.)
+          do i=10,1,-1
+            temtemp=tem*(1.+float(i)/20.)
             print*,'did not converge at T=',tem,' trying ',temtemp
             call die_pe(temtemp,pe,pg,found,converge,niter,skiprelim)
           enddo
