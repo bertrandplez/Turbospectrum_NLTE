@@ -54,6 +54,10 @@
       CHARACTER*20 LELE
       real newvoigt
 
+* special version NLTE
+      logical nlte_species
+      integer iii,ilevlo,ilevup
+
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
      &             GAMRAD,ALOGC6,ION
@@ -377,7 +381,6 @@ cc     &     RECL=412)
       call makeabund(overall,alpha,helium,rabund,sabund,fixabund,
      &                  abund,amass,aname,isotopfrac)
 
-cc      OPEN(UNIT=11,FILE=INATOM,STATUS='OLD')
       print*,'metallicity changed by ',overall,' dex'
       do i=2,92
         if (abund(i).lt.-28.) then
@@ -633,6 +636,19 @@ cc        print*,'opened file '
         read(lunit,*,end=9874) species,ion,nline
         print*,species
         read(lunit,*) comment
+*
+* find out if species is treated in NLTE
+* This is tagged in line list as the word 'NLTE' appearing anywhere in comment
+*
+        iii=1
+        nlte_species=.false.
+        do while (iii.le.len(comment)-3)
+          if (comment(iii:iii+3).eq.'NLTE') then
+            nlte_species=.true.
+          endif
+          iii=iii+1
+        enddo
+*
         call getinfospecies(species,iel,natom,atom,isotope)
 * find out if Ames H2O or Joergensen's
         if (iel.eq.10108) then
@@ -672,14 +688,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
           goto 9874
         endif
 
-*default fdamp (may be changed for each element further down)
-****        if (iel.gt.92) then
-****          fdamp=0.
-****        else
-****          fdamp=2.0
-****        endif
         g=1.
-ccc        raddmp=0.0
 * new element. we must compute more in depth
         oldpart=.false.
         symmfactor=1.e0
@@ -696,7 +705,6 @@ ccc        raddmp=0.0
 * scaled by overall, helium, etc (see options in input.f). 
 * This value may be overwritten by using ABCHANGE in input file.
 *
-* We don't read the atomic/molec data table anymore (atomda): abunp not used.
 * Partition functions
 * come now from partf and molecpartf. Chi, chi2, chi3 come from partf.f for 
 * atoms (Irwin data tables).
@@ -704,7 +712,6 @@ ccc        raddmp=0.0
 * Unsoeld recipe for vanderWaals broadening. 
 * Finally the mass is computed here.
 *
-ccc        CALL ATOMDA(IEL,LELE,CHI,CHI2,MAM,ABUNP)
 
         if (iel.le.92) then
           lele=aname(iel)
@@ -728,10 +735,8 @@ ccc        CALL ATOMDA(IEL,LELE,CHI,CHI2,MAM,ABUNP)
      &         ' isotopes: ',5i3)
         print*,comment
         if (iel.le.92) then
-          ABUL=abund(iel)
           abunp=abund(iel)
         endif
-* With Tsuji equilibrium, abund is not needed.
 *
 * Test for molecular list format
 * allows backward compatibility for pre-v14.1 format molecular line lists
@@ -747,6 +752,10 @@ ccc        CALL ATOMDA(IEL,LELE,CHI,CHI2,MAM,ABUNP)
         else
           newformat=.true.
         endif
+        if (.not.newformat) then
+          print*,'bsyn.f'
+          stop 'old line list format and NLTE. Incompatible options'
+         endif
           
 * Start wavelength loop
 *
@@ -757,7 +766,7 @@ ccc        CALL ATOMDA(IEL,LELE,CHI,CHI2,MAM,ABUNP)
 *
 ***************************************************************
 *
-      iatouca=0
+      numberoflines=0
 *
 ***************************************************************
 *
@@ -789,8 +798,15 @@ ccc        CALL ATOMDA(IEL,LELE,CHI,CHI2,MAM,ABUNP)
 * warning! xlb is real*8
 *
 * new format for molecules, identical to that for atoms, starting with v14.1
+*
+* NLTE format includes also 2 more integers for lower and upper level identification
         if (newformat) then
-          read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
+          if (nlte_species) then
+            read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup,
+     &                    ilevlo,ilevup
+          else
+            read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
+          endif
         else
 * allows backward compatibility for older format molecular line lists
           read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp
@@ -932,8 +948,6 @@ ccc          lshift(k)=1.d0-velocity(k)/2.99792458d10
 *
 * Print line information
 *
-ccc      IF(IP.GE.1) WRITE(7,990)IEL,ION,NMY,FDAMP,IINT,IMY,MAM,ABUL,
-ccc     &                       CHI,XITE
       CHIU=CHIE+3.40*3647./XLB
       if (iel.le.nat) then
         XIONP=CHI
@@ -1050,8 +1064,6 @@ cc      DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 *
       CALF=constant*F
 *
-cc      IF(FDAMP.GT.0..AND.IP.GE.1) WRITE(7,267) GAMRAD,ALOGC6
-cc      IF(IP.GE.1) WRITE(7,265) LELE,ABUL,ABUND,NTAU
       do 111 j=1,ntau
        plez(j)=n(j)*stim(j)/dnud(j)/ross(j)
        xlb_vshifted(j)=xlb*lshift(j)
@@ -1147,7 +1159,7 @@ ccc        endif
 *
 ********************** check n(contributing lines) ******************
 *
-      if (iii.gt.1) iatouca=iatouca+1
+      if (iii.gt.1) numberoflines=numberoflines+1
 *
 *********************************************************************
       istart=max(1,lindex-iii-2)
@@ -1190,8 +1202,9 @@ ccc        endif
 * end of line lists loop
 ******************************************************
 *
-      print*,'nombre de raies contribuant (environ) : ',iatouca,
-     &       ' n. total : ', iline
+      print*,'Approximate number of lines included in synthesis: ',
+     &        numberoflines
+      print*,' Total number of lines read: ', iline
 *
 ******************************************************
 9874  close(lunit)
