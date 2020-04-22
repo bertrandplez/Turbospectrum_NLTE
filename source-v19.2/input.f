@@ -10,7 +10,8 @@
       character*256 charvalue
       character*128 filmet,filmol,filwavel
       character*256 linefil,detout,inatom,inmod,inabun,inspec,
-     &              outfil,mongofil,filterfil,continopac,inpmod
+     &              outfil,mongofil,filterfil,continopac,inpmod,
+     &              modelatomfile,departurefile
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
      &        hydrovelo,pureLTE
       integer iint,k
@@ -25,7 +26,8 @@
      &                 helium,alpha,rabund,sabund,xifix,xic,mrxf,
      &                 inpmod,continopac,filwavel,hydrovelo,
      &                 xl1,xl2,del,xlmarg,xlboff,iint,xmyc,scattfrac,
-     &                 pureLTE
+     &                 pureLTE,nlte,modelatomfile,departurefile
+
       common/species/atominclude
       data atominclude 
      &   /'H ','He','Li','Be','B ','C ','N ','O ','F ','Ne',
@@ -39,6 +41,8 @@
      &    'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
      &    'Pa','U ','  ','  ','  ','  ','  ','  ','  ','  ' /
 *
+      modelatomfile=' '
+      departurefile=' '
       scattfrac=0.0
       pureLTE=.false.
       do k=1,100
@@ -67,6 +71,7 @@ ccc      inatom='DATA/atomdata-v12.1'
       outfil='syntspec/synout'
       hydrovelo=.false.
       limbdark=.false.
+      nlte=.false.
       tsuji=.true.
       spherical=.false.
       multidump=.false.
@@ -123,6 +128,13 @@ ccc      inatom='DATA/atomdata-v12.1'
           abch(iii)=fifi
           print*,iii,fifi
         enddo
+      else if (keyword(1:4).eq.'NLTE'.or.
+     &         keyword(1:4).eq.'nlte') then
+        read(charvalue,*) nlte
+      else if (keyword(1:13).eq.'MODELATOMFILE') then
+        read(charvalue,10) modelatomfile
+      else if (keyword(1:13).eq.'DEPARTUREFILE') then
+        read(charvalue,10) departurefile
       else if (keyword(1:5).eq.'TSUJI') then
         read(charvalue,*) tsuji
       else if (keyword(1:9).eq.'SPHERICAL') then

@@ -82,11 +82,16 @@ C CALCULATE THE MATRIX ELEMENTS
       IF (DEBUG) PRINT 132,XJ,SOURCE,ERROR,FJ
      & ,((PFEAU(I,K),K=1,NDP),I=1,NIMP1)
       IF (IDEBUG.GT.1) GO TO 150
-      if (computeIplus) then
-* skip iteration on S, BPz 06/06-2018
-        itm=1
-        goto 141
-      endif
+!
+! REMOVED on 1/04-2020  BPz
+!
+CCCC      if (computeIplus) then
+CCCC* skip iteration on S, BPz 06/06-2018
+CCCC        itm=1
+CCCC        goto 141
+CCCC      endif
+!
+!
 C
 C ITERATION LOOP
       DO 110 IT=1,ITMAX
@@ -98,7 +103,7 @@ C SOLVE THE CONTINUUM SCATTERING PROBLEM IN THE EDDINGTON APPROXIMATION
       CALL TRANSC
       CALL SCATTR
       IF (DEBUG) PRINT 122,EX(ISCAT),DUM,P,DTAUS
-122   FORMAT('0EX,SP1,SP2,SP3,P,DTAUS=',E10.4/(/10(1X,1P,10E12.4/)))
+122   FORMAT('0EX,SP1,SP2,SP3,P,DTAUS=',E11.4/(/10(1X,1P,10E12.4/)))
 C
 C CORRECTION TO THE SOURCE FUNCTION
       DO 120 K=1,JTAU1

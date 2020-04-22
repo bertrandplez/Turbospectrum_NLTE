@@ -33,7 +33,9 @@
       COMMON/RHOC/RHO(NDP)
 * extension for large number of wavelengths and lines (monster II)
       doubleprecision xlambda
-      common/large/ xlambda(lpoint),maxlam,ABSO(NDP,lpoint),
+      doubleprecision  source_function
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,ABSO(NDP,lpoint),
      & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
 *
 ccc      READ(12,100) MCODE,NTAU,XLS

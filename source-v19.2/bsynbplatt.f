@@ -33,11 +33,18 @@
 *
 * extension for large number of wavelengths and lines (monster II)
       doubleprecision xlambda
-      common/large/ xlambda(lpoint),maxlam,ABSO(NDP,lpoint),
+      doubleprecision source_function
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,ABSO(NDP,lpoint),
      & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
+*
 *
       real fcfc(lpoint),y1cy1c(lpoint),y1y1(nrays,lpoint),
      & xlm(lpoint)
+
+* special version NLTE
+      logical nlte
+      common /nlte_common/ nlte
 
       logical findtau1,hydrovelo
       real velocity
@@ -136,7 +143,15 @@ cc1963  continue
 ccc              x(k)=xc(k)+abso(k,j+jjj)
             x(k)=abso(k,j)
             s(k)=absos(k,j)
-            bplan(k)=bpl(T(k),xlsingle)
+*
+* NLTE case implemented for lines
+*
+            if (nlte) then
+              bplan(k)=source_function(k,j)
+            else
+              bplan(k)=bpl(T(k),xlsingle)
+            endif
+*
           enddo
 c            if (debug) then
 c              print*,' line;  lambda = ',xlambda(j)

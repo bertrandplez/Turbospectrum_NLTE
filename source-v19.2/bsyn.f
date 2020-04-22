@@ -38,10 +38,11 @@
 *
       CHARACTER*256 DETOUT,INATOM,INMOD,INLINE,INSPEC,OUTFIL,inabun,
      &              filterfil
-      character*80 filttitle,comment
+      character*80 filttitle,comment,comment_line
       character*50 MCODE
 
       real scattfrac,absfrac
+      real eqw,eqwerr
       REAL N,MA,MH,M,L,MUM,NTOT,MAM,MABUND(16),ntt
       REAL XIH,XIHM,XKHM,HJONH,HJONC,HJONN,HJONO,XNECNO
       REAL ABUVC(NDP),ABUVN(NDP),ABUVO(NDP),ABUVS(NDP),ABUVK(NDP)
@@ -51,13 +52,24 @@
      &          X(NDP),S(NDP),plez(ndp),contop(ndp)
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB
       doubleprecision xlb_vshifted(ndp),lshift(ndp)
+      real xlsingle
       CHARACTER*20 LELE
       real newvoigt
 
 * special version NLTE
-      logical nlte_species
-      integer iii,ilevlo,ilevup
-
+      logical nlte_species,nlte
+      integer iii,ilevlo,ilevup,maxlevel,iiii
+      integer ndepth
+      character*20 idlevlo,idlevup
+      parameter (maxlevel=10000)
+      real b_departure(maxlevel,ndp),taumod(ndp)
+      common /nlte_common/ nlte
+      integer modnlevel,maxmodlevel
+      parameter (maxmodlevel=2000)
+      real modenergy(maxmodlevel),modg(maxmodlevel)
+      integer modion(maxmodlevel)
+      character*40 modid(maxmodlevel)
+*
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
      &             GAMRAD,ALOGC6,ION
@@ -97,7 +109,9 @@
       character*26   species,blabla
 
       doubleprecision xlambda,dist
-      common/large/ xlambda(lpoint),maxlam,ABSO(NDP,lpoint),
+      doubleprecision  emissivity(ndp),source_function
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,ABSO(NDP,lpoint),
      & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       logical oldpart,Ames,scan2001,oldscan,Barber
       common/oldpart/oldpart
@@ -136,7 +150,7 @@
 
       logical dattsuji,datspherical,datlimbdark,databfind,
      &        datmultidump,datxifix,datmrxf,dathydrovelo,datpureLTE,
-     &        pureLTE
+     &        pureLTE,datnlte
       integer datnoffil,datncore,datmaxfil,datmihal,datiint
       real    isoch(1000),isochfact(1000),datisoch(1000),
      &        datisochfact(1000)
@@ -144,7 +158,9 @@
       character*128 datfilmet,datfilmol,datfilwavel
       character*256 datlinefil(maxfil),datdetout,
      &          datinatom,datinmod,datinabun,datcontinopac,datinpmod,
-     &          datinspec,datoutfil,datmongofil,datfilterfil
+     &          datinspec,datoutfil,datmongofil,datfilterfil,
+     &          datmodelatomfile,datdeparturefile,departurefile,
+     &          modelatomfile
       doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -159,7 +175,8 @@
      &                 datxifix,datxic,datmrxf,datinpmod,datcontinopac,
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE
+     &                 datiint,datxmyc,datscattfrac,datpureLTE,
+     &                 datnlte,datmodelatomfile,datdeparturefile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -175,7 +192,7 @@
       real absave(100),symmfactor
 ***********************************************
       integer version
-      data version /192/
+      data version /201/
 ***********************************************
       data debug/.false./
       data nat/92/
@@ -184,6 +201,7 @@
 
 ccc      external commn_handler
 
+      nlte=.false.
       tsuswitch =.false.
       Ames=.false.
       scan2001=.false.
@@ -209,18 +227,6 @@ ccc      external commn_handler
  
       call input
 
-* fraction of the line opacity to count as scattering.
-*  Remaining is counted in absorption    BPz 27/09-2002
-
-      scattfrac=datscattfrac
-      absfrac=1.0-scattfrac
-      if (scattfrac.gt.0.) then
-        print*
-        print*,' WARNING!!!!! ', scattfrac,' of the line opacity',
-     &     ' counted as scattering!!!!!'
-        print*
-      endif
-
       tsuji=dattsuji
       filmet=datfilmet
       filmol=datfilmol
@@ -243,6 +249,7 @@ ccc      external commn_handler
         diflog=1.0001
         computeIplus=.true.
       endif
+      print*,'hydrovelo, computeIplus :',hydrovelo,computeIplus
       detout=datdetout
       inatom=datinatom
       inmod=datinmod
@@ -272,6 +279,30 @@ ccc      external commn_handler
         isoch(i)=datisoch(i)
         isochfact(i)=datisochfact(i)
       enddo
+      nlte=datnlte
+      modelatomfile=datmodelatomfile
+      departurefile=datdeparturefile
+
+* fraction of the line opacity to count as scattering.
+*  Remaining is counted in absorption    BPz 27/09-2002
+* do not allow this in NLTE case
+
+      if (.not.nlte) then
+        scattfrac=datscattfrac
+        absfrac=1.0-scattfrac
+        if (scattfrac.gt.0.) then
+          print*
+          print*,' WARNING!!!!! ', scattfrac,' of the line opacity',
+     &     ' counted as scattering!!!!!'
+          print*
+        endif
+      else
+        if (scattfrac.gt.1.e-10) then
+          print*,'NLTE and setting arbitrary scattering in line'
+          print*,' are incompatible options'
+          stop 'Stop in bsyn'
+        endif
+      endif
 
       print*,tsuji,filmet(1:index(filmet,' ')),
      &       filmol(1:index(filmol,' '))
@@ -495,6 +526,7 @@ ccc          stop
         absos(k,j)=0.0
         absocont(k,j)=0.0
         absoscont(k,j)=0.0
+        source_function(k,j)=0.0
 401    continue
 400   continue
        
@@ -535,9 +567,18 @@ cc      if (xlboff.lt.1.e-6) xlboff=0.0
 *
 * initiate total extinction
       do j=1,maxlam
+        xlsingle=sngl(xlambda(j))
         do K=1,ntau
           absos(k,j)=absoscont(k,j)
           abso(k,j)=absocont(k,j)
+          if (nlte) then
+*
+* set emissivity / source function for continuum assuming LTE for continuum!
+* THIS IS NOT VALID IF CONTINUUM OPACITY IS, E.G., DUE TO A NLTE PHOTOIONIZATION
+*
+* this is actually emissivity (normalised by kappa_std)
+            source_function(k,j)=abso(k,j)*bpl(T(k),xlsingle)
+          endif
         enddo
       enddo
 *
@@ -637,17 +678,79 @@ cc        print*,'opened file '
         print*,species
         read(lunit,*) comment
 *
-* find out if species is treated in NLTE
-* This is tagged in line list as the word 'NLTE' appearing anywhere in comment
+* find out if this species is treated in NLTE
+* This is tagged in the line list as the word 'NLTE' appearing anywhere in comment
 *
         iii=1
         nlte_species=.false.
         do while (iii.le.len(comment)-3)
           if (comment(iii:iii+3).eq.'NLTE') then
             nlte_species=.true.
+*  nlte must be set to .true. if at least one species in nlte
+            if (.not.nlte) then
+              print*,'NLTE must be set to .true. in order to treat',
+     &               ' nlte species consistently'
+              stop 'Set NLTE !'
+            endif
           endif
           iii=iii+1
         enddo
+        if (nlte_species) then
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*
+* read model atom file with level identifications
+! unit number to open, file name, max number of levels, number of level read, energy of the levels
+          print*,'modelatomfile = ',modelatomfile
+          call read_modelatom(77,modelatomfile,maxnlevel,modnlevel,
+     &                          modenergy,modg,modion,modid)
+*
+* read departure coefficients table
+*
+          call read_departure(77,departurefile,maxlevel,modnlevel,
+     &                        ndp,ndepth,taumod,b_departure)
+! check
+!          print*,'bsyn, modnlevel ',modnlevel
+!          do iii=1,modnlevel
+!            print*,iii,(b_departure(iii,iiii),iiii=1,ndepth)
+!          enddo
+!
+! a couple of simple checks
+!
+          if (ndepth.ne.ntau) then
+            stop ' wrong model or departure file! stop in bsyn.f !'
+          else
+            do iii=1,ntau
+              if (abs(tau(iii)/taumod(iii)-1.).gt.1.e-5) then
+                do iiii=1,ntau
+                  print*,tau(iiii),taumod(iiii)
+                enddo
+                print*,'tau scales differ in model atmos and ',
+     &                 'in departure coefficient file'
+                stop 'stopping in bsyn.f'
+              endif
+            enddo
+          endif
+*
+* TEMPORARY: SET ALL DEPARTURE COEFFICIENTS TO some value for testing purposes
+* 
+!          do iiii=1,ntau
+!            do iii=1,maxlevel
+!              b_departure(iii,iiii)=float(iii)
+!            enddo
+!          enddo
+* END OF TEMPORARY
+*
+*
+        else
+! LTE case
+          do iiii=1,ntau
+            do iii=1,maxlevel
+              b_departure(iii,iiii)=1.0
+            enddo
+          enddo
+        endif
+*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
         call getinfospecies(species,iel,natom,atom,isotope)
 * find out if Ames H2O or Joergensen's
@@ -761,6 +864,9 @@ cc          call Hlineadd(lunit,nline,xlboff)
 *
       ILINE=0
       NALLIN=NALLIN+NLINE
+
+      ilevlo=1
+      ilevup=2  ! dummy values
 *
 * NLINE is the number of lines of the element IEL.
 *
@@ -803,12 +909,25 @@ cc          call Hlineadd(lunit,nline,xlboff)
         if (newformat) then
           if (nlte_species) then
             read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup,
-     &                    ilevlo,ilevup
+     &                    eqw,eqwerr,comment_line,
+     &                    ilevlo,ilevup,idlevlo,idlevup
+            if (ilevlo.gt.maxlevel.or.ilevup.gt.maxlevel) then
+              print*,'number of levels greater than maxlevel = ',maxlevel
+              stop 'bsyn.f; increase maxlevel!'
+            else if (ilevlo.lt.1.or.ilevup.lt.1) then
+              stop 'bsyn.f; level identification is wrong'
+            endif
           else
             read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
+            ilevlo=1
+            ilevup=2  ! dummy values
           endif
         else
 * allows backward compatibility for older format molecular line lists
+          if (nlte_species) then
+            print*,' Bsyn: old format incompatible with NLTE line lists'
+            stop
+          endif
           read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp
         endif
 *
@@ -869,7 +988,7 @@ cc            endif
           enddo
           call partffordepth(ntau,t,lele,fpartition)
         else 
-* For K I line scattering **********************************
+* TEST For K I line scattering **********************************
           if (iel.eq.19.and.ion.eq.1) then
             scattfrac=0.0
             absfrac=1.0-scattfrac
@@ -941,7 +1060,6 @@ ccc          lshift(k)=1.d0-velocity(k)/2.99792458d10
               print*,'isotopfrac =',isotopfrac(atom(i),isotope(i))
             endif
           enddo
-***          ntot(k)=max(ntot(k),1.e-30)
         enddo
  
       endif
@@ -1047,7 +1165,6 @@ ccc        recipe='T'
       CALL DEPTH(IEL)
       IELP=IEL
       IONP=ION
-cc      IF(IP.GE.1) WRITE(7,230)
 cc      DBVK=XL*1.E-05
 cc      DO 6 JJ=1,NTAU,10
 cc        DBV=DBVK*DNUD(JJ)
@@ -1065,7 +1182,16 @@ cc      DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
       CALF=constant*F
 *
       do 111 j=1,ntau
-       plez(j)=n(j)*stim(j)/dnud(j)/ross(j)
+       if (nlte) then
+         plez(j)=n(j)*b_departure(ilevlo,j)*
+     &           (1.+ (stim(j)-1.)*
+     &              b_departure(ilevup,j)/b_departure(ilevlo,j))/
+     &            dnud(j)/ross(j)
+         emissivity(j)=n(j)*stim(j)/dnud(j)/ross(j)*
+     &                 b_departure(ilevup,j)
+       else
+         plez(j)=n(j)*stim(j)/dnud(j)/ross(j)
+       endif
        xlb_vshifted(j)=xlb*lshift(j)
 111   continue
 *
@@ -1079,6 +1205,7 @@ ccc      print*,xlb
           contop(k)=absocont(k,1)
        enddo 
        do 222 i=1,maxlam
+         xlsingle=sngl(xlambda(i))
          xkmax=0.
          do 333 j=1,ntau
           vt=(xlambda(i)-xlb_vshifted(j))*1.d-8
@@ -1087,6 +1214,16 @@ ccc      print*,xlb
 cc           CALL VOIGT(A(j),V,HVOIGT)
            hvoigt=newvoigt(a(j),v)
            l=calf*hvoigt*plez(j)
+*
+* NLTE
+           if (nlte) then
+* source_function is emissivity here (normalised by standard opacity, i.e. ross()). 
+* It still needs to be divided by absorption (i.e. by abso(), which is also normalised by std op)
+             source_function(j,i)=source_function(j,i)+
+     &            emissivity(j)*bpl(T(j),xlsingle)*calf*hvoigt
+           endif
+* end of NLTE
+*
            ABSO(j,i)=ABSO(j,i)+l*absfrac
            ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
 * we compare the line absorption to the continuum x at the rightmost
@@ -1109,6 +1246,7 @@ cc           CALL VOIGT(A(j),V,HVOIGT)
       enddo 
       iii=0
       do 2 i=lindex,maxlam
+         xlsingle=sngl(xlambda(i))
        xkmax=0.
        iii=iii+1
        do 3 j=1,ntau
@@ -1118,6 +1256,15 @@ cc           CALL VOIGT(A(j),V,HVOIGT)
 cc        CALL VOIGT(A(j),V,HVOIGT)
         hvoigt=newvoigt(a(j),v)
         l=calf*hvoigt*plez(j)
+*
+* NLTE
+           if (nlte) then
+* source_function is emissivity here. It still needs to be divided by absorption
+             source_function(j,i)=source_function(j,i)+
+     &            emissivity(j)*bpl(T(j),xlsingle)*calf*hvoigt
+           endif
+* end of NLTE
+*
         ABSO(j,i)=ABSO(j,i)+l*absfrac
         ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
         xkmax=max(xkmax,l/contop(j))
@@ -1133,6 +1280,7 @@ ccc        endif
 * 1) the line lies towards the end of the wavelength array
 * 2) the line encompasses the whole array
       do 422 i=lindex-1,1,-1
+         xlsingle=sngl(xlambda(i))
        xkmax=0.
        do 433 j=1,ntau
         vt=(xlb_vshifted(j)-xlambda(i))*1.d-8
@@ -1141,6 +1289,15 @@ ccc        endif
 cc        CALL VOIGT(A(j),V,HVOIGT)
         hvoigt=newvoigt(a(j),v)
         l=calf*hvoigt*plez(j)
+*
+* NLTE
+           if (nlte) then
+* source_function is emissivity here. It still needs to be divided by absorption
+             source_function(j,i)=source_function(j,i)+
+     &            emissivity(j)*bpl(T(j),xlsingle)*calf*hvoigt
+           endif
+* end of NLTE
+*
         ABSO(j,i)=ABSO(j,i)+l*absfrac
         ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
         xkmax=max(xkmax,l/contop(j))
@@ -1165,6 +1322,7 @@ ccc        endif
       istart=max(1,lindex-iii-2)
 ccc      print*,istart,lindex-1
       do 22 i=istart,lindex-1
+         xlsingle=sngl(xlambda(i))
        do 33 j=1,ntau
         vt=(xlb_vshifted(j)-xlambda(i))*1.d-8
         vt=c*vt/xl**2
@@ -1172,12 +1330,17 @@ ccc      print*,istart,lindex-1
 cc        CALL VOIGT(A(j),V,HVOIGT)
         hvoigt=newvoigt(a(j),v)
         l=calf*hvoigt*plez(j)
+*
+* NLTE
+           if (nlte) then
+* source_function is emissivity here. It still needs to be divided by absorption
+             source_function(j,i)=source_function(j,i)+
+     &            emissivity(j)*bpl(T(j),xlsingle)*calf*hvoigt
+           endif
+* end of NLTE
+*
         ABSO(j,i)=ABSO(j,i)+l*absfrac
         ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
-*
-ccc        if(iprint.eq.1.and.j.eq.1) then
-ccc         print*,xlambda(i),hvoigt,xkmax,a(1),v
-ccc        endif
 *
 33     continue
 22    continue
@@ -1215,31 +1378,36 @@ ccc        endif
      &       ' AND',F10.3,' A CONSIDERED',/,'  CENTRAL WAVELENGTH=',
      &       F10.3,' A')
 *
+* NLTE
+* 
+      if (nlte) then
+* compute source function for lines
+        do j=1,maxlam
+          xlsingle=sngl(xlambda(j))
+          do k=1,ntau
+***********
+            if (source_function(k,j)/abso(k,j)/bpl(T(k),xlsingle)-1.0
+     &         .gt.0.01) then
+              print*,'S and B differ (1%) ',xlsingle,k,
+     &                source_function(k,j)/abso(k,j),
+     &                bpl(T(k),xlsingle)
+            endif
+***********
+*
+* now source function is the source function (line + continuum absorption)
+*
+            source_function(k,j)=source_function(k,j)/abso(k,j)
+*
+          enddo
+        enddo
+      endif
+*
+* end of NLTE
+*
       call clock
       print*, 'now solve'
       print*,nallin,' lines in the interval'
-ccc      print*,icount1,' slow voigt',icount2,' nordlund',
-ccc     & icount3,' quick',
-ccc     &   icount4,' look-up table'
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-c        print*,'CHECK kappa !!'
-c        do j=1,maxlam
-c          if (abs(xlambda(j)-5240.41d0).lt.1.d-4.or.
-c     &        abs(xlambda(j)-5242.49d0).lt.1.d-4.or.
-c     &        abs(xlambda(j)-5241.62d0).lt.1.d-4)  then
-c            print*,'lambda=',xlambda(j)
-c            print*,'  K  log(chi) log(kappa) log(sigma)'
-c            do k=1,ntau
-c              print*,k,T(k),log10(ro(k)),
-c     &          log10((abso(k,j)+absos(k,j))*ross(k)),
-c     &          log10(abso(k,j)*ross(k)),
-c     &          log10(absos(k,j)*ross(k))
-c            enddo
-c          endif
-c        enddo
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+*
       if (.not.multidump) then
         if (spherical) then
           CALL BSYNB(NALLIN)
@@ -1322,6 +1490,6 @@ c        enddo
   990 FORMAT(' INPUT PARAMETERS:'/' IEL=',I3,
      & ' ION=',I1,' NMY=',I1,' FDAMP=',F3.1,' IINT=',I1,
      & ' IMY=',I1,' MA=',F6.2,' ABUND=',F4.2,' CHI=',F5.2,' XITE=',
-     & 1PE8.2)
+     & 1PE9.2)
 *
       END

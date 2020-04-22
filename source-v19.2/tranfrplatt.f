@@ -59,8 +59,8 @@
       C(I)=2.*A
       T(I)=TAU(1)*(X(1)+S(1))/XMU(I)
       IF(T(I).GT.70.) GOTO 700
-      EX(I)=T(I)*(1.-.5*T(I)*(1.-.3333*T(I)))
-      IF(T(I).GT.0.1) EX(I)=1.-EXP(-T(I))
+      EX(I)=T(I)*(1.-.5*T(I)*(1.-T(I)/3.*(1.-T(i)/4.)))
+      IF(T(I).GT.0.01) EX(I)=1.-EXP(-T(I))
       GOTO 701
   700 EX(I)=1.
   701 CONTINUE

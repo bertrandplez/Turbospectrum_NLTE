@@ -12,6 +12,7 @@
      &        nmy,nlbldu,iint,iweak,lunit,maxlam,ll,
      ,        jlcont, nlcont
       doubleprecision ionpot,wave,xl1,xl2,del,xlboff,xlambda
+      doubleprecision source_function
 
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
@@ -34,9 +35,9 @@
       common /orderedpress/ presneutral(ndp,100),presion(ndp,100),
      &                      presion2(ndp,100),presion3(ndp,100)
       common /pieces/ xl1,xl2,del,eps,nmy,nlbldu,iint,xmyc,iweak
-      common /large/ xlambda(lpoint),maxlam,abso(ndp,lpoint),
-     &               absos(ndp,lpoint),absocont(ndp,lpoint),
-     &               absoscont(ndp,lpoint)
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,abso(ndp,lpoint),
+     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       common/rossc/ xkapr(ndp),cross(ndp)
       common/continuum/nlcont,jlcont(lpoint)
       

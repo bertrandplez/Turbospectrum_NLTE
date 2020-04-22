@@ -65,8 +65,10 @@ C K=1
       B=A**2
       SP2(1,I)=1.+2.*A
       SP3(1,I)=-2.*B
-      EX(I)=TAUT(1)*(1.-0.5*TAUT(1)*(1.-0.333333*TAUT(1)))
-      IF (TAUT(1).GT.0.1) EX(I)=1.-EXP(-TAUT(1))
+      EX(I)=TAUT(1)*(1.-0.5*TAUT(1)*(1.-TAUT(1)/3.)*(1.-taut(1)/4.))
+      IF (TAUT(1).GT.0.01) then
+        EX(I)=1.-EXP(-TAUT(1))
+      endif
       SP2(1,I)=SP2(1,I)/(1.+2.*A*EX(I))
       SP3(1,I)=SP3(1,I)/(1.+2.*A*EX(I))
 C
@@ -311,6 +313,8 @@ C SURFACE FLUX
       DO 220 I=1,NMU
 220   FUN(I)=-XMU(I,1)*YSURF(I)
       HSURF=0.5*TRQUA2(NMU,XMU,FUN,DMU,DER)
+
+cc      Print*,'check surf flux:',hsurf/xh(1)
       RETURN
 C------------------------------------------------------------------
 C
