@@ -30,6 +30,10 @@
       COMMON/TAUC/ TAU(ndp),DTAULN(ndp),NTAU
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
       COMMON/ROSSC/ ROSS(NDP),cross(ndp)
+!
+      COMMON/SPACE3/ SOURCEplatt(ndp),ERROR(ndp),
+     &               tomatch(7*nrays*ndp+8*ndp+1+3*nrays)
+!
 *
 * extension for large number of wavelengths and lines (monster II)
       doubleprecision xlambda
@@ -98,25 +102,31 @@
         do k=1,ntau
           x(k)=absocont(k,j)
           s(k)=absoscont(k,j)
-          bplan(k)=bpl(T(k),xlsingle)
+*
+* NLTE case implemented for continuum
+*
+          if (nlte) then
+! test            bplan(k)=source_function(k,j)
+            bplan(k)=bpl(T(k),xlsingle)
+          else
+            bplan(k)=bpl(T(k),xlsingle)
+          endif
+*
         enddo
-cc      do 1963 jc=1,nlcont
-cc        READ(14,rec=jc) MCODE,idum,xlm(jc),BPLAN,XC,S,XI
-cc        if (debug) then
-cc          print*,'bsynbplatt read 14 ',mcode,jc,idum,xlm(jc)
-cc          print*,' XC     S     BPlan'
-cc          do k=1,ntau
-cc            print*,xc(k),s(k),bplan(k)
-cc          enddo
-cc        endif
-cc      DO 9 K=1,NTAU
-cc        X(K)=XC(K)
-!        if (abs(xlsingle-5001.0).lt.1.e-4.and.k.eq.61) then
-!           print*,'k',k,'kappa cont',x(k)*ross(k),s(k)*ross(k)
-!        endif
-cc    9 CONTINUE
        
+        do k=1,ntau
+         write(59,*) xlsingle,k,bplan(k)
+        enddo
+
         call traneqplatt(0)
+
+!        do k=1,ntau
+!          if (abs(source_function(k,j)/sourceplatt(k)-1.0).gt.
+!     &         0.001) then
+!            print*,'source differ',xlsingle,k,source_function(k,j),
+!     &          sourceplatt(k)
+!          endif
+!        enddo
         Y1CY1C(j)=Y1(NMY)
         FCFC(j)=4.*HSURF*pi
 !        IF(IINT.LE.0) WRITE(7,204) fcFC(j),xlsingle
@@ -140,31 +150,46 @@ cc1963  continue
         if(iweak.le.0.or.iint.le.0) then
           do k=1,ntau
 * the continuum opacity is already included in abso
-ccc              x(k)=xc(k)+abso(k,j+jjj)
-            x(k)=abso(k,j)
-            s(k)=absos(k,j)
+! test : it is not included anymore
+
+            x(k)=abso(k,j)+absocont(k,j)
+! test            x(k)=abso(k,j)
+! test 
+            s(k)=absos(k,j)+absoscont(k,j)
 *
 * NLTE case implemented for lines
 *
             if (nlte) then
-              bplan(k)=source_function(k,j)
+!              bplan(k)=source_function(k,j)
+! test: compute total source function, for lines and continuum
+             bplan(k)=(source_function(k,j)*abso(k,j)+
+     &                 bpl(T(k),xlsingle)*absocont(k,j))/x(k)
             else
               bplan(k)=bpl(T(k),xlsingle)
             endif
 *
           enddo
-c            if (debug) then
-c              print*,' line;  lambda = ',xlambda(j)
-c            endif
-cc            if (abs(xlambda(j)-5240.41d0).lt.1.d-4.or.
-cc     &          abs(xlambda(j)-5242.49d0).lt.1.d-4.or.
-cc     &          abs(xlambda(j)-5241.62d0).lt.1.d-4)  then
-cc              print*,'lambda = ',xlambda(j),' calling traneqplatt',idebug
-cc              idebug=1
-cc            else
+
           idebug=0
-cc            endif
+       
+        do k=1,ntau
+         write(60,*) xlsingle,k,bplan(k)
+        enddo
+        if (abs(xlsingle-5349.40).lt.0.005) then
+          print*,'bsynbplatt final check', xlsingle,
+     &       source_function(10,j),abso(10,j),bpl(T(10),xlsingle),
+     &       absocont(10,j),x(10),s(10)
+        endif
+
           call traneqplatt(idebug)
+
+!        do k=1,ntau
+!          if (abs(source_function(k,j)/sourceplatt(k)-1.0).gt.
+!     &         0.001) then
+!            print*,'source differ',xlsingle,k,source_function(k,j),
+!     &          sourceplatt(k)
+!          endif
+!        enddo
 
 * starting with version 12.1, flux is not divided by pi anymore.
 * F_lambda integrated over lambda is sigma.Teff^4
@@ -176,6 +201,7 @@ cc            endif
           endif
           prof(j)=1.-prf
         else
+! NOT MADE FOR NLTE!!!!!!!!
           do k=1,ntau
             etad(k)=abso(k,j)
             maxetad=max(maxetad,etad(k))

@@ -12,36 +12,45 @@
       implicit none
       character departurefile*256,oneline*256
       integer iunit,modnlevel,i,ndepth_read,j,ndepth,maxlevel
-      real taumod(ndepth),b_departure(maxlevel,ndepth)
+      integer modnlevel_read
+      real taumod(ndepth),b_departure(ndepth,maxlevel)
       logical header
 
-      open(iunit,file=departurefile,status='old')
+      open(iunit,file=departurefile,form='unformatted',status='old',
+     &     convert='little_endian')
       header=.true.
-      do while (header)
-        read(iunit,10,end=99) oneline
-        if (oneline(1:1).ne.'!') then
-          header=.false.
-          backspace(iunit)
-        endif
-      enddo
-      i=1
-      do while (.true.)
-        if (i.gt.ndepth) then
-          print*,' more depth points in departure file than can ',
-     &           'be accomodated in read_departure.f !'
-          stop 'Stopping here!'
-        endif
-        read(iunit,*,end=99) taumod(i),(b_departure(j,i),j=1,modnlevel)
-        taumod(i)=10.**taumod(i)
-        i=i+1
+      read(iunit) ndepth_read
+      print*,'read_departure, ndepth ',ndepth_read
+      read(iunit) modnlevel_read
+      print*,'read_departure, nlevel ',modnlevel_read
+
+      if (ndepth.lt.ndepth_read) then
+        print*,'ndepth in departure file ',
+     &     ndepth_read,' is too large'
+        print*,'increase dimension!'
+        stop 'read_departure.f'
+      endif
+      if (modnlevel.ne.modnlevel_read) then
+        print*,'nlevel in atom is',modnlevel,'in departure file ',
+     &     modnlevel_read
+        print*,'check consistency!'
+        stop 'read_departure.f'
+      endif
+
+      do i=1,ndepth_read
+        read(iunit) taumod(i)
       enddo
 
-10    format(a)
-99    ndepth_read=i-1
-      print*,'read departure coefficients for ',i,
+      do j=1,modnlevel
+        do i=1,ndepth_read
+          read(iunit) b_departure(i,j)
+        enddo
+      enddo
+
+      print*,'read departure coefficients for ',ndepth_read,
      &       ' depths in read_departure'
 
-      close(77)
+      close(iunit)
 
       return
       end

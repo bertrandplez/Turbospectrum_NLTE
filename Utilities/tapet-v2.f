@@ -876,9 +876,9 @@ c...v....1....v....2....v....3....v....4....v....5....v....6....v....7....v....8
  2021 format(/2x,'Sc',4x,'Ti',4x,'V',5x,'Mn',4x,'Co')
   203 FORMAT (16F6.2)
  1202 format(//'  Log. Abundances used in model calculations'/
-     &         20(2x,a2,2x))
- 1204 format(20(2x,a2,2x))
- 1203 FORMAT (20F6.2)
+     &         20(2x,a2,3x))
+ 1204 format(20(2x,a2,3x))
+ 1203 FORMAT (20F7.3)
 c...v....1....v....2....v....3....v....4....v....5....v....6....v....7....v....8
   204 FORMAT(////,'C o r r e c t i o n s   i n   t h e   l a s t   i t e
      * r a t i o n')

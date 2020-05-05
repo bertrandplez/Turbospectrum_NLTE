@@ -18,7 +18,7 @@
       COMMON /CTRAN/X(NDP),S(NDP),BPLAN(NDP),XJ(NDP),xh(NDP),XK(NDP),
      &  fillup(4*ndp+3)
       COMMON/TAUC/ TAU(ndp),DTAULN(ndp),JTAU
-      COMMON/SPACE2/ SOURCE(ndp),ERROR(ndp),DUM(3*ndp),P(ndp),
+      COMMON/SPACE3/ SOURCE(ndp),ERROR(ndp),DUM(3*ndp),P(ndp),
      &               SP1(ndp,nrays),SP2(ndp,nrays),SP3(ndp,nrays),
      &               AN(ndp),AD(ndp),BD(ndp),
      &               FACT(ndp),DSO(ndp),C(nrays),T(nrays),EX(nrays),

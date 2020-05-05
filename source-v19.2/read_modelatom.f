@@ -43,7 +43,7 @@
       enddo
 10    format(a)
 
-      close(77)
+      close(iunit)
 
       return
 

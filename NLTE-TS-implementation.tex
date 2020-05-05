@@ -150,7 +150,7 @@ Doppler-shift implemented so far for the scattering continuum opacities, and the
 
 \section{Tests}
 \subsection{Radiative transfer solver}
-\subsubsection{Direct quadrature of source function}
+\subsubsection{Direct quadrature of source function (used in case of velocity fields)}
 This solver (routine Iplus\_calc.f) computes the integral ${\int_0^{\tau_{\rm max}}s(t) exp(-t) dt}$ on the tau scale for each 
 ray. For optically thick rays it uses the diffusion approximation for the deepest point: 
 $i^+(\tau_{\rm max}) = S(\tau_{\rm max})+\frac{dS}{d\tau}(\tau_{\rm max})$.
@@ -158,7 +158,7 @@ For optically thin rays it uses an approximation of the intensity generated in t
 $i^+ = S(\tau_{\rm min}) * (1-exp(-\tau_{\rm min}))$.
 
 This routine gives slightly different results from the ordinary Feautrier routine (traneq.f). It was therefore tested against
-an analytic solution, for a source function of the form $S(tau)=\sum_0^{n_{max}}{a_i \tau^i}$, with $a_i = 1$.
+an analytic solution, for a source function of the form $S(tau)=\sum_0^{n_{max}}{a_i \tau^i}$, with $a_i = 1$, as well as against various degree 4 polynomials for the source function, including non-monotonous.
 This was tested  for different quadratures (n=1 is the shallowest depth point):
 \begin{enumerate}
 \item propagation of the intensity from the deepest point out to the surface, using the analytic expression for the integral, 
@@ -170,21 +170,21 @@ $$i^+_n=i^+_{n+1} e^{-(\tau_{n+1}-\tau_{n})}+ (S_{n+1} e^{-(\tau_{n+1}-\tau_{n})
 $$i^+(1)=\sum_1^{n_{max}}{(S_{n}e^{-\tau_n}+S_{n+1}e^{-\tau_{n+1}})(\tau_{n+1}-\tau_{n})/2}$$\label{trap}
 \end{enumerate}
 Rectangle rule for the whole integral gave larger errors.
-Various degree 4 polynomials for the source function were tested, including non-monotonous.
 With a sampling of 0.1 in $\tau$, and a range between $10^{-6}$ and $100$, method \ref{proptrap} gave better than 1\% results, with method \ref{trap} always close. Increasing the sampling to 0.2 and 0.3 increases the error to 
 3.5 and 8\% respectively.
 Method \ref{prop} shows errors in excess of 1\% in all cases, increasing above 10 or even 100\% with the lowest sampling.
 We adopt method \ref{proptrap}.
 Note that the Feautrier plane-parallel and spherical formal solvers do not always agree. Their performances degrade
-when the optical depth sampling is less tight. The PP version does not work in the optically thin case.
-The spherical version and our adopted method agree within less than a percent most of the time, and occasionally a 
+when the optical depth sampling is coarser. The PP version does not work in the optically thin case.
+The spherical version and our adopted method agree within less than a percent most of the time, and occasionally differ a 
 little more.
 \subsubsection{Static case}
 Using departure coefficients of unity recovers the Planck function for the line source function, and a spectrum identical 
 to the LTE case within rounding errors.
 
 The use of a MULTI output for a Ca model atom (106 levels) in a MARCS solar model atmosphere, leads  to
-LTE and NLTE line profile that are identical to the MULTI calculation.
+LTE and NLTE line profile that are different to the MULTI calculation, including the continuum level.
+This REMAINS UNSOLVED FOR NOW !
 
 Need to check for a case with strong scattering in the continuum, e.g. Ca\,II H and K lines in a metal-poor star.
 

@@ -62,7 +62,7 @@
       integer ndepth
       character*20 idlevlo,idlevup
       parameter (maxlevel=10000)
-      real b_departure(maxlevel,ndp),taumod(ndp)
+      real b_departure(ndp,maxlevel),taumod(ndp)
       common /nlte_common/ nlte
       integer modnlevel,maxmodlevel
       parameter (maxmodlevel=2000)
@@ -569,15 +569,19 @@ cc      if (xlboff.lt.1.e-6) xlboff=0.0
       do j=1,maxlam
         xlsingle=sngl(xlambda(j))
         do K=1,ntau
-          absos(k,j)=absoscont(k,j)
-          abso(k,j)=absocont(k,j)
+! test          absos(k,j)=absoscont(k,j)
+! test          abso(k,j)=absocont(k,j)
           if (nlte) then
 *
 * set emissivity / source function for continuum assuming LTE for continuum!
 * THIS IS NOT VALID IF CONTINUUM OPACITY IS, E.G., DUE TO A NLTE PHOTOIONIZATION
 *
 * this is actually emissivity (normalised by kappa_std)
-            source_function(k,j)=abso(k,j)*bpl(T(k),xlsingle)
+            source_function(k,j)=absocont(k,j)*bpl(T(k),xlsingle)
+
+! test : source_function is now used only for lines
+            source_function(k,j)=0.0
+! test
           endif
         enddo
       enddo
@@ -684,7 +688,8 @@ cc        print*,'opened file '
         iii=1
         nlte_species=.false.
         do while (iii.le.len(comment)-3)
-          if (comment(iii:iii+3).eq.'NLTE') then
+          if (comment(iii:iii+3).eq.'NLTE'.or.
+     &        comment(iii:iii+3).eq.'nlte') then
             nlte_species=.true.
 *  nlte must be set to .true. if at least one species in nlte
             if (.not.nlte) then
@@ -711,7 +716,7 @@ cc        print*,'opened file '
 ! check
 !          print*,'bsyn, modnlevel ',modnlevel
 !          do iii=1,modnlevel
-!            print*,iii,(b_departure(iii,iiii),iiii=1,ndepth)
+!            print*,iii,(b_departure(iiii,iii),iiii=1,ndepth)
 !          enddo
 !
 ! a couple of simple checks
@@ -733,9 +738,9 @@ cc        print*,'opened file '
 *
 * TEMPORARY: SET ALL DEPARTURE COEFFICIENTS TO some value for testing purposes
 * 
-!          do iiii=1,ntau
-!            do iii=1,maxlevel
-!              b_departure(iii,iiii)=float(iii)
+!          do iiii=1,maxlevel
+!            do iii=1,ntau
+!              b_departure(iii,iiii)=float(iiii)
 !            enddo
 !          enddo
 * END OF TEMPORARY
@@ -743,8 +748,8 @@ cc        print*,'opened file '
 *
         else
 ! LTE case
-          do iiii=1,ntau
-            do iii=1,maxlevel
+          do iiii=1,maxlevel
+            do iii=1,ntau
               b_departure(iii,iiii)=1.0
             enddo
           enddo
@@ -911,12 +916,19 @@ cc          call Hlineadd(lunit,nline,xlboff)
             read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup,
      &                    eqw,eqwerr,comment_line,
      &                    ilevlo,ilevup,idlevlo,idlevup
-            if (ilevlo.gt.maxlevel.or.ilevup.gt.maxlevel) then
-              print*,'number of levels greater than maxlevel = ',maxlevel
-              stop 'bsyn.f; increase maxlevel!'
+            if (ilevlo.gt.modnlevel.or.ilevup.gt.modnlevel) then
+              print*,'level number outside range!', ilevlo,ilevup,
+     &               ' max =',modnlevel
+              stop 'Stop in bsyn.f'
             else if (ilevlo.lt.1.or.ilevup.lt.1) then
               stop 'bsyn.f; level identification is wrong'
             endif
+! check departure coeff
+            print*,'ilevlo ilevup, lambda',ilevlo,ilevup,sngl(xlb)
+            do k=1,ntau
+               print*,k,b_departure(k,ilevlo),b_departure(k,ilevup)
+            enddo
+!
           else
             read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
             ilevlo=1
@@ -1183,12 +1195,12 @@ cc      DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 *
       do 111 j=1,ntau
        if (nlte) then
-         plez(j)=n(j)*b_departure(ilevlo,j)*
+         plez(j)=n(j)*b_departure(j,ilevlo)*
      &           (1.+ (stim(j)-1.)*
-     &              b_departure(ilevup,j)/b_departure(ilevlo,j))/
+     &              b_departure(j,ilevup)/b_departure(j,ilevlo))/
      &            dnud(j)/ross(j)
          emissivity(j)=n(j)*stim(j)/dnud(j)/ross(j)*
-     &                 b_departure(ilevup,j)
+     &                 b_departure(j,ilevup)
        else
          plez(j)=n(j)*stim(j)/dnud(j)/ross(j)
        endif
@@ -1386,16 +1398,17 @@ cc        CALL VOIGT(A(j),V,HVOIGT)
           xlsingle=sngl(xlambda(j))
           do k=1,ntau
 ***********
-            if (source_function(k,j)/abso(k,j)/bpl(T(k),xlsingle)-1.0
-     &         .gt.0.01) then
-              print*,'S and B differ (1%) ',xlsingle,k,
-     &                source_function(k,j)/abso(k,j),
-     &                bpl(T(k),xlsingle)
-            endif
+!            if (source_function(k,j)/abso(k,j)/bpl(T(k),xlsingle)-1.0
+!     &         .gt.0.01) then
+!              print*,'S and B differ (1%) ',xlsingle,k,
+!     &                source_function(k,j)/abso(k,j),
+!     &                bpl(T(k),xlsingle)
+!            endif
 ***********
 *
-* now source function is the source function (line + continuum absorption)
+* now source function is the source function for the lines
 *
+            write(61,*) xlsingle,k,source_function(k,j),abso(k,j)
             source_function(k,j)=source_function(k,j)/abso(k,j)
 *
           enddo
