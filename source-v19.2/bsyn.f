@@ -60,8 +60,11 @@
       logical nlte_species,nlte
       integer iii,ilevlo,ilevup,maxlevel,iiii
       integer ndepth
+      character header_dep1*500,header_dep2*1000
       character*20 idlevlo,idlevup
+      character nlte_specname*2
       parameter (maxlevel=10000)
+      real abundance_nlte
       real b_departure(ndp,maxlevel),taumod(ndp)
       common /nlte_common/ nlte
       integer modnlevel,maxmodlevel
@@ -707,12 +710,14 @@ cc        print*,'opened file '
 ! unit number to open, file name, max number of levels, number of level read, energy of the levels
           print*,'modelatomfile = ',modelatomfile
           call read_modelatom(77,modelatomfile,maxnlevel,modnlevel,
-     &                          modenergy,modg,modion,modid)
+     &                          modenergy,modg,modion,modid,
+     &                          nlte_specname)
 *
 * read departure coefficients table
 *
           call read_departure(77,departurefile,maxlevel,modnlevel,
-     &                        ndp,ndepth,taumod,b_departure)
+     &                        ndp,ndepth,taumod,b_departure,
+     &                    abundance_nlte,header_dep1,header_dep2)
 ! check
 !          print*,'bsyn, modnlevel ',modnlevel
 !          do iii=1,modnlevel
@@ -721,6 +726,11 @@ cc        print*,'opened file '
 !
 ! a couple of simple checks
 !
+          print*,'read departure file header '
+          print*,adjustl(trim(header_dep1))
+          print*,adjustl(trim(header_dep2))
+          print*,'NLTE abundance :',abundance_nlte
+
           if (ndepth.ne.ntau) then
             stop ' wrong model or departure file! stop in bsyn.f !'
           else
@@ -821,6 +831,24 @@ cc          call Hlineadd(lunit,nline,xlboff)
 * Finally the mass is computed here.
 *
 
+! NLTE: check model atom id:
+        if (nlte_species) then
+          if (aname(iel).ne.nlte_specname) then
+            print*,' Bsyn: NLTE species is ',aname(iel),
+     &             'but model atom is for ',nlte_specname
+            stop 'ERROR'
+          else
+! check abundance
+            if (abs(log10(abund(iel))+12.-abundance_nlte)
+     &          .gt.0.0001) then
+              print*,' Bsyn: NLTE departure coeff calculated for',
+     &               'abundance =',abundance_nlte,' while it is ',
+     &                log10(abund(iel))+12.,' here'
+              stop 'Change abundance in script! '
+            endif
+          endif
+        endif
+!
         if (iel.le.92) then
           lele=aname(iel)
         else

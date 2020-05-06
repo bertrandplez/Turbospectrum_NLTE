@@ -149,8 +149,7 @@ For the total (line + continuum) opacity, the scheme is similar, except that the
 Doppler-shift implemented so far for the scattering continuum opacities, and the source function is not iterated}.
 
 \section{Tests}
-\subsection{Radiative transfer solver}
-\subsubsection{Direct quadrature of source function (used in case of velocity fields)}
+\subsection{Radiative transfer solver, and direct quadrature of source function (used in case of velocity fields)}
 This solver (routine Iplus\_calc.f) computes the integral ${\int_0^{\tau_{\rm max}}s(t) exp(-t) dt}$ on the tau scale for each 
 ray. For optically thick rays it uses the diffusion approximation for the deepest point: 
 $i^+(\tau_{\rm max}) = S(\tau_{\rm max})+\frac{dS}{d\tau}(\tau_{\rm max})$.
@@ -178,21 +177,23 @@ Note that the Feautrier plane-parallel and spherical formal solvers do not alway
 when the optical depth sampling is coarser. The PP version does not work in the optically thin case.
 The spherical version and our adopted method agree within less than a percent most of the time, and occasionally differ a 
 little more.
-\subsubsection{Static case}
+
+\subsection{Test of the NLTE implementation in the static case}
+
+\subsubsection{NLTE case with departure coefficients set to 1}
+
 Using departure coefficients of unity recovers the Planck function for the line source function, and a spectrum identical 
 to the LTE case within rounding errors.
 
+\subsubsection{Test with a model atom}
+
 The use of a MULTI output for a Ca model atom (106 levels) in a MARCS solar model atmosphere, leads  to
-LTE and NLTE line profile that are different to the MULTI calculation, including the continuum level.
-This REMAINS UNSOLVED FOR NOW !
+NLTE and LTE line profiles that are identical to the MULTI calculation. The continuum levels are identical as well (MULTI
+gives $F_\nu$, while TS calculates $F_\lambda$).
+
 
 Need to check for a case with strong scattering in the continuum, e.g. Ca\,II H and K lines in a metal-poor star.
 
-\subsubsection{Non-zero velocities case}
-\subsection{NLTE case with departure coefficients set to 1}
-\subsection{Static NLTE case}
-
-TEST if iteration of source function must be done or not.
 
 \subsection{non-zero velocity NLTE case}
 \end{document}

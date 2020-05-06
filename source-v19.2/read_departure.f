@@ -1,6 +1,7 @@
 !
       subroutine read_departure(iunit,departurefile,maxlevel,modnlevel,
-     &                   ndepth,ndepth_read,taumod,b_departure)
+     &                   ndepth,ndepth_read,taumod,b_departure,
+     &                   abundance_nlte,header_dep1,header_dep2)
 !
 ! read NLTE departure coefficients for one model atom, and one atmosphere model
 ! created by BPlez 17/04-2020
@@ -11,14 +12,17 @@
 !
       implicit none
       character departurefile*256,oneline*256
+      character header_dep1*500,header_dep2*1000
       integer iunit,modnlevel,i,ndepth_read,j,ndepth,maxlevel
       integer modnlevel_read
       real taumod(ndepth),b_departure(ndepth,maxlevel)
-      logical header
+      real abundance_nlte
 
       open(iunit,file=departurefile,form='unformatted',status='old',
      &     convert='little_endian')
-      header=.true.
+      read(iunit) header_dep1
+      read(iunit) abundance_nlte
+      read(iunit) header_dep2
       read(iunit) ndepth_read
       print*,'read_departure, ndepth ',ndepth_read
       read(iunit) modnlevel_read

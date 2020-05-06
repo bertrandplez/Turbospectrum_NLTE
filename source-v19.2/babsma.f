@@ -762,8 +762,8 @@ cc1963        format(i3,2x,6(e12.0))
             read(imod,*) tau(k),t(k),pe(k),velocity(k),xi(k)
             tau(k)=10.**tau(k)
             pe(k)=pe(k)*T(k)*kboltz
-            velocity(k)=velocity(k)*1.e5
-            xi(k)=xi(k)*1.e5
+            velocity(k)=velocity(k)*1.e5        ! cm/s
+            xi(k)=xi(k)                         ! km/s
           enddo
 ***********************************************
         else

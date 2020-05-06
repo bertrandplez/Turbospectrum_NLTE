@@ -1,6 +1,7 @@
 !
       subroutine read_modelatom(iunit,modelatomfile,maxn,modnlevel,
-     &                          modenergy,modg,modion,modid)
+     &                          modenergy,modg,modion,modid,
+     &                          species)
 !
 ! read NLTE model atom
 ! created by BPlez 15/04-2020
@@ -11,7 +12,7 @@
 !
       implicit none
       integer maxn
-      character modelatomfile*256,oneline*256,species*4
+      character modelatomfile*256,oneline*256,species*2
       character modid(maxn)*40
       integer iunit,modnlevel,modion(maxn),i
       real modenergy(maxn),abundance,mass,modg(maxn)
