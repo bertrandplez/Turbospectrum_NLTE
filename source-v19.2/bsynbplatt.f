@@ -114,9 +114,9 @@
 *
         enddo
        
-        do k=1,ntau
-         write(59,*) xlsingle,k,bplan(k)
-        enddo
+!        do k=1,ntau
+!         write(59,*) xlsingle,k,bplan(k)
+!        enddo
 
         call traneqplatt(0)
 
@@ -172,9 +172,9 @@ cc1963  continue
 
           idebug=0
        
-        do k=1,ntau
-         write(60,*) xlsingle,k,bplan(k)
-        enddo
+!        do k=1,ntau
+!         write(60,*) xlsingle,k,bplan(k)
+!        enddo
         if (abs(xlsingle-5349.40).lt.0.005) then
           print*,'bsynbplatt final check', xlsingle,
      &       source_function(10,j),abso(10,j),bpl(T(10),xlsingle),

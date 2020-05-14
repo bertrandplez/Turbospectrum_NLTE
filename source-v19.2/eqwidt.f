@@ -39,12 +39,12 @@
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB,step
       doubleprecision DLAMB0,DOPPLC,DXLAMB,xlb_vshifted(ndp),lshift(ndp)
       CHARACTER*20 LELE
-      real newvoigt
+      real newvoigt,gamst
       logical formatlong
 
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
-     &             GAMRAD,ALOGC6,ION
+     &             GAMRAD,ALOGC6,ION,gamst
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),NTAU
       logical hydrovelo,firstiter,strongflag,outofrange,notconvflag(3),
      &        infoonly
