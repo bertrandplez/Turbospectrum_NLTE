@@ -65,7 +65,7 @@
       character nlte_specname*2
       parameter (maxlevel=10000)
       real abundance_nlte,gamst
-      real b_departure(ndp,maxlevel),taumod(ndp)
+      real b_departure(ndp,0:maxlevel),taumod(ndp)
       common /nlte_common/ nlte
       integer modnlevel,maxmodlevel
       parameter (maxmodlevel=2000)
@@ -748,7 +748,7 @@ cc        print*,'opened file '
 *
 * TEMPORARY: SET ALL DEPARTURE COEFFICIENTS TO some value for testing purposes
 * 
-!          do iiii=1,maxlevel
+!          do iiii=0,maxlevel
 !            do iii=1,ntau
 !              b_departure(iii,iiii)=float(iiii)
 !            enddo
@@ -758,7 +758,7 @@ cc        print*,'opened file '
 *
         else
 ! LTE case
-          do iiii=1,maxlevel
+          do iiii=0,maxlevel
             do iii=1,ntau
               b_departure(iii,iiii)=1.0
             enddo
@@ -968,8 +968,14 @@ cc          call Hlineadd(lunit,nline,xlboff)
               print*,'level number outside range!', ilevlo,ilevup,
      &               ' max =',modnlevel
               stop 'Stop in bsyn.f'
-            else if (ilevlo.lt.1.or.ilevup.lt.1) then
-              stop 'bsyn.f; level identification is wrong'
+            else if (ilevlo.eq.0.or.ilevup.eq.0) then
+              print*,'unidentified level ilevlo=',ilevlo,'ilevup=',
+     &               ilevup
+              print*,'wavelength=',sngl(xlb)
+              print*,'continuing with departure coefficient = 1. ',
+     &               'for that level'
+            else if (ilevlo.lt.0.or.ilevup.lt.0) then
+              stop 'bsyn.f; level identification (<0) is wrong'
             endif
 ! check departure coeff
             print*,'ilevlo ilevup, lambda',ilevlo,ilevup,sngl(xlb)

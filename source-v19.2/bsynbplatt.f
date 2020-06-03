@@ -149,8 +149,7 @@ cc1963  continue
 
         if(iweak.le.0.or.iint.le.0) then
           do k=1,ntau
-* the continuum opacity is already included in abso
-! test : it is not included anymore
+! the continuum opacity is not included in abso
 
             x(k)=abso(k,j)+absocont(k,j)
 ! test            x(k)=abso(k,j)

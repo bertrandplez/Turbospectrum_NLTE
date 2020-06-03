@@ -15,7 +15,7 @@
       character header_dep1*500,header_dep2*1000
       integer iunit,modnlevel,i,ndepth_read,j,ndepth,maxlevel
       integer modnlevel_read
-      real taumod(ndepth),b_departure(ndepth,maxlevel)
+      real taumod(ndepth),b_departure(ndepth,0:maxlevel)
       real abundance_nlte
 
       open(iunit,file=departurefile,form='unformatted',status='old',
@@ -43,6 +43,8 @@
 
       do i=1,ndepth_read
         read(iunit) taumod(i)
+! set departure coefficient to 1 for unidentified levels
+        b_departure(i,0)=1.0
       enddo
 
       do j=1,modnlevel

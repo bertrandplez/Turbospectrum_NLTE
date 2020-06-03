@@ -136,10 +136,16 @@ ccc      if(iweak.gt.0) write(7,202) eps
           s(k)=absoscont(k,j)
           xlsingle=xlambda(j)
 *
-* For continuum we have the Planck function, even in the NLTE case.
-* This is OK if we don't have NLTE for the species contributing to the continuum.
-* 
-          bplan(k)=bpl(T(k),xlsingle)
+* NLTE case implemented for continuum
+*
+          if (nlte) then
+! test            bplan(k)=source_function(k,j)
+* Using the Planck function is OK if we don't have NLTE for the species contributing to the continuum.
+*
+            bplan(k)=bpl(T(k),xlsingle)
+          else
+            bplan(k)=bpl(T(k),xlsingle)
+          endif
 *
         enddo
         if (debug) then
@@ -326,14 +332,18 @@ C
       numb=0
       do j=1,maxlam
         do k=1,ntau
-          x(k)=abso(k,j)
-          s(k)=absos(k,j)
+! the continuum opacity is not included in abso
+
+          x(k)=abso(k,j)+absocont(k,j)
+          s(k)=absos(k,j)+absoscont(k,j)
           xlsingle=xlambda(j)
 *
 * NLTE case implemented for lines
 *
           if (nlte) then
-            bplan(k)=source_function(k,j)
+!            bplan(k)=source_function(k,j)
+            bplan(k)=(source_function(k,j)*abso(k,j)+
+     &                 bpl(T(k),xlsingle)*absocont(k,j))/x(k)
           else
             bplan(k)=bpl(T(k),xlsingle)
           endif
