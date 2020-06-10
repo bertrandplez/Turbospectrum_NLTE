@@ -129,7 +129,7 @@ cc      data edge/ 912.00, 3647.98, 8209.26, 14591.99, 22800.22, 32923.98/ ! vac
 cc      data edge /912., 3647., 8207., 14588., 22794., 32915./
 cc* air edges from continuous opacity file.
       integer version
-      data version /192/
+      data version /201/
       data kboltz / 1.3806e-16 /
       data mh / 1.660e-24 /
 
