@@ -28,6 +28,7 @@
 *            gamrad/(2.pi.c)=deltanu (cm-1); gamrad/(2.pi)=deltanu (Hz)
 *   ALOGC6 IS UNSOELDS (DIFFERENCE BETWEEN THE 2 LEVELS)
 *   IJON IS THE IONIZATIN STATE OF THE LINE SPECIES (1=NEUTRAL)
+*   GAMST is the Stark broadening parameter
 *
 * ROUTINE MODIFIED FOR CANARY CODE
 *
@@ -38,7 +39,8 @@
       character*1 recipe
       REAL N,MU,MA,MH,M
       REAL NTOT,NTT
-      REAL MUM,gamvdw10000
+      REAL MUM,gamvdw10000,gamst,gamstark,xne,eudiff
+      real tempstark,chiu,eion
       doubleprecision ionpot
       DIMENSION Q(NDP),theta(ndp),xi0(ndp)
 *
@@ -46,7 +48,7 @@
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),
      &              NDEPTH
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
-     &             GAMRAD,ALOGC6,IJON
+     &             GAMRAD,ALOGC6,IJON,gamst
       COMMON/CONST/ BOLTZ,MH,H,C,E,M
       COMMON/CQ/ Q1(NDP),Q2(NDP),Q3(NDP),AQ1(3),AQ2(3),TLIM1,
      &           TLIM2,Q1LIM,Q2LIM,AQ3(3),TLIM3,Q3LIM,TQA(3)
@@ -210,6 +212,47 @@ cc          endif
           print*,'depth: recipe= ',recipe,' not implemented!'
           stop
         endif
+
+        if (idamp.ne.1) then
+! Include Stark broadening
+!
+* prepare for stark broadening for the case when gamst=0.0
+          if (ijon.eq.1) then
+            eion=chi
+          else if (ijon.eq.2) then
+            eion=chi2
+          else if (ijon.eq.3) then
+            eion=chi3
+          else
+            print*,ijon,'th stage of ionisation not foreseen !'
+            stop 'in subroutine depth.f of bsyn/eqwidt.f'
+          endif
+! XL is wavelength in cm
+          chiu=chie+3.40*3647./(xl*1.d8)
+          Eudiff=13.598*(ijon/(eion-chiu))**2
+
+* preparation of T dependent factors for the Pe loop below:
+          tempstark=(temp/10000.)**(1./6.)
+          xne=pe(i)/boltz/temp
+          if (gamst.lt.0.0) then
+            gamst=10.**gamst
+          endif
+          if(gamst.ne.0.0) then
+* temperature scaling if the Stark width was given
+            gamstark=gamst*tempstark*xne
+          else
+* C.Cowley's modification of Unsold approximation
+* Cowley C.R. 1971, The Observatroy 91, 139
+            if(ijon.eq.1) then
+              gamstark=2.26e-7*Eudiff*xne
+            else    ! ijon = 2 or 3
+              gamstark=5.42e-7*Eudiff*xne/(ijon+1.)**2
+            endif
+          endif
+          gamma=gamma+gamstark
+        endif
+! end of Stark broadening calculation
+
         a(i) = gamma/(fyrapi*dnud(i))
       enddo
 *

@@ -8,7 +8,7 @@ program faltbo
 
   integer                                            :: iprf,ii,jj,ios,isize,isize2,jmax
   integer                                            :: resample,itype,ipad,jbeg,jend,ipad2,ipad1,kk
-  real(kind=kind(1.d0))                              :: FWHM,FWHM2,somme,dlam,dlam2
+  real(kind=kind(1.d0))                              :: FWHM,FWHM2,somme,dlam,dlam2,clight
   real(kind=kind(1.d0)), allocatable, dimension(:)   :: lambda
   real(kind=kind(1.d0)), dimension(102)              :: Ftest
   real(kind=kind(1.d0)), allocatable, dimension(:)   :: lambda2,F2,dl,prof
@@ -17,6 +17,7 @@ program faltbo
   character(len=800)                                 :: inspec,outfil,command,oneline
   logical                                            :: velocity
 
+  clight = 2.99792458e5 
   resample=1
   ! read inputs and open files 
   print*,'input file ?'
@@ -99,8 +100,8 @@ program faltbo
   dlam=lambda(2)-lambda(1)
   dlam2=lambda(isize)-lambda(isize-1)
   if (velocity) then
-     ipad1=int(-50.*FWHM*lambda(1)/3.e5/dlam)+1
-     ipad2=int(-50.*FWHM*lambda(isize)/3.e5/dlam2)+1
+     ipad1=int(-50.*FWHM*lambda(1)/clight/dlam)+1
+     ipad2=int(-50.*FWHM*lambda(isize)/clight/dlam2)+1
   else
      ipad1=int(50.*FWHM/1.e3/dlam)+1
      ipad2=int(50.*FWHM/1.e3/dlam2)+1
@@ -135,8 +136,8 @@ program faltbo
        dlam=lambda(ii+1)-lambda(ii)
      endif
      if (velocity) then
-       FWHM2=-FWHM*lambda(ii)/3.e5 ! km/s -> A 
-       ipad=int(-50.*FWHM*lambda(ii)/3.e5/dlam)+1
+       FWHM2=-FWHM*lambda(ii)/clight ! km/s -> A 
+       ipad=int(-50.*FWHM*lambda(ii)/clight/dlam)+1
      else
        ipad=int(50.*FWHM/1.e3/dlam)+1
      endif

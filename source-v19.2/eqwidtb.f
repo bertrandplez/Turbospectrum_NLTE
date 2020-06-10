@@ -44,8 +44,9 @@ CCC      COMMON/CANGLE/ NMY,XMY(6),XMY2(6),WMY(6)
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
 *
 * extension for large number of wavelengths and lines (monster II)
-      doubleprecision xlambda
-      common/large/ xlambda(lpoint),maxlam,ABSO(NDP,lpoint),
+      doubleprecision xlambda,source_function
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,ABSO(NDP,lpoint),
      & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
 *
       character*256 filterfil

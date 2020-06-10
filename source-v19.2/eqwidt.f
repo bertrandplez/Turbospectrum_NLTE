@@ -39,12 +39,12 @@
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB,step
       doubleprecision DLAMB0,DOPPLC,DXLAMB,xlb_vshifted(ndp),lshift(ndp)
       CHARACTER*20 LELE
-      real newvoigt
+      real newvoigt,gamst
       logical formatlong
 
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
-     &             GAMRAD,ALOGC6,ION
+     &             GAMRAD,ALOGC6,ION,gamst
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),NTAU
       logical hydrovelo,firstiter,strongflag,outofrange,notconvflag(3),
      &        infoonly
@@ -82,8 +82,9 @@
       integer     isotope(5),atom(5)
       character*26   species,blabla
 
-      doubleprecision xlambda
-      common/large/ xlambda(lpoint),maxlam,abso(ndp,lpoint),
+      doubleprecision xlambda,source_function
+      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
+     & maxlam,ABSO(NDP,lpoint),
      & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       logical oldpart,Ames,scan2001,oldscan,Barber
       common/oldpart/oldpart
@@ -122,7 +123,8 @@
       common/rhotsu/ rhotsuji,xmytsuji,ejontsuji
 
       logical dattsuji,datspherical,datlimbdark,databfind,abfind,
-     &        datmultidump,datxifix,datmrxf,dathydrovelo,datpureLTE
+     &        datmultidump,datxifix,datmrxf,dathydrovelo,datpureLTE,
+     &        datnlte,nlte,purelte
       integer datnoffil,datncore,datmaxfil,datmihal,datiint
       real    isoch(1000),isochfact(1000),datisoch(1000),
      &        datisochfact(1000)
@@ -130,7 +132,9 @@
       character*128 datfilmet,datfilmol,datfilwavel
       character*256 datlinefil(maxfil),datdetout,
      &          datinatom,datinmod,datinabun,datcontinopac,datinpmod,
-     &          datinspec,datoutfil,datmongofil,datfilterfil
+     &          datinspec,datoutfil,datmongofil,datfilterfil,
+     &          datmodelatomfile,modelatomfile,datdeparturefile,
+     &          departurefile
       doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -145,7 +149,8 @@
      &                 datxifix,datxic,datmrxf,datinpmod,datcontinopac,
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE
+     &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
+     &                 datmodelatomfile,datdeparturefile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -162,7 +167,7 @@
 
 ******************************************
       integer version
-      data version /192/
+      data version /201/
 ******************************************
       data nat/92/
       logical newformat
@@ -238,6 +243,10 @@ ccc      external commn_handler
       xlboff=datxlboff
       iint=datiint
       xmyc=datxmyc
+      nlte=datnlte
+      purelte=datpurelte
+      departurefile=datdeparturefile
+      modelatomfile=datmodelatomfile
 
       print*,' EQWIDT CHECK: xl1= ',xl1
       print*,' EQWIDT CHECK: xl2= ',xl2
@@ -1326,6 +1335,6 @@ C one of the cases did not work.
   990 FORMAT(' INPUT PARAMETERS:'/' IEL=',I3,
      & ' ION=',I1,' NMY=',I1,' FDAMP=',F3.1,' IINT=',I1,
      & ' IMY=',I1,' MA=',F6.2,' ABUND=',F4.2,' CHI=',F5.2,' XITE=',
-     & 1PE8.2)
+     & 1PE9.2)
 *
       END

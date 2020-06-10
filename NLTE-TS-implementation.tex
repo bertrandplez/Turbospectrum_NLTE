@@ -1,0 +1,200 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}             % AMS Math
+\usepackage[T1]{fontenc}
+%\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{tablefootnote}
+\usepackage{a4wide}
+\usepackage{enumitem}
+\usepackage[font=small,skip=0pt]{caption}
+\usepackage{verbatim}
+\begin{document}
+
+
+\centerline
+{\bf NLTE implementation in Turbospectrum - Bertrand Plez - 06/01-2020}
+\centerline {Revised 07/04-2020}
+\bigskip
+
+\section{Equations}
+\noindent
+From Rutten 2003 (Eq. 2.105) the NLTE line source function is:
+\begin{equation}
+S_\lambda = \frac{j_\lambda}{\alpha_\lambda} = 
+\frac{2 h c^2}{\lambda^5} \frac{\psi/\varphi}{\frac{b_l}{b_u}e^{h\nu/kT}-\chi/\varphi} 
+\end{equation}
+and with complete redistribution ($\chi=\varphi=\psi$),
+\begin{equation}
+ S_\lambda = \frac{2 h c^2}{\lambda^5} \frac{1}{\frac{b_l}{b_u}e^{h\nu/kT}-1} = B_\lambda \frac{e^{h\nu/kT}-1}{\frac{b_l}{b_u}e^{h\nu/kT}-1}
+\end{equation}
+The bound-bound extinction is then (complete redistribution):
+\begin{equation}
+\boxed{\alpha_\lambda = \alpha_\lambda^* b_l \frac{1-\frac{b_u}{b_l}e^{-h\nu/kT}}{1-e^{-h\nu/kT}}}\label{eq-bb}
+\end{equation}
+From which the emissivity:
+\begin{equation}
+j_\lambda = \alpha_\lambda S_\lambda = \alpha_\lambda^* b_l \frac{1-\frac{b_u}{b_l}e^{-h\nu/kT}}{1-e^{-h\nu/kT}}
+B_\lambda \frac{e^{h\nu/kT}-1}{\frac{b_l}{b_u}e^{h\nu/kT}-1}
+\end{equation}
+\begin{equation}
+j_\lambda = \alpha_\lambda^* b_l B_\lambda \frac{1 - \frac{b_u}{b_l} e^{-h\nu/kT}}{\frac{b_l}{b_u} - e^{-h\nu/kT}}
+\end{equation}
+and finally: 
+\begin{equation}
+\boxed{j_\lambda = \alpha_\lambda^* b_u B_\lambda }\label{eq-jbb}
+\end{equation}
+The total source function at a given wavelength, if more than one line contributes is:
+
+\begin{equation}
+\boxed{S_\lambda=\frac{\sum{j_\lambda}}{\sum{\alpha_\lambda}}}\label{eq-Sbb}
+\end{equation}
+Similarly for the continuum:
+\begin{equation}
+\boxed{ \alpha_\lambda^{bf} = \alpha_\lambda^{bf*} b_i \frac{1-\frac{b_c}{b_i}e^{-h\nu/kT}}{1-e^{-h\nu/kT}} } \label{eq-bf}
+\end{equation}
+\begin{equation}
+\boxed{j_\lambda^{bf} = \alpha_\lambda^{bf*} b_c B_\lambda }\label{eq-jbf}
+\end{equation}
+and
+\begin{equation}
+\boxed{ \alpha_\lambda^{ff} = \alpha_\lambda^{ff*} b_c} \label{eq-ff}
+\end{equation}
+\begin{equation}
+\boxed{j_\lambda^{ff} = \alpha_\lambda^{ff*} b_c B_\lambda }\label{eq-jff}
+\end{equation}
+\begin{equation}
+S_\lambda^{ff}=B_\lambda
+\end{equation}
+
+\section{Philosophy of the implementation in Turbospectrum}
+In TS  the implementation can be done as follows:
+\begin{itemize}
+\item The identification of the upper and lower level is read from the line list, using two more variables at the end of the statement (eqwidt.f version, as bsyn.f does not have the obseqw and eqwerror):
+
+ >> read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup,obseqw,eqwerror
+
+These identifications are those of the model atom.
+
+\item The departure coefficients are read from the MULTI output file with identical level id:s.
+\item The absorption coefficient is corrected in bsyn.f (and eqwidt.f, if we plan to use it). Variable is called plez(). See loop: do 111 ...continue.
+\item The extinction coefficient is incremented: abso() only. The scattering part absos() is kept to zero. 
+Warning: abso() is normalized by the standard opacity, and is in cm$^2$/gram of stellar matter. It should either be transformed to $\alpha$ (cm$^{-1}$), or the emissivity should be given in cm$^2$/gram as well.
+\item A new array is created and incremented: emissivity().
+\item  After all lines have been scanned, and their contribution added in abso() and emissivity(), bsynb.f is called.
+\item In bsynb.f the continuum absocont() and absoscont() are computed, as well as the Planck function, 
+then traneq.f is called to solve the transport equation for the continuum. SOME THINKING NEEDED HERE. 
+Do we want to do it this way? How do we add the continuum contribution for the NLTE species?
+\item Then same thing is done including lines. In MULTI, the continuum scattering part of the source function is treated properly. We should keep it this way in TS, i.e. keep $\sigma_{cont}$ and $\kappa_{cont}$ separate. The source function can then 
+be iterated as usual in TS. CHECK that this gives the same result as MULTI. The source function for the lines
+needs to be changed from bplan() to emissivity/alpha, i.e. emissivity/abso()*ross(). 
+\end{itemize}
+
+\noindent The implementation must keep compatibility with the older line list format, and with LTE calculations. For 
+this to work a flag NLTE = .true./.false. is implemented (all departure coefficients set to one).\\
+
+\noindent One uncertain issue is the treatment of bf and ff transitions for NLTE species. We do not implement it for the
+moment.
+
+\section{Actual implementation}
+\subsection{babsma}
+Nothing was changed in the babsma.f part (computation of the continuum opacities). This can be changed later if we decide
+to implement NLTE corrections for some of the continuous opacities (photoionisation, or hydrogen opacities).
+
+\subsection{bsyn}
+In bsyn.f, a new switch is implemented (NLTE = .false. or .true.), implemented in the run-script by, e.g.\footnote{This is 
+different from the PURE-LTE logical switch which, if set 
+in both babsma and bsyn, includes all scattering into the absorption coefficient, resulting in a pure planckian source function.} 
+: 
+\begin{verbatim}'NLTE :'          '.false.'\end{verbatim}.
+If set to .true. this switch results in a special treatment of the line list, the calculation of the line opacity, and the source function. By default it is set to .false., ensuring back compatibility with previous LTE versions.
+
+\subsubsection{line list}
+In order for the NLTE information to be read from the line list, a keyword must be included in the free comment line
+that is included after the line providing the element, ionisation stage and number of lines in the line list. This comment 
+just needs to include somewhere the word NLTE.
+Then each line is read according to:
+\begin{verbatim}
+            read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup,
+     &                    comment_line,
+     &                    ilevlo,ilevup,idlevlo,idlevup
+\end{verbatim}
+With the last 4 items (2 integers and 2 character*20) being the lower and upper level number, and identifications.
+Only the number is used in the following.
+ 
+\subsubsection{departure coefficients}
+If the species is treated in NLTE, the model atom is read, and departure coefficients
+are set for all levels (new routines read\_modelatom.f and read\_departure.f). if a species is to be treated in LTE, 
+the departure coefficients are all set to 1.0.
+
+\subsubsection{line absorption and source function}
+For all lines of LTE and NLTE species the absorption coefficient is calculated as in Eq.\,\ref{eq-bb}, and the emissivity 
+ as in Eq.\,\ref{eq-jbb}. This is done at each wavelength, where the absorption for all
+contributing lines is added to the continuum absorption. The same is done for the emissivity. 
+For the continuum contributions, Eq.\,\ref{eq-bf}, \ref{eq-jbf}, \ref{eq-ff}, and \ref{eq-jff} are used, 
+with all departure coefficients set to 1.
+When all contributions have been added, the source function is calculated using Eq.\,\ref{eq-Sbb}.
+
+\subsection{Solving the radiative transfer equation}
+In the subroutine bsynb.f, the continuum radiative transfer problem is solved as usual using the Feautrier method,
+and iterating on the starting Planck source function to converge to the final $S = \frac{\kappa B + \sigma J}{\kappa + \sigma}$
+at all wavelengths. Then the line + continuum radiative transfer is solved using the NLTE source function.
+
+In case there is a velocity field, the outgoing intensities and flux are then calculated using the same source
+function, by a simple integration of S.exp(-tau). This is not strictly correct, as the source 
+function and the opacities should be Doppler-shifted. {\bf There is no iteration on the source function in that case}. 
+
+For the total (line + continuum) opacity, the scheme is similar, except that the absorption coefficient is Doppler-shifted.
+{\bf There is no 
+Doppler-shift implemented so far for the scattering continuum opacities, and the source function is not iterated}.
+
+\section{Tests}
+\subsection{Radiative transfer solver, and direct quadrature of source function (used in case of velocity fields)}
+This solver (routine Iplus\_calc.f) computes the integral ${\int_0^{\tau_{\rm max}}s(t) exp(-t) dt}$ on the tau scale for each 
+ray. For optically thick rays it uses the diffusion approximation for the deepest point: 
+$i^+(\tau_{\rm max}) = S(\tau_{\rm max})+\frac{dS}{d\tau}(\tau_{\rm max})$.
+For optically thin rays it uses an approximation of the intensity generated in the layer above $\tau_{\rm min}$: 
+$i^+ = S(\tau_{\rm min}) * (1-exp(-\tau_{\rm min}))$.
+
+This routine gives slightly different results from the ordinary Feautrier routine (traneq.f). It was therefore tested against
+an analytic solution, for a source function of the form $S(tau)=\sum_0^{n_{max}}{a_i \tau^i}$, with $a_i = 1$, as well as against various degree 4 polynomials for the source function, including non-monotonous.
+This was tested  for different quadratures (n=1 is the shallowest depth point):
+\begin{enumerate}
+\item propagation of the intensity from the deepest point out to the surface, using the analytic expression for the integral, 
+and an average of the source function in the interval: 
+$$i^+_n=I^+_{n+1} e^{-(\tau_{n+1}-\tau_{n})} + 0.5 (S_{n}+S_{n+1}) e^{-(\tau_{n+1}-\tau_{n})}$$\label{prop}
+\item propagation of the intensity, using the trapezoidal rule for the integration within each interval, i.e. approximating $Se^{-\tau}$ by an affine function within each $\tau$ interval: 
+$$i^+_n=i^+_{n+1} e^{-(\tau_{n+1}-\tau_{n})}+ (S_{n+1} e^{-(\tau_{n+1}-\tau_{n})} + S_n) (\tau_{n+1}+\tau_n)/2.$$\label{proptrap}
+\item trapezoidal rule for the whole integral: 
+$$i^+(1)=\sum_1^{n_{max}}{(S_{n}e^{-\tau_n}+S_{n+1}e^{-\tau_{n+1}})(\tau_{n+1}-\tau_{n})/2}$$\label{trap}
+\end{enumerate}
+Rectangle rule for the whole integral gave larger errors.
+With a sampling of 0.1 in $\tau$, and a range between $10^{-6}$ and $100$, method \ref{proptrap} gave better than 1\% results, with method \ref{trap} always close. Increasing the sampling to 0.2 and 0.3 increases the error to 
+3.5 and 8\% respectively.
+Method \ref{prop} shows errors in excess of 1\% in all cases, increasing above 10 or even 100\% with the lowest sampling.
+We adopt method \ref{proptrap}.
+Note that the Feautrier plane-parallel and spherical formal solvers do not always agree. Their performances degrade
+when the optical depth sampling is coarser. The PP version does not work in the optically thin case.
+The spherical version and our adopted method agree within less than a percent most of the time, and occasionally differ a 
+little more.
+
+\subsection{Test of the NLTE implementation in the static case}
+
+\subsubsection{NLTE case with departure coefficients set to 1}
+
+Using departure coefficients of unity recovers the Planck function for the line source function, and a spectrum identical 
+to the LTE case within rounding errors.
+
+\subsubsection{Test with a model atom}
+
+The use of a MULTI output for a Ca model atom (106 levels) in a MARCS solar model atmosphere, leads  to
+NLTE and LTE line profiles that are identical to the MULTI calculation. The continuum levels are identical as well (MULTI
+gives $F_\nu$, while TS calculates $F_\lambda$).
+
+
+Need to check for a case with strong scattering in the continuum, e.g. Ca\,II H and K lines in a metal-poor star.
+
+
+\subsection{non-zero velocity NLTE case}
+\end{document}
+

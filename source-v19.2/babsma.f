@@ -89,10 +89,11 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       character*128 datfilmet,datfilmol,datfilwavel
       character*256 datlinefil,datdetout,datinatom,datinmod,
      &              datinabun,datinspec,datoutfil,datmongofil,
-     &              datfilterfil,datcontinopac,datinpmod
+     &              datfilterfil,datcontinopac,datinpmod,
+     &              datmodelatomfile,datdeparturefile
       logical dattsuji,datspherical,datlimbdark,databfind,
      &        datmultidump,datxifix,datmrxf,dathydrovelo,
-     &        datpureLTE,pureLTE
+     &        datpureLTE,pureLTE,datnlte,nlte
       integer datiint
       real    datisoch(1000),datisochfact(1000),datxmyc
       doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
@@ -107,7 +108,8 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
      &                 datrabund,datsabund,datxifix,datxic,datmrxf,
      &                 datinpmod,datcontinopac,datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE
+     &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
+     &                 datmodelatomfile,datdeparturefile
 *
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -312,15 +314,11 @@ c              if (xlambda(j).gt.edge(k)) then
 * MODEL READ FROM UNIT 12, NEW MODEL DATA WRITTEN ON UNIT 13
 *
       OPEN(UNIT=IWRIT,FILE=DETOUT,STATUS='UNKNOWN')
-c,recl=4*2*200)
       OPEN(UNIT=IREAT,FILE=datcontinopac,STATUS='OLD')
       OPEN(UNIT=IMODUT,FILE=OUTMOD,STATUS='UNKNOWN')
       OPEN(UNIT=IMODUT2,FILE=outmod2,STATUS='UNKNOWN')
-c,recl=4*2*200)
       OPEN(UNIT=ISLASK,STATUS='SCRATCH',FORM='UNFORMATTED')
-c,RECL=8192)
       OPEN(UNIT=16,STATUS='SCRATCH',FORM='UNFORMATTED')
-c,RECL=16384)
 ccc      OPEN(UNIT=34,FILE='pression.dat',STATUS='UNKNOWN')
 
 **** input parameter read. Now read model.
@@ -435,9 +433,11 @@ cccc          print*,'reading ntau again ',ntau
           read(imod,'(a)') mocode
           print*,mocode
           if (mocode(1:1).eq.'s'.or.mocode(1:1).eq.'p') then
-            print*,'This model seems to be aan ascii MARCS model'
+            print*,'This model seems to be an ascii MARCS model'
           else
-            print*,' This model may not be a MARCS model!'
+            print*,' This model is probably not a MARCS model!'
+            print*,'check model and control parameter MARCS-FILE in',
+     &             ' run-script'
           endif
 
           read(imod,'(a)') blabla
@@ -520,6 +520,8 @@ cccc          print*,'reading ntau again ',ntau
             print*,' ntau = ',ntau,' > ndp = ',ndp
             stop 'increase ndp!'
           endif
+        else           ! not a KURUCZ model
+          goto 762
         endif
         mocode='KURUCZ'
         xls=5000.
@@ -527,7 +529,27 @@ cccc          print*,'reading ntau again ',ntau
         intryc=0
         scale=0.
         goto 764
-762     stop 'COULD NOT READ MODEL ATMOSPHERE FILE !!!'
+762     continue
+!
+! Try the Multi2.3 format. BPz 17/04-2020
+!
+        backspace(imod)
+        do while (.true.)
+          read(imod,'(a)',err=761) mocode
+          mocode=mocode(2:40)
+          mocode=adjustl(mocode)
+          if (mocode(1:4).eq.'NDEP') exit
+        enddo
+        read(imod,*) ntau
+        read(imod,*)
+        mocode='MULTI'
+! assume lambda std = 5000A
+        xls=5000.
+        gravl=0.0
+        intryc=0
+        scale=0.
+        goto 764
+761     stop 'COULD NOT READ MODEL ATMOSPHERE FILE !!!'
 764     continue
 
 ***********************************************
@@ -729,6 +751,21 @@ cc1963        format(i3,2x,6(e12.0))
             print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
      &              kaprefmass(k)
           enddo
+***********************************************
+        else if (mocode(1:5).eq.'MULTI') then
+!
+! Multi2.3 format
+!  LG TAU      TEMPERATURE  NE           V            VTURB        
+! velocities in km/s
+!
+          do k=1,ntau
+            read(imod,*) tau(k),t(k),pe(k),velocity(k),xi(k)
+            tau(k)=10.**tau(k)
+            pe(k)=pe(k)*T(k)*kboltz
+            velocity(k)=velocity(k)*1.e5        ! cm/s
+            xi(k)=xi(k)                         ! km/s
+          enddo
+***********************************************
         else
           DO 11 K=1,NTAU
             READ(IMOD,*) TAU(K),T(K),PE(K),PGL(K),XI(K)
@@ -851,7 +888,7 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
             endif
             call jon(t(k),pe(k),1,pg,ro,dum,io,k)
             print888,t(k),pe(k),pg,pgl(k)
-888         format('first jon call T, Pe, Pg Pgin ',f6.0,3(1x,1pe9.3))
+888         format('first jon call T, Pe, Pg Pgin ',f6.0,3(1x,1pe10.3))
 * must iterate on pe to get right pg in model.
 * try better guess input pe:
             pein=pe(k)*pgl(k)/pg
@@ -859,7 +896,7 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
             call jon(t(k),pe(k),1,pg,ro,dum,io,k)
 * pg should be within eps of pgl (cf. pemake).
             print889,t(k),pe(k),pg,pgl(k)
-889         format('after jon iter T, Pe, Pg Pgin ',f6.0,3(1x,1pe9.3))
+889         format('after jon iter T, Pe, Pg Pgin ',f6.0,3(1x,1pe10.3))
           enddo
         endif
       endif

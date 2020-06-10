@@ -658,9 +658,9 @@ c
 
 CC format to write tsuji's data in file readable in free format
 
-5012    FORMAT ('''',A8,'''',x,1pE11.5,x,4(1pE12.5,x),I1,4(I3,I4))
+5012    FORMAT ('''',A8,'''',x,1pE12.5,x,4(1pE12.5,x),I1,4(I3,I4))
 
-5021    FORMAT (F10.3,E12.5,E12.6)
+5021    FORMAT (F10.3,E12.5,E13.6)
 5030    FORMAT (A)
 5031    FORMAT (1X,A)
 6031    FORMAT(1H1,20A4/)
