@@ -98,6 +98,7 @@
       dimension presmo(30)
       COMMON/CMOL1/ EH,FE,FH,FHE,FC,FCE,FN,FNE,FO,FOE,FK,FKE,FS,FSE
       COMMON/CMOL2/ NNMOL,PK(30)
+      real eps,epsmem
 *
 * Special for spherical 
 *
@@ -482,6 +483,7 @@ cc     &     RECL=412)
 cccc      call cstrip(alunit,27)
 cccc      READ(27,101) IP,EPS
       IP=0
+! kappa_line/kappa_cont > 10^-4 is good enough for all lines but hydrogen
       EPS=0.0001
       NMY=6
       iweak=0
@@ -802,7 +804,11 @@ cc        print*,'opened file '
           print 1234,species,lele,iel,ion,(isotope(nn),nn=1,natom)
           print*, 'nlines ', nline
 cc          call Hlineadd(lunit,nline,xlboff)
+! for hydrogen lines a cut at kappa_line/kappa_cont = 1.e-5 at least is necessary
+          EPSmem=EPS
+          EPS=1.e-5
           call hydropac(lunit,xlboff)
+          EPS=EPSmem
           goto 9874
         endif
 

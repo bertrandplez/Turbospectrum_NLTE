@@ -10,7 +10,7 @@
       character comment*100,species*20
       integer ion,nline,ntau,iter,l,k,i,lstart,lstartp,
      &        nmy,nlbldu,iint,iweak,lunit,maxlam,ll,
-     ,        jlcont, nlcont
+     ,        jlcont, nlcont,nf,nfo,nb,nbo,nl,lpos
       doubleprecision ionpot,wave,xl1,xl2,del,xlboff,xlambda
       doubleprecision source_function
 
@@ -25,9 +25,10 @@
      &     ne(ndp),
      &     nh1(ndp),nhe1(ndp),hnorm,hnormnostim(ndp),stim,
      &     diff,diffp,theta(ndp),hckt(ndp),abso,absos,absocont,
-     &     dopple(ndp),contrib,xkapr,cross,hlinop,h1bfg,alpha,
+     &     dopple(ndp),xkapr,cross,hlinop,h1bfg,alpha,
      ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
-      logical  lymanalpha, usedam,notfound,contonly
+      logical  lymanalpha, usedam,notfound,contonly,kskip,lskip
+      logical  ldone(lpoint)
 *      
       common /atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
      &               ntau
@@ -45,6 +46,7 @@
       integer znlc ,  ii
       real    zxlm,zBP(ndp),zXC(ndp),zS(ndp),zXI(ndp)
 
+      ldone=.false.
 ! set populations to 0. (computed as LTE pop in hbop)
       npop=0.0
 ! compute lines and continuum
@@ -78,19 +80,85 @@ c
      &                 2.99792458e10
       enddo
 ! add opacity
-      do k=1,ntau
-        do l=1,maxlam
-*	  print*,' l,xlam ',l,xlambda(l)
-          call hbop(xlambda(l),nline,nlo,nup,hlambda,
-     &         nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,total,cont,
-     &         contonly)
+      do nl=1,nline
+! find out where we have contributing lines
+! search if line lies within the interval 
+        print*,'H line ',hlambda(nl)
+        if (hlambda(nl)-xlambda(1).le.0.) then
+! line lies blueward
+          lpos=1
+        else if (hlambda(nl)-xlambda(maxlam).ge.0.) then
+          lpos=maxlam
+        else
+! locate it by successive splitting in halves
+          nb=1
+          nbo=nb
+          nf=maxlam
+          nfo=nf
+          do while (nf-nb.gt.1)
+            if (hlambda(nl)-xlambda(nb).gt.0.) then
+              nbo=nb
+              nb=(nb+nf)/2
+            else
+              nb=nbo
+              nf=(nb+nf)/2
+            endif
+            lpos=nb
+          enddo
+        endif
+!check
+        print*,'Hline ',hlambda(nl),lpos,xlambda(lpos),xlambda(lpos+1)
+! now compute line profile
+        lskip=.false.
+        do l=lpos,maxlam
+          if (.not.ldone(l).and..not.lskip) then
+!  	    print*,' l,xlam ',l,sngl(xlambda(l))
+            do k=1,ntau
+              kskip=.false.
+! include all H lines at that wavelength
+              call hbop(xlambda(l),nline,nlo,nup,hlambda,
+     &          nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
+     &          total,cont,contonly)
 ! HI bf is already included in babsma.f
-          abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
-!!!!          absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-
-!!!!!!!!!          if(contrib/absocont(k,l) .le. eps) goto 5    !  in order to implement a condition for not calling hbop, we need to start from line centers 
-        enddo      
-   5    continue
+              abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
+              ldone(l)=.true.
+!!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
+              if((total-cont)/absocont(k,l) .le. eps) then
+                kskip=.true.
+                if (k.eq.1) then
+                  lskip=kskip
+                endif
+              endif
+              lskip=lskip.and.kskip
+            enddo
+          endif
+        enddo
+! other side of the profile
+        lskip=.false.
+        do l=lpos,1,-1
+          if (.not.ldone(l).and..not.lskip) then
+*           print*,' l,xlam ',l,xlambda(l)
+            do k=1,ntau
+              kskip=.false.
+! include all H lines at that wavelength
+              call hbop(xlambda(l),nline,nlo,nup,hlambda,
+     &          nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
+     &          total,cont,contonly)
+! HI bf is already included in babsma.f
+              abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
+              ldone(l)=.true.
+!!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
+              if((total-cont)/absocont(k,l) .le. eps) then
+                kskip=.true.
+                if (k.eq.1) then
+                  lskip=kskip
+                endif
+              endif
+              lskip=lskip.and.kskip
+            enddo
+          endif
+        enddo
+! end of loop on H lines
       enddo
 
       return

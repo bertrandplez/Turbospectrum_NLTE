@@ -861,6 +861,28 @@ Added data file:
 ---------------
 NHcont_Stancil_2019.dat
 
+
+---------------
+2020
+---------------
+New version Turbospectrum2020
+Modifications are now followed by GitHub
+
+v20 is able to read NLTE departure coefficients and compute NLTE line profiles
+
+One modification was made on June 16 2020 to speed up the calculation of 
+hydrogen lines. They are cut at some distance from line center using a condition
+on eps=kappa_line/kappa_cont. Until now they were added on the whole spectrum.
+For all lines the cut is eps=10^-4, and for H lines it is eps=10^-5.
+Using 10^-4 on H lines clearly cuts the line wings.
+Using 10^-5 on other lines does not modify the flux compared to 10^-4.
+10^-3 is not enough.
+
+Timing for a run with 104000 lines, and 500000 wavelengths from 4198 to 9225A
+Deltalambda = 0.01, solar model.
+eps	0.001	0.0001	10^-5	10^-4	10^-4
+epsH	0.001	0.0001	10^-5	10^-5	no cut
+time	38s	53s	87s	67s	312s
 ----------------------------
 ---- ACKNOWLEDGEMENTS ------
 ----------------------------

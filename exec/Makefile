@@ -6,10 +6,10 @@ Loader  = ifort
 include1 = ../$(SOURCE)/spectrum.inc
 include2 = ../$(SOURCE)/tsuji.par
 
-OPT1     = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff   -save 
-LINKOPT        = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff -save 
+OPT1     = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff   -save  -p
+LINKOPT        = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff -save  -p
 
-SOURCE = source-v19.2
+SOURCE = source
 
 babsma_luobj =  \
       ../$(SOURCE)/absko.f \
