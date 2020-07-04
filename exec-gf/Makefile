@@ -2,6 +2,7 @@
 F = gfortran
 Loader  = gfortran
 
+SOURCE = source
 
 include1 = ../$(SOURCE)/spectrum.inc
 include2 = ../$(SOURCE)/tsuji.par
@@ -9,10 +10,10 @@ include2 = ../$(SOURCE)/tsuji.par
 OPT1 = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium
 LINKOPT = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium
 
-SOURCE = source-v19.2
 
 babsma_luobj =  \
       ../$(SOURCE)/absko.f \
+      ../$(SOURCE)/nhop.f \
       ../$(SOURCE)/babsma.f \
       ../$(SOURCE)/detabs.f \
       ../$(SOURCE)/getinfospecies.f \
@@ -135,6 +136,9 @@ bsyn_luobj = \
       ../$(SOURCE)/takemolec.f \
       ../$(SOURCE)/readmo.f \
       ../$(SOURCE)/readfilt.f \
+      ../$(SOURCE)/read_segments.f \
+      ../$(SOURCE)/read_modelatom.f \
+      ../$(SOURCE)/read_departure.f \
       ../$(SOURCE)/tint.f \
       ../$(SOURCE)/lint.f \
       ../$(SOURCE)/traneq.f \
@@ -161,7 +165,7 @@ bsyn_luobj = \
 #clean : 
 #	rm *.f bsyn_lu babsma_lu eqwidt_lu 
 
-all : cubint_module.mod  babsma_lu bsyn_lu eqwidt_lu
+all : cubint_module.mod  babsma_lu bsyn_lu eqwidt_lu 
 
 cubint_module.mod : ../$(SOURCE)/cubint_module.f90 cubint_module.o
 	$(F)  -c ../$(SOURCE)/cubint_module.f90

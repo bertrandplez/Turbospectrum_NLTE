@@ -134,7 +134,10 @@
      &          datinatom,datinmod,datinabun,datcontinopac,datinpmod,
      &          datinspec,datoutfil,datmongofil,datfilterfil,
      &          datmodelatomfile,modelatomfile,datdeparturefile,
-     &          departurefile
+     &          departurefile,
+     &          speciallinesfile,
+     &          contmaskfile,linemaskfile,segmentsfile,
+     &          datcontmaskfile,datlinemaskfile,datsegmentsfile
       doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -150,7 +153,8 @@
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
-     &                 datmodelatomfile,datdeparturefile
+     &                 datmodelatomfile,datdeparturefile,
+     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -247,6 +251,9 @@ ccc      external commn_handler
       purelte=datpurelte
       departurefile=datdeparturefile
       modelatomfile=datmodelatomfile
+      segmentsfile=datsegmentsfile
+      linemaskfile=datlinemaskfile
+      contlinefile=datcontlinefile
 
       print*,' EQWIDT CHECK: xl1= ',xl1
       print*,' EQWIDT CHECK: xl2= ',xl2

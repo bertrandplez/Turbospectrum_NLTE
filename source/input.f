@@ -8,10 +8,12 @@
       character*2 atominclude(100)
       character*30 keyword,answer
       character*256 charvalue
+      character*286 oneline
       character*128 filmet,filmol,filwavel
       character*256 linefil,detout,inatom,inmod,inabun,inspec,
      &              outfil,mongofil,filterfil,continopac,inpmod,
-     &              modelatomfile,departurefile
+     &              modelatomfile,departurefile,
+     &              contmaskfile,linemaskfile,segmentsfile
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
      &        hydrovelo,pureLTE
       integer iint,k
@@ -26,7 +28,8 @@
      &                 helium,alpha,rabund,sabund,xifix,xic,mrxf,
      &                 inpmod,continopac,filwavel,hydrovelo,
      &                 xl1,xl2,del,xlmarg,xlboff,iint,xmyc,scattfrac,
-     &                 pureLTE,nlte,modelatomfile,departurefile
+     &                 pureLTE,nlte,modelatomfile,departurefile,
+     &                 contmaskfile,linemaskfile,segmentsfile
 
       common/species/atominclude
       data atominclude 
@@ -41,6 +44,9 @@
      &    'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
      &    'Pa','U ','  ','  ','  ','  ','  ','  ','  ','  ' /
 *
+      linemaskfile=' '
+      contmaskfile=' '
+      segmentsfile=' '
       modelatomfile=' '
       departurefile=' '
       scattfrac=0.0
@@ -92,7 +98,12 @@ ccc      inatom='DATA/atomdata-v12.1'
       xl2=-10.d0
       del=-10.d0
 *
-1     read(iread,*,end=99) keyword,charvalue
+1     read(iread,'(a)',end=99) oneline
+      if (oneline(1:1).eq.'#') then
+        goto 1       ! this is a comment. Skip
+      endif
+      
+      read(oneline,*,end=99) keyword,charvalue
 
       print*, keyword(1:lenstr(keyword)),charvalue(1:lenstr(charvalue))
 
@@ -135,6 +146,13 @@ ccc      inatom='DATA/atomdata-v12.1'
         read(charvalue,10) modelatomfile
       else if (keyword(1:13).eq.'DEPARTUREFILE') then
         read(charvalue,10) departurefile
+      else if (keyword(1:12).eq.'SEGMENTSFILE') then
+        read(charvalue,10) segmentsfile
+        print*,'input : segmentsfile',segmentsfile
+      else if (keyword(1:12).eq.'LINEMASKFILE') then
+        read(charvalue,10) linemaskfile
+      else if (keyword(1:12).eq.'CONTMASKFILE') then
+        read(charvalue,10) contmaskfile
       else if (keyword(1:5).eq.'TSUJI') then
         read(charvalue,*) tsuji
       else if (keyword(1:9).eq.'SPHERICAL') then

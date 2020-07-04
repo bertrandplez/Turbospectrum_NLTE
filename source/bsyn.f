@@ -72,6 +72,10 @@
       real modenergy(maxmodlevel),modg(maxmodlevel)
       integer modion(maxmodlevel)
       character*40 modid(maxmodlevel)
+* Segments
+      integer nsegment,nsegmax
+      parameter (nsegmax=200)
+      doubleprecision xlsegmin(nsegmax),xlsegmax(nsegmax)
 *
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
@@ -164,7 +168,9 @@
      &          datinatom,datinmod,datinabun,datcontinopac,datinpmod,
      &          datinspec,datoutfil,datmongofil,datfilterfil,
      &          datmodelatomfile,datdeparturefile,departurefile,
-     &          modelatomfile
+     &          modelatomfile,
+     &          contmaskfile,linemaskfile,segmentsfile,
+     &          datcontmaskfile,datlinemaskfile,datsegmentsfile
       doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -180,7 +186,8 @@
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datiint,datxmyc,datscattfrac,datpureLTE,
-     &                 datnlte,datmodelatomfile,datdeparturefile
+     &                 datnlte,datmodelatomfile,datdeparturefile,
+     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -286,6 +293,9 @@ ccc      external commn_handler
       nlte=datnlte
       modelatomfile=datmodelatomfile
       departurefile=datdeparturefile
+      segmentsfile=datsegmentsfile
+      contmaskfile=datcontmaskfile
+      linemaskfile=datlinemaskfile
 
 * fraction of the line opacity to count as scattering.
 *  Remaining is counted in absorption    BPz 27/09-2002
@@ -535,6 +545,26 @@ ccc          stop
 401    continue
 400   continue
        
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*
+* read wavelengths segments to be computed. Only lines falling in these segments will be kept,
+* and the flux/intensity will not be computed outside these windows.
+* unit number to open, file name, maximum allowed number of segments,
+* actual number of segments, lambdastart and end for each segment
+*
+      if (segmentsfile.ne.' ') then
+        print*,'segmentsfile = ',segmentsfile
+        call read_segments(77,segmentsfile,nsegmax,
+     &                        nsegment,xlsegmin,xlsegmax)
+! test
+        do i=1,nsegment
+          print*,xlsegmin(i),xlsegmax(i)
+        enddo
+      else
+        nsegment=0
+      endif
+*
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
 * EPS tells which small l/kappa is neglected.
 * XLM is a characteristic wavelength
@@ -908,7 +938,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
 13        newformat=.false.
 14        continue
         endif
-        if (.not.newformat.and.nltespecies) then
+        if (.not.newformat.and.nlte_species) then
           print*,'bsyn.f'
           stop 'old line list format and NLTE. Incompatible options'
         endif

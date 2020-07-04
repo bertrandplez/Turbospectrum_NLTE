@@ -136,6 +136,7 @@ bsyn_luobj = \
       ../$(SOURCE)/takemolec.f \
       ../$(SOURCE)/readmo.f \
       ../$(SOURCE)/readfilt.f \
+      ../$(SOURCE)/read_segments.f \
       ../$(SOURCE)/read_modelatom.f \
       ../$(SOURCE)/read_departure.f \
       ../$(SOURCE)/tint.f \

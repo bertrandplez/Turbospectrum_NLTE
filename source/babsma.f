@@ -90,7 +90,8 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       character*256 datlinefil,datdetout,datinatom,datinmod,
      &              datinabun,datinspec,datoutfil,datmongofil,
      &              datfilterfil,datcontinopac,datinpmod,
-     &              datmodelatomfile,datdeparturefile
+     &              datmodelatomfile,datdeparturefile,
+     &              datcontmaskfile,datlinemaskfile,datsegmentsfile
       logical dattsuji,datspherical,datlimbdark,databfind,
      &        datmultidump,datxifix,datmrxf,dathydrovelo,
      &        datpureLTE,pureLTE,datnlte,nlte
@@ -109,7 +110,8 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
      &                 datinpmod,datcontinopac,datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
-     &                 datmodelatomfile,datdeparturefile
+     &                 datmodelatomfile,datdeparturefile,
+     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile
 *
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
