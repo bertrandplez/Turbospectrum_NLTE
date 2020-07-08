@@ -868,6 +868,8 @@ NHcont_Stancil_2019.dat
 New version Turbospectrum2020
 Modifications are now followed by GitHub
 
+Stark broadening is included
+
 v20 is able to read NLTE departure coefficients and compute NLTE line profiles
 
 One modification was made on June 16 2020 to speed up the calculation of 

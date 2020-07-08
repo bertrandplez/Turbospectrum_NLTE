@@ -1025,6 +1025,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
      &                      levlo,levup
             else
               read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
+              gamst=0.
             endif
             ilevlo=1
             ilevup=2  ! dummy values
