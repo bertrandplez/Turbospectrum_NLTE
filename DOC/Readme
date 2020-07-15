@@ -885,6 +885,16 @@ Deltalambda = 0.01, solar model.
 eps	0.001	0.0001	10^-5	10^-4	10^-4
 epsH	0.001	0.0001	10^-5	10^-5	no cut
 time	38s	53s	87s	67s	312s
+
+15/07-2020
+implementation of spectral windows to optimise calculation of many small intervals.
+With Resolution =10^6, with 56 windows of width 5-10A, I get running time, compared to
+calculation of full window (line list 104000 lines):
+
+1.205u 0.384s 0:01.60 98.7%	0+0k 0+0io 0pf+0w ! babsma
+6.369u 0.313s 0:06.69 99.7%	0+0k 0+0io 0pf+0w ! 56 windows
+55.440u 1.426s 0:56.93 99.8%	0+0k 0+0io 0pf+0w ! full 4800-6800A
+
 ----------------------------
 ---- ACKNOWLEDGEMENTS ------
 ----------------------------

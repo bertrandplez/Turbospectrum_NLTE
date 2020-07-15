@@ -72,10 +72,12 @@
       real modenergy(maxmodlevel),modg(maxmodlevel)
       integer modion(maxmodlevel)
       character*40 modid(maxmodlevel)
-* Segments
-      integer nsegment,nsegmax
+* Segments: limits and number of wavelength for each segment
+      integer nsegment,nsegmax,iseg,lstart,ii,lstop
       parameter (nsegmax=200)
       doubleprecision xlsegmin(nsegmax),xlsegmax(nsegmax)
+      integer nlseg(nsegmax)
+      doubleprecision dlambda,resolution
 *
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),QUO(NDP),DBVCON
       COMMON/ATOM/ XL,MA,CHI,CHI2,chi3,CHIE,G,IDAMP,FDAMP,
@@ -527,25 +529,12 @@ ccc          stop
           print*
         endif
       endif
+       
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       IF(ABS(XLMARG).LT.1.E-6) XLMARG=5.0000
       XLM=(XL1+XL2)/2.
       XL1L=XL1-XLMARG
       XL2R=XL2+XLMARG
-      maxlam=int((xl2-xl1)/del)+1
-      if (maxlam.gt.lpoint) stop 'bsyn: too many wavelengths'
-      do 400 j=1,min(maxlam+100,lpoint)
-* concerning this min() see readmo, set up of the continuum opacities
-       xlambda(J)=XL1+FLOAT(J-1)*DEL
-       do 401 k=1,ndp
-        abso(k,j)=0.0
-        absos(k,j)=0.0
-        absocont(k,j)=0.0
-        absoscont(k,j)=0.0
-        source_function(k,j)=0.0
-401    continue
-400   continue
-       
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
 * read wavelengths segments to be computed. Only lines falling in these segments will be kept,
 * and the flux/intensity will not be computed outside these windows.
@@ -556,13 +545,65 @@ ccc          stop
         print*,'segmentsfile = ',segmentsfile
         call read_segments(77,segmentsfile,nsegmax,
      &                        nsegment,xlsegmin,xlsegmax)
-! test
+        xl1l=1.e30
+        xl2r=0.
+        j=1
+        nltot=0
         do i=1,nsegment
-          print*,xlsegmin(i),xlsegmax(i)
+          xl1l=min(xl1l,xlsegmin(i))
+          xl2r=max(xl2r,xlsegmax(i))
+! define lambdas for each segment
+          nlseg(i)=0
+! use constant resolution within interval
+!
+! TEST !!
+! 
+          RESOLUTION = 1000000.
+!
+! END OF TEST !!
+!
+          dlambda=(xlsegmax(i)+xlsegmin(i))*0.5/resolution
+          xlambda(j)=xlsegmin(i)
+          jj=0
+!          print*,'j',j,xlambda(j),jj
+          do while (xlambda(j).lt.xlsegmax(i))
+            j=j+1
+            jj=jj+1
+            xlambda(j)=xlsegmin(i)+dlambda*jj
+!           print*,'j',j,xlambda(j),jj
+          enddo
+          j=j+1
+          nlseg(i)=jj+1
+          nltot=nltot+nlseg(i)
+!         print*,'nlseg, nltot',i,nlseg(i),nltot
+! test
+!         print*,i,xlsegmin(i),xlsegmax(i)
+!         print*,(jj,xlambda(jj),jj=nltot-nlseg(i)+1,nltot)
         enddo
+        maxlam=nltot
       else
-        nsegment=0
+! ordinary setup, constant lambda step, single spectral segment
+        nsegment=1
+        maxlam=int((xl2-xl1)/del)+1
+        do j=1,min(maxlam+100,lpoint)
+* concerning this min() see readmo, set up of the continuum opacities ! obsolete ??? BPz 15/07-2020
+          xlambda(J)=XL1+FLOAT(J-1)*DEL
+        enddo
+        xlsegmin(1)=xlambda(1)
+        xlsegmax(1)=xlambda(maxlam)
+        nlseg(1)=maxlam
       endif
+!
+      if (maxlam.gt.lpoint) stop 'bsyn: too many wavelengths'
+      do j=1,maxlam
+        do k=1,ndp
+          abso(k,j)=0.0
+          absos(k,j)=0.0
+          absocont(k,j)=0.0
+          absoscont(k,j)=0.0
+          source_function(k,j)=0.0
+        enddo
+      enddo
 *
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
@@ -1039,7 +1080,30 @@ cc          call Hlineadd(lunit,nline,xlboff)
           read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp
         endif
 *
-        if (xlb.lt.xl1l.or.xlb.gt.xl2r) then
+        if (nsegment.eq.1) then
+          iseg=1
+          lstart=1
+          lstop=maxlam
+        else
+          iseg=0
+          do i=1,nsegment
+! find out if line belongs to one of our segments
+            if (xlb.ge.xlsegmin(i).and.xlb.le.xlsegmax(i)) then
+              iseg=i
+! find out index for first wavelength to consider in lambda array
+              lstart=0
+              do ii=1,iseg-1
+                lstart=lstart+nlseg(ii)
+                del=xlambda(lstart+1)-xlambda(lstart)
+              enddo
+              lstop=lstart+nlseg(iseg)-1
+              exit
+            endif
+          enddo
+        endif
+! keep this for single spectral interval. We then need to include lines outside the interval.
+! Multiple segments are already optimized to include all necessary lines.
+        if (xlb.lt.xl1l.or.xlb.gt.xl2r.or.iseg.eq.0) then
           NALLIN=NALLIN-1
           NLINE=NLINE-1
           NREJCT=NREJCT+1
@@ -1097,20 +1161,20 @@ cc            endif
             call partffordepth(ntau,t,lele,fpartition)
           else 
 * TEST For K I line scattering **********************************
-            if (iel.eq.19.and.ion.eq.1) then
-              scattfrac=0.0
-              absfrac=1.0-scattfrac
-            else
-              scattfrac=0.0
-              absfrac=1.0-scattfrac
-            endif
+!            if (iel.eq.19.and.ion.eq.1) then
+!              scattfrac=0.0
+!              absfrac=1.0-scattfrac
+!            else
+!              scattfrac=0.0
+!              absfrac=1.0-scattfrac
+!            endif
+* End of test K I line scattering **********************************
             if (scattfrac.gt.0.) then
               print*, 'Element ',iel,' Ion',ion
               print*,' WARNING!!!!! ', scattfrac,' of the line opacity',
      &         ' counted as scattering!!!!!'
               print*
             endif
-* For K I line scattering **********************************
             do k=1,ntau
               if (presneutral(k,iel).ge.0.) then
                 ntot(k)=(presneutral(k,iel)+presion(k,iel)+
@@ -1306,13 +1370,16 @@ cc      DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 * Start wavelength loop for this line
 *
 ccc      print*,xlb
-        zap=(xlb-xl1)/del
+        zap=(xlb-xlambda(lstart))/del
         IF (zap.le.0.) THEN
+!
 * treatment of the lines lying between xl1l and xl1
+* This happens only if we have a single spectral interval
+!
         do k=1,ntau
-          contop(k)=absocont(k,1)
+          contop(k)=absocont(k,lstart)
         enddo 
-        do 222 i=1,maxlam
+        do 222 i=lstart,lstop
           xlsingle=sngl(xlambda(i))
           xkmax=0.
           do 333 j=1,ntau
@@ -1347,13 +1414,15 @@ cc           CALL VOIGT(A(j),V,HVOIGT)
 * now lines lying in the [xl1,xl2] interval
 * lindex in xlambda of the closest wavelength > to the wavelength of 
 * the line
-        lindex=int(zap)+2
-        lindex=min(maxlam+1,lindex)
+        lindex=lstart+int(zap)+2
+        lindex=min(lstop+1,lindex)
+        print*,'lstart,lstop,xlb,xlambda(lstart),zap,lindex'
+        print*,lstart,lstop,xlb,xlambda(lstart),zap,lindex
         do k=1,ntau
-           contop(k)=absocont(k,min(maxlam,lindex))
+           contop(k)=absocont(k,min(lstop,lindex))
         enddo 
         iii=0
-        do 2 i=lindex,maxlam
+        do 2 i=lindex,lstop
           xlsingle=sngl(xlambda(i))
           xkmax=0.
           iii=iii+1
@@ -1387,7 +1456,7 @@ ccc         endif
 * we get out without being under eps. 2possibilities:
 * 1) the line lies towards the end of the wavelength array
 * 2) the line encompasses the whole array
-        do 422 i=lindex-1,1,-1
+        do 422 i=lindex-1,lstart,-1
           xlsingle=sngl(xlambda(i))
           xkmax=0.
           do 433 j=1,ntau
@@ -1427,7 +1496,7 @@ ccc         endif
         if (iii.gt.1) numberoflines=numberoflines+1
 *
 *********************************************************************
-        istart=max(1,lindex-iii-2)
+        istart=max(lstart,lindex-iii-2)
 ccc      print*,istart,lindex-1
         do 22 i=istart,lindex-1
           xlsingle=sngl(xlambda(i))
