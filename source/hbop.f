@@ -207,7 +207,7 @@ C
         else
 ! all other lines
           SIGMA = SF * FNM(NLO(I),NUP(I)) *
-     *     HLINOP(WAVE,NLO(I),NUP(I),WAVEH(I),T,NE,NP(1),NHE,DOP)
+     *     HLINOP(WAVE,NLO(I),NUP(I),WAVEH(I),T,NE,NH,NHE,DOP)
           CHI = 0.
           IF (W(NLO(I)).GT.0.)  ! populations would be zero also
      +       CHI = SIGMA * ( W(NUP(I))/W(NLO(I))*NP(NLO(I)) -

@@ -123,7 +123,8 @@ c
               abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
               ldone(l)=.true.
 !!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-              if((total-cont)/absocont(k,l) .le. eps) then
+              if((total-cont)/absocont(k,l)/xkapr(k)/ro(k) 
+     &             .le. eps) then
                 kskip=.true.
                 if (k.eq.1) then
                   lskip=kskip
@@ -148,7 +149,8 @@ c
               abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
               ldone(l)=.true.
 !!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-              if((total-cont)/absocont(k,l) .le. eps) then
+              if((total-cont)/absocont(k,l)/xkapr(k)/ro(k) 
+     &             .le. eps) then
                 kskip=.true.
                 if (k.eq.1) then
                   lskip=kskip
