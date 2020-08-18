@@ -578,6 +578,7 @@ ccc          stop
 !         print*,'nlseg, nltot',i,nlseg(i),nltot
 ! test
 !         print*,i,xlsegmin(i),xlsegmax(i)
+!         print*,i,'lam(nlseg)',xlambda(nltot)
 !         print*,(jj,xlambda(jj),jj=nltot-nlseg(i)+1,nltot)
         enddo
         maxlam=nltot
@@ -876,10 +877,10 @@ cc        print*,'opened file '
           print*, 'nlines ', nline
 cc          call Hlineadd(lunit,nline,xlboff)
 ! for hydrogen lines a cut at kappa_line/kappa_cont = 1.e-5 at least is necessary
-          EPSmem=EPS
-          EPS=1.e-5
+          epsmem=eps
+          eps=1.e-3
           call hydropac(lunit,xlboff)
-          EPS=EPSmem
+          eps=epsmem
           goto 9874
         endif
 
@@ -1091,12 +1092,12 @@ cc          call Hlineadd(lunit,nline,xlboff)
             if (xlb.ge.xlsegmin(i).and.xlb.le.xlsegmax(i)) then
               iseg=i
 ! find out index for first wavelength to consider in lambda array
-              lstart=0
+              lstart=1
               do ii=1,iseg-1
                 lstart=lstart+nlseg(ii)
-                del=xlambda(lstart+1)-xlambda(lstart)
               enddo
               lstop=lstart+nlseg(iseg)-1
+              del=xlambda(lstart+1)-xlambda(lstart)
               exit
             endif
           enddo
@@ -1414,10 +1415,8 @@ cc           CALL VOIGT(A(j),V,HVOIGT)
 * now lines lying in the [xl1,xl2] interval
 * lindex in xlambda of the closest wavelength > to the wavelength of 
 * the line
-        lindex=lstart+int(zap)+2
-        lindex=min(lstop+1,lindex)
-        print*,'lstart,lstop,xlb,xlambda(lstart),zap,lindex'
-        print*,lstart,lstop,xlb,xlambda(lstart),zap,lindex
+        lindex=lstart+int(zap)+1
+        lindex=min(lstop,lindex)
         do k=1,ntau
            contop(k)=absocont(k,min(lstop,lindex))
         enddo 

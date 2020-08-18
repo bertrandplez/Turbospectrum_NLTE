@@ -47,7 +47,7 @@ C
 C***********************************************************************
 
       SUBROUTINE HBOP(WAVE, N, NLO, NUP, WAVEH, NH, NHE, NE, T, DOP,
-     *                  NPOP, NL, TOTAL, CONTIN, contonly)
+     *                  NPOP, NL, TOTAL, CONTIN, contonly,lineonly)
 C
 C  Returns the total absorption coefficient due to H bound levels at WAVE, 
 C  for a given line list employing the occupation probability formalism 
@@ -97,6 +97,7 @@ C           -- higher levels are assumed in LTE
 C  total  = returns the total (line + continuous) absorption coefficient
 C  contin = returns the continuous absorption coefficient
 C  contonly = computes only contin if true (BPz 03/04-2019)    logical
+C  lineonly = computes only lines if true (BPz 17/08-2020)    logical
 C
 C  Important parameters
 C  
@@ -121,7 +122,7 @@ C
       REAL TS, TF
       REAL*8 WAVE, WAVEH(*), REDCUT
       REAL*8 EHYD(NLEVELS), CONTH(NLEVELS), WCALC, D, WSTAR, TAPER
-      LOGICAL FIRST,contonly
+      LOGICAL FIRST,contonly,lineonly
       SAVE 
       DATA FIRST/.TRUE./
       PARAMETER (H=6.62607E-27, C=2.9979E10, K=1.38065E-16)
@@ -187,6 +188,12 @@ C
 C
 C  Compute line opacity components
 C
+      if (lineonly.and.contonly) then
+! solve incompatible options
+        lineonly=.false.
+        contonly=.false.
+      endif
+
       LINE = 0.
 !
       if (.not. contonly) then
@@ -217,11 +224,14 @@ C
  30    LINE = LINE + CHI
 !
       endif
+
+      CONTIN = 0.
+
+      if (.not. lineonly) then
 !
 C
 C  Compute the continuous components - sum over NBF lowest states
 C     
-      CONTIN = 0.
       DO 40 I = 1, NBF
 C
 C  Compute dissolved fraction for the wavelength for this lower level
@@ -252,6 +262,8 @@ CC      ENDIF
 C
 C  Sum up and we're done
 C
+      endif
+
       TOTAL = CONTIN + LINE
 C
       RETURN

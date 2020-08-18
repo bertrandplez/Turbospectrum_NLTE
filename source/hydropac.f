@@ -17,7 +17,7 @@
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
       real xlo(150),xup(150),gf(150),npop(150)
-      real cont,total
+      real cont,total,contrib
       integer nlo(150),nup(150)
       character*9 lname(150)
 !
@@ -27,8 +27,8 @@
      &     diff,diffp,theta(ndp),hckt(ndp),abso,absos,absocont,
      &     dopple(ndp),xkapr,cross,hlinop,h1bfg,alpha,
      ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
-      logical  lymanalpha, usedam,notfound,contonly,kskip,lskip
-      logical  ldone(lpoint)
+      logical  lymanalpha, usedam,notfound,contonly,kskip(ndp),lskip
+      logical  ldone(lpoint),lineonly
 *      
       common /atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
      &               ntau
@@ -49,8 +49,9 @@
       ldone=.false.
 ! set populations to 0. (computed as LTE pop in hbop)
       npop=0.0
-! compute lines and continuum
+! compute lines only 
       contonly=.false.
+      lineonly=.true.
 ! read line list
       rewind (lunit)
       read(lunit,*) species,ion,nline
@@ -110,54 +111,61 @@ c
         print*,'Hline ',hlambda(nl),lpos,xlambda(lpos),xlambda(lpos+1)
 ! now compute line profile
         lskip=.false.
+        kskip=.false.
         do l=lpos,maxlam
           if (.not.ldone(l).and..not.lskip) then
 !  	    print*,' l,xlam ',l,sngl(xlambda(l))
+            lskip=.true.
             do k=1,ntau
-              kskip=.false.
+              if (.not. kskip(k)) then
 ! include all H lines at that wavelength
-              call hbop(xlambda(l),nline,nlo,nup,hlambda,
-     &          nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
-     &          total,cont,contonly)
+!!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
+                call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
+     &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
+     &           total,cont,contonly,lineonly)
+                contrib = (total - cont)/xkapr(k)/ro(k)
+                abso(k,l) = abso(k,l) + contrib
 ! HI bf is already included in babsma.f
-              abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
-              ldone(l)=.true.
-!!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-              if((total-cont)/absocont(k,l)/xkapr(k)/ro(k) 
-     &             .le. eps) then
-                kskip=.true.
-                if (k.eq.1) then
-                  lskip=kskip
+!!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
+!                print*,xlambda(l),k,contrib,absocont(k,l)
+                if(contrib/absocont(k,l) .le. eps) then
+                  kskip(k)=.true.
                 endif
               endif
-              lskip=lskip.and.kskip
+! if kskip is .true. at all depth, then lskip becomes .true., and next 
+! wavelength is skipped
+              lskip=lskip.and.kskip(k)
             enddo
+! mark this wavelength as done
+!            ldone(l)=.true.
           endif
         enddo
 ! other side of the profile
         lskip=.false.
+        kskip=.false.
         do l=lpos,1,-1
           if (.not.ldone(l).and..not.lskip) then
 *           print*,' l,xlam ',l,xlambda(l)
+            lskip=.true.
             do k=1,ntau
-              kskip=.false.
+              if (.not. kskip(k)) then
 ! include all H lines at that wavelength
-              call hbop(xlambda(l),nline,nlo,nup,hlambda,
-     &          nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
-     &          total,cont,contonly)
+!!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
+                call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
+     &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
+     &           total,cont,contonly,lineonly)
+                contrib = (total - cont)/xkapr(k)/ro(k)
+                abso(k,l) = abso(k,l) + contrib
 ! HI bf is already included in babsma.f
-              abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
-              ldone(l)=.true.
-!!!!           absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-              if((total-cont)/absocont(k,l)/xkapr(k)/ro(k) 
-     &             .le. eps) then
-                kskip=.true.
-                if (k.eq.1) then
-                  lskip=kskip
+!!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
+                if(contrib/absocont(k,l) .le. eps) then
+                  kskip(k)=.true.
                 endif
               endif
-              lskip=lskip.and.kskip
+              lskip=lskip.and.kskip(k)
             enddo
+! mark this wavelength as done
+!            ldone(l)=.true.
           endif
         enddo
 ! end of loop on H lines

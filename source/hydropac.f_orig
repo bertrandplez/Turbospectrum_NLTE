@@ -27,7 +27,7 @@
      &     diff,diffp,theta(ndp),hckt(ndp),abso,absos,absocont,
      &     dopple(ndp),contrib,xkapr,cross,hlinop,h1bfg,alpha,
      ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
-      logical  lymanalpha, usedam,notfound,contonly
+      logical  lymanalpha, usedam,notfound,contonly,lineonly
 *      
       common /atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
      &               ntau
@@ -47,8 +47,9 @@
 
 ! set populations to 0. (computed as LTE pop in hbop)
       npop=0.0
-! compute lines and continuum
+! compute lines only
       contonly=.false.
+      lineonly=.true.
 ! read line list
       rewind (lunit)
       read(lunit,*) species,ion,nline
@@ -83,7 +84,7 @@ c
 *	  print*,' l,xlam ',l,xlambda(l)
           call hbop(xlambda(l),nline,nlo,nup,hlambda,
      &         nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,total,cont,
-     &         contonly)
+     &         contonly,lineonly)
 ! HI bf is already included in babsma.f
           abso(k,l) = abso(k,l) + (total - cont)/xkapr(k)/ro(k)
 !!!!          absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)

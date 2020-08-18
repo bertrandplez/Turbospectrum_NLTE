@@ -104,8 +104,8 @@ C
       real cont,total,dopple
       integer nlo(150),nup(150)
       character*9 lname(150)
-      logical contonly,firsth
-      data contonly /.true./, firsth /.true./
+      logical contonly,firsth,lineonly
+      data contonly /.true./, firsth /.true./, lineonly /.false./
 !
 
       data first/.true./
@@ -307,7 +307,7 @@ c
       xlambda=dble(xla(jp))
       call hbop(xlambda,nline,nlo,nup,hlambda,
      &         nh1,nhe1,ne,t(ntp),dopple,npop,0,total,cont,
-     &         contonly)
+     &         contonly,lineonly)
       sumabs=sumabs+cont/rosav(ntp)
 !
 ! now HI bf absorption is included !
