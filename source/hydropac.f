@@ -143,7 +143,7 @@ c
 ! other side of the profile
         lskip=.false.
         kskip=.false.
-        do l=lpos,1,-1
+        do l=lpos-1,1,-1
           if (.not.ldone(l).and..not.lskip) then
 *           print*,' l,xlam ',l,xlambda(l)
             lskip=.true.
