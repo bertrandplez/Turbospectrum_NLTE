@@ -17,6 +17,8 @@ C  Some contributions and significant input from Kjell Eriksson.
 C  
 C  Modified by B. Plez to include detailed treatment of lower Balmer lines
 C  April 2, 2019
+C    modifications of 25/09-2007 from previous version implemented here 
+C on 25/08-2020 (connection to DOYLE H+H and RAYLEIGH) BPz
 C
 C  We would very much appreciate bug reports to: barklem@astro.uu.se 
 C
@@ -577,14 +579,16 @@ C
      2 -12.59, -12.56, -12.53/
 C
       PARAMETER (PI = 3.14159265359, SQRTPI = 1.77245385)
-      PARAMETER (CLIGHT = 2.9979258E18)
+      PARAMETER (CLIGHT = 2.99792458E18)
       PARAMETER (CLIGHTCM = 2.99792458E10)
 C
 C  Most model atmosphere codes include Rayleigh scattering by H atoms 
 C  elsewhere, eg. quantum mechanical calculations. This parameter cuts
 C  the Lyman alpha natural absorption at this chosen point.  
 C
-      PARAMETER (RAYLCUT = 1240.D0) ! in Angstroms
+C Changed from 1240 to 1400 by BPz 04/10-2007 (implemented 25/08-2020 in this version)
+      PARAMETER (RAYLCUT = 1400.D0) ! in Angstroms
+cccc      PARAMETER (RAYLCUT = 1240.D0) ! in Angstroms
 c      PARAMETER (RAYLCUT = 3000.D0) ! in Angstroms
 C
 C  Data for self-broadening from calculations of Barklem, Piskunov and 
@@ -815,15 +819,26 @@ C  profiles store log10(I(d omega)) for N(H) = 1e14 cm^-3. Assumed
 C  insensitive to T, and linear scaling with N(H).  Note I(d freq) = 
 C  I(d omega)/c 
 C
-            ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN 
+c Changed by BPz on 25/09-2007 to stop extrapolation where Doyle's H+H
+c CIA takes over in jonabs_vac.dat (detabs.f) : 1750A
+c changed 25/08-2020 in this version
+c
+cccc            ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN
+            ELSE IF (FREQ.GT.57142.8571*CLIGHTCM) THEN
                SPACING = 200.*CLIGHTCM
                FREQ22000 = (82259.105-22000.)*CLIGHTCM
 C
 C  If redward of last point (1660 -> 5000 Angstrom) extrapolate,
+c [BPz : now it is 1750A, not 5000A]
 C  otherwise (1278 -> 1660 Angstrom) linear (in log10 profiles) 
 C  interpolation 
 C  
                IF (FREQ.LT.FREQ22000) THEN
+c
+c Changed by BPz on 25/09-2007. We replace that extrapolation of the far wing
+c by the H+H CIA of Doyle included in the continuous opacity package of MARCS/BABSMA
+c  implemented here on 25/08-2020
+
                   XLYMANH2 = (LYMANH2(2)-LYMANH2(1))/SPACING*
      *                         (FREQ-FREQ22000)+LYMANH2(1)
                ELSE
@@ -884,11 +899,16 @@ C  The profiles store log10(I(d omega)) for N(H+) = 1e14 cm^-3. Assumed
 C  insensitive to T, and linear scaling with N(H+). Note I(d freq) = 
 C  I(d omega)/c and we assume N(H+) = N(e-).
 C
-         ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN 
+c Changed by BPz on 25/09-2007 to stop extrapolation where Doyle's H+H
+c CIA takes over in jonabs_vac.dat (detabs.f) : 1750A
+c
+CCCC         ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN
+         ELSE IF (FREQ.GT.57142.8571*CLIGHTCM) THEN
             SPACING=100.*CLIGHTCM
             FREQ15000=(82259.105-15000.)*CLIGHTCM
 C
 C  If redward of last point (1487 -> 5000 Angstroem) extrapolate,
+c BPz : now it is 1750A, not 5000A. Implemented in this version on 25/08-2020
 C  otherwise (1278 -> 1487 Angstroem) interpolation. 
 C  
             IF (FREQ.LT.FREQ15000) THEN
@@ -952,7 +972,7 @@ C
       DATA Y1WTM/1.E18, 1.E17, 1.E16, 1.E14/
       DATA N1/0/, M1/0/
 C
-      PARAMETER (CLIGHT = 2.9979258E18)
+      PARAMETER (CLIGHT = 2.99792458E18)
       PARAMETER (PI = 3.14159265359, SQRTPI = 1.77245385)
       PARAMETER (H = 6.62618E-27)  !Planck in cgs
       PARAMETER (K = 1.38066E-16)  !Boltzmann in cgs

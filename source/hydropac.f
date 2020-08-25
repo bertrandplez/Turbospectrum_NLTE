@@ -118,7 +118,7 @@ c
             lskip=.true.
             do k=1,ntau
               if (.not. kskip(k)) then
-! include all H lines at that wavelength
+! include selected H line at that wavelength
 !!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
                 call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
      &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,
@@ -132,7 +132,7 @@ c
                   kskip(k)=.true.
                 endif
               endif
-! if kskip is .true. at all depth, then lskip becomes .true., and next 
+! if kskip is .true. at all depths, then lskip becomes .true., and next 
 ! wavelength is skipped
               lskip=lskip.and.kskip(k)
             enddo
@@ -149,7 +149,7 @@ c
             lskip=.true.
             do k=1,ntau
               if (.not. kskip(k)) then
-! include all H lines at that wavelength
+! include selected H line at that wavelength
 !!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
                 call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
      &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,0,

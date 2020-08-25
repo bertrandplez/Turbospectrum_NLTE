@@ -1,19 +1,21 @@
-       LOG of SPECTRUM updates
+       LOG of TURBOSPECTRUM updates
 
 ----------------------------
 ---- ACKNOWLEDGEMENTS ------
 ----------------------------
-The following collleagues have greatly contributed to the successive
+The following colleagues have greatly contributed to the successive
 upgrades of Turbospectrum, through suggestions, coding, and testing:
 
-Carlos Abia, Carlos Allende Prieto, Paul Barklem, Dmitry Bizyaev, Sergi Blanco Cuaresma, 
-Eric Depagne, Ben Davies, Bengt Edvardsson, Kjell Eriksson, Bengt Gustafsson, 
-Vanessa Hill, Michael Ireland, Alain Jorissen, Eric Josselin, 
-Patrick de Laverny, Thomas Masseron, Pieter Neyskens, Aake Nordlund, 
-Pierre North, Svea Hernandez Orta, Nikolai Piskunov, Verne V. Smith, Monique Spite, 
-Matthias Steffen, Mathieu Van der Swaelmen, Sophie Van Eck, Olga Zamora, ...
+Carlos Abia, Carlos Allende Prieto, Paul Barklem, Maria Bergemann, Dmitry Bizyaev, 
+Sergi Blanco Cuaresma, Katia Cunha, Eric Depagne, Ben Davies, Bengt Edvardsson, 
+Kjell Eriksson, Geffrey Gerber, Bengt Gustafsson, Vanessa Hill, Michael Ireland, 
+Alain Jorissen, Eric Josselin, Patrick de Laverny, Thomas Masseron, Pieter Neyskens, 
+Aake Nordlund, Pierre North, Svea Hernandez Orta, Nikolai Piskunov, Verne V. Smith,
+Ekaterina Semenova, Monique Spite, Matthias Steffen, Mathieu Van der Swaelmen, 
+Sophie Van Eck, Olga Zamora, ...
 
 I hope I have not forgotten too many of them !!
+
 
 
 Starts------17/01-2005
@@ -895,18 +897,31 @@ calculation of full window (line list 104000 lines):
 6.369u 0.313s 0:06.69 99.7%	0+0k 0+0io 0pf+0w ! 56 windows
 55.440u 1.426s 0:56.93 99.8%	0+0k 0+0io 0pf+0w ! full 4800-6800A
 
+20/08-2020:
+debug of last two upgrades: HI lines (the threshold was not correctly handled)
+and windows (some lines were not taken into account).
+eps is now set to 10^-3 for HI, and remains at 10^-4 for other lines.
+This increases the cpu time for the last 2 tests above
+from 7 to 14 sec (windows)
+from 57 to 66 sec (full 4800-6800).
+
+6400 - 6800   eps=10-3  1.2 sec  eps=10-4  1.4 sec
+windows:       eps=10-3  14 sec  eps=10-4   30 sec
+4800 - 6800   eps=10-3   66 sec eps=10-4 135 sec
+
 ----------------------------
 ---- ACKNOWLEDGEMENTS ------
 ----------------------------
-The following collleagues have greatly contributed to the successive
+The following colleagues have greatly contributed to the successive
 upgrades of Turbospectrum, through suggestions, coding, and testing:
 
-Carlos Abia, Carlos Allende Prieto, Paul Barklem, Dmitry Bizyaev, Sergi Blanco Cuaresma, 
-Eric Depagne, Ben Davies, Bengt Edvardsson, Kjell Eriksson, Bengt Gustafsson, 
-Vanessa Hill, Michael Ireland, Alain Jorissen, Eric Josselin, 
-Patrick de Laverny, Thomas Masseron, Pieter Neyskens, Aake Nordlund, 
-Pierre North, Svea Hernandez Orta, Nikolai Piskunov, Verne V. Smith, Monique Spite, 
-Matthias Steffen, Mathieu Van der Swaelmen, Sophie Van Eck, Olga Zamora, ...
+Carlos Abia, Carlos Allende Prieto, Paul Barklem, Maria Bergemann, Dmitry Bizyaev, 
+Sergi Blanco Cuaresma, Katia Cunha, Eric Depagne, Ben Davies, Bengt Edvardsson, 
+Kjell Eriksson, Geffrey Gerber, Bengt Gustafsson, Vanessa Hill, Michael Ireland, 
+Alain Jorissen, Eric Josselin, Patrick de Laverny, Thomas Masseron, Pieter Neyskens, 
+Aake Nordlund, Pierre North, Svea Hernandez Orta, Nikolai Piskunov, Verne V. Smith,
+Ekaterina Semenova, Monique Spite, Matthias Steffen, Mathieu Van der Swaelmen, 
+Sophie Van Eck, Olga Zamora, ...
 
 I hope I have not forgotten too many of them !!
 

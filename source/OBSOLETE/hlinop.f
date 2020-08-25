@@ -637,20 +637,6 @@ C
 C  If Lyman alpha we match the static ion part to the Allard et al 
 C  value at -4000 cm^-1 detuning on red wing.
 C
-ccc              IF ((LYMANALF).AND.(FREQ.lT.(82259.105*CLIGHTcm))) THEN
-ccc                WAVE4000 = 1.D8/(82259.105-4000.)
-ccc               XHOLT4000 = 0.5 * STARK1(N,M,WAVE4000,WAVEH,T,XNE)
-ccc                SAT4000 = (10.**(-11.07-14.))/CLIGHTCM*XNE
-ccc                XFAC = 1.+(SAT4000/XHOLT4000-1.)*DABS(DELW)/62.
-ccc                XSTARK = XSTARK * 0.5 * (1. + XFAC)
-ccc              ENDIF
-c
-c fix (below) of code bit above (XHOLT4000 can become zero) by KE, PB
-c  20110308
-C
-C  If Lyman alpha we match the static ion part to the Allard et al 
-C  value at -4000 cm^-1 detuning on red wing.
-C
              IF ((LYMANALF).AND.(FREQ.LT.(82259.105)*CLIGHTCM)) THEN
                WAVE4000 = 1.D8/(82259.105-4000.)
                XHOLT4000 = 0.5 * STARK1(N,M,WAVE4000,WAVEH,T,XNE)
