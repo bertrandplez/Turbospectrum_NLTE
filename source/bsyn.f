@@ -876,10 +876,10 @@ cc        print*,'opened file '
           print 1234,species,lele,iel,ion,(isotope(nn),nn=1,natom)
           print*, 'nlines ', nline
 cc          call Hlineadd(lunit,nline,xlboff)
-! for hydrogen lines a cut at kappa_line/kappa_cont = 1.e-5 at least is necessary
+! for hydrogen lines a different cut is chosen
           epsmem=eps
           eps=1.e-3
-          call hydropac(lunit,xlboff)
+          call hydropac(lunit,xlboff,nlte)
           eps=epsmem
           goto 9874
         endif

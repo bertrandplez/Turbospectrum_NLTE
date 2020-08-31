@@ -1,7 +1,9 @@
-      subroutine hydropac(lunit,xlboff)
+      subroutine hydropac(lunit,xlboff,nlte)
 !
 ! new version for use with hbop.f  ! H line + continuum bf opacity
 ! Bpz 02/02-2019
+! BPz: inclusion of nlte case. Necessary regardless of case for HI lines, as 
+! we need emissivity (stored in source_function), and not only extinction coefficient.
 
       implicit none
 
@@ -29,6 +31,10 @@
      ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
       logical  lymanalpha, usedam,notfound,contonly,kskip(ndp),lskip
       logical  ldone(lpoint),lineonly
+! NLTE
+      logical nlte
+      real xlsingle,bpl
+
 *      
       common /atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
      &               ntau
@@ -125,6 +131,16 @@ c
      &           total,cont,contonly,lineonly)
                 contrib = (total - cont)/xkapr(k)/ro(k)
                 abso(k,l) = abso(k,l) + contrib
+
+! This works only if H is in LTE. If in NLTE, the expression must be changed to include 
+! departure coefficients. To be done later / BPz 31/08-2020
+
+                if (nlte) then
+                  xlsingle=sngl(xlambda(l))
+                  source_function(k,l) = source_function(k,l) + 
+     &                                 contrib*bpl(T(k),xlsingle)
+                endif
+
 ! HI bf is already included in babsma.f
 !!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
 !                print*,xlambda(l),k,contrib,absocont(k,l)
@@ -156,6 +172,16 @@ c
      &           total,cont,contonly,lineonly)
                 contrib = (total - cont)/xkapr(k)/ro(k)
                 abso(k,l) = abso(k,l) + contrib
+
+! This works only if H is in LTE. If in NLTE, the expression must be changed to include 
+! departure coefficients. To be done later / BPz 31/08-2020
+
+                if (nlte) then
+                  xlsingle=sngl(xlambda(l))
+                  source_function(k,l) = source_function(k,l) + 
+     &                                 contrib*bpl(T(k),xlsingle)
+                endif
+
 ! HI bf is already included in babsma.f
 !!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
                 if(contrib/absocont(k,l) .le. eps) then
