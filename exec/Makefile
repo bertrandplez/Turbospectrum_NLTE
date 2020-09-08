@@ -8,6 +8,8 @@ include2 = ../$(SOURCE)/tsuji.par
 
 OPT1     = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff   -save 
 LINKOPT        = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceback -fp-speculationoff -save
+#OPT1     = -convert big_endian -O0 -g -C  -traceback -save 
+#LINKOPT     = -convert big_endian -O0 -g -C  -traceback -save 
 
 SOURCE = source
 

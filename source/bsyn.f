@@ -303,9 +303,9 @@ ccc      external commn_handler
 *  Remaining is counted in absorption    BPz 27/09-2002
 * do not allow this in NLTE case
 
+      scattfrac=datscattfrac
+      absfrac=1.0-scattfrac
       if (.not.nlte) then
-        scattfrac=datscattfrac
-        absfrac=1.0-scattfrac
         if (scattfrac.gt.0.) then
           print*
           print*,' WARNING!!!!! ', scattfrac,' of the line opacity',
