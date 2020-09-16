@@ -160,7 +160,7 @@
 
       logical dattsuji,datspherical,datlimbdark,databfind,
      &        datmultidump,datxifix,datmrxf,dathydrovelo,datpureLTE,
-     &        pureLTE,datnlte
+     &        pureLTE,datnlte,departbin,datdepartbin
       integer datnoffil,datncore,datmaxfil,datmihal,datiint
       real    isoch(1000),isochfact(1000),datisoch(1000),
      &        datisochfact(1000)
@@ -189,7 +189,8 @@
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datiint,datxmyc,datscattfrac,datpureLTE,
      &                 datnlte,datmodelatomfile,datdeparturefile,
-     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile
+     &                 datdepartbin,datcontmaskfile,datlinemaskfile,
+     &                 datsegmentsfile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -215,6 +216,7 @@
 ccc      external commn_handler
 
       nlte=.false.
+      departbin=.true.
       tsuswitch =.false.
       Ames=.false.
       scan2001=.false.
@@ -294,6 +296,7 @@ ccc      external commn_handler
       enddo
       nlte=datnlte
       modelatomfile=datmodelatomfile
+      departbin=datdepartbin
       departurefile=datdeparturefile
       segmentsfile=datsegmentsfile
       contmaskfile=datcontmaskfile
@@ -789,9 +792,10 @@ cc        print*,'opened file '
 *
 * read departure coefficients table
 *
-          call read_departure(77,departurefile,maxlevel,modnlevel,
-     &                        ndp,ndepth,taumod,b_departure,
-     &                    abundance_nlte,header_dep1,header_dep2)
+          call read_departure(77,departurefile,departbin,maxlevel,
+     &                        modnlevel,ndp,ndepth,taumod,
+     &                    b_departure,abundance_nlte,header_dep1,
+     &                      header_dep2)
 ! check
 !          print*,'bsyn, modnlevel ',modnlevel
 !          do iii=1,modnlevel
@@ -917,6 +921,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
             stop 'ERROR'
           else
 ! check abundance
+            abundance_nlte = log10(abund(iel))+12. !jeff set this so abundance can be adjusted freely while fitting
             if (abs(log10(abund(iel))+12.-abundance_nlte)
      &          .gt.0.0001) then
               print*,' Bsyn: NLTE departure coeff calculated for',

@@ -15,7 +15,7 @@
      &              modelatomfile,departurefile,
      &              contmaskfile,linemaskfile,segmentsfile
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
-     &        hydrovelo,pureLTE
+     &        hydrovelo,pureLTE,departbin
       integer iint,k
       real    isoch(1000),isochfact(1000),xic,xmyc,scattfrac
       doubleprecision xl1,xl2,del,xlmarg,xlboff
@@ -29,7 +29,8 @@
      &                 inpmod,continopac,filwavel,hydrovelo,
      &                 xl1,xl2,del,xlmarg,xlboff,iint,xmyc,scattfrac,
      &                 pureLTE,nlte,modelatomfile,departurefile,
-     &                 contmaskfile,linemaskfile,segmentsfile
+     &                 departbin,contmaskfile,linemaskfile,
+     &                 segmentsfile
 
       common/species/atominclude
       data atominclude 
@@ -51,6 +52,7 @@
       departurefile=' '
       scattfrac=0.0
       pureLTE=.false.
+      departbin=.true.
       do k=1,100
         abch(k)=-99.9
       enddo
@@ -146,6 +148,8 @@ ccc      inatom='DATA/atomdata-v12.1'
         read(charvalue,10) modelatomfile
       else if (keyword(1:13).eq.'DEPARTUREFILE') then
         read(charvalue,10) departurefile
+      else if (keyword(1:12).eq.'DEPARTBINARY') then
+        read(charvalue,*) departbin
       else if (keyword(1:12).eq.'SEGMENTSFILE') then
         read(charvalue,10) segmentsfile
         print*,'input : segmentsfile',segmentsfile
