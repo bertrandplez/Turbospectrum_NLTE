@@ -64,11 +64,13 @@
          read(iunit,1969) coefval(k), power(k,:)
         enddo  
  1969  format('# ', a15,3(1x,f10.6))
-        read(iunit,1971) ndepth_read
- 1971  format(i3,1x)
+        read(iunit,1971) abundance_nlte
+ 1971  format(f6.3,1x)
+        read(iunit,1972) ndepth_read
+ 1972  format(i3,1x)
         print*,'read_departure, ndepth ',ndepth_read
-        read(iunit,1972) modnlevel_read
- 1972  format(i4,1x)
+        read(iunit,1973) modnlevel_read
+ 1973  format(i4,1x)
         print*,'read_departure, nlevel ',modnlevel_read
         if (ndepth.lt.ndepth_read) then
           print*,'ndepth in departure file ',
@@ -83,16 +85,16 @@
            stop 'read_departure.f'
         endif
         do i=1,ndepth_read
-          read(iunit,1973) taumod(i)
+          read(iunit,1974) taumod(i)
           taumod(i)=10.**taumod(i)
 ! set departure coefficient to 1 for unidentified levels
           b_departure(i,0)=1.0
         enddo
- 1973  format(f8.4,1x)
+ 1974  format(f8.4,1x)
         do i=1,ndepth_read
-         read(iunit,1974)  (b_departure(i,j), j=1, modnlevel)
+         read(iunit,1975)  (b_departure(i,j), j=1, modnlevel)
         enddo
- 1974  format(1000(f10.5,2x))
+ 1975  format(1000(f10.5,2x))
         print*,'read departure coefficients for ',ndepth_read,
      &       ' depths in read_departure'
 
