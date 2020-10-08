@@ -921,7 +921,6 @@ cc          call Hlineadd(lunit,nline,xlboff)
             stop 'ERROR'
           else
 ! check abundance
-            abundance_nlte = log10(abund(iel))+12. !jeff set this so abundance can be adjusted freely while fitting
             if (abs(log10(abund(iel))+12.-abundance_nlte)
      &          .gt.0.0001) then
               print*,' Bsyn: NLTE departure coeff calculated for',
