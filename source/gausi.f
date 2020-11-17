@@ -12,7 +12,7 @@
 *
 *-----------------------------------------------------------------------
 *
-      DIMENSION AI(6),XMYI(6),AP(29),XMYP(29),INDOV(9)
+      DIMENSION AI(*),XMYI(*),AP(29),XMYP(29),INDOV(9)
 *
 * 10 DATAKORT FOER AP, 9 FOER XMYP OCH 1 FOER INDOV
 *
