@@ -63,9 +63,10 @@
         do k=1,8
          read(iunit,1969) coefval(k), power(k,:)
         enddo  
- 1969  format('# ', a15,3(1x,f10.6))
+! 1969  format('# ', a15,3(1x,f10.6))
+ 1969  format(2x, a15,3(1x,f10.6))
         read(iunit,1971) abundance_nlte
- 1971  format(f6.3,1x)
+ 1971  format(f6.2,1x)
         read(iunit,1972) ndepth_read
  1972  format(i3,1x)
         print*,'read_departure, ndepth ',ndepth_read

@@ -15,7 +15,7 @@
      &              modelatomfile,departurefile,
      &              contmaskfile,linemaskfile,segmentsfile
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
-     &        hydrovelo,pureLTE,departbin
+     &        hydrovelo,pureLTE,departbin,nlte
       integer iint,k
       real    isoch(1000),isochfact(1000),xic,xmyc,scattfrac
       doubleprecision xl1,xl2,del,xlmarg,xlboff
