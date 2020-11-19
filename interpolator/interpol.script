@@ -1,0 +1,103 @@
+#!/bin/csh -f
+##################################################################################################
+# Output turbospectrum/babsma format compatible 
+# A control plot (interpol_check.ps) is displayed at the end.
+# Extrapolation is not advised, even if allowed by this program.
+# Requires an "cubic" set of 8 MARCS binary format models,
+# in other words 
+# !!!!!   MODELS MUST DIFFER 2 BY 2 BY ONLY ONE PARAMETER !!!!!!  
+# !!!!!!! ORDER OF THE INPUT MODELS MATTERS !!!!!!!
+# here is the order of the files
+# model1: Tefflow logglow zlow
+# model2: Tefflow logglow zup
+# model3: Tefflow loggup zlow
+# model4: Tefflow loggup zup
+# model5: Teffup logglow zlow
+# model6: Teffup logglow zup
+# model7: Teffup loggup zlow
+# model8: Teffup loggup zup
+######################################################################################################
+
+set model_path = /Users/gerber/iwg7_pipeline/fromBengt/marcs_my_search/plane_and_sphere  #needs updated by the user, points to where MARCS models are
+set nlte_path = NLTEdata  #needs updated by the user, points to where NLTE data is (binary file of departure coefficients and auxiliary data file used to navigate it)
+
+#MARCS binary format (.true.) or MARCS ASCII web format (.false.)?
+set marcs_binary = '.false.'
+#set marcs_binary = '.true.'
+
+#enter here the values requested for the interpolated model 
+foreach Tref   ( 4600 )
+foreach loggref ( +4.75 )
+foreach zref ( -2.20 )
+set modele_out = Testout/${Tref}g${loggref}z${zref}.interpol
+set modele_out2 = Testout/${Tref}g${loggref}z${zref}.alt
+set modele_out3 = Testout/${Tref}g${loggref}z${zref}_coef.dat
+#set modele_out = scratch
+
+# grid values bracketting the interpolation point (should be automatised!)
+set Tefflow = 4750
+set Teffup  = 4500
+set logglow = +4.5
+set loggup  = +5.0
+set zlow    = -3.00
+set zup     = -2.00
+set alflow  = +0.40
+set alfup   = +0.40
+set xit     = 01
+
+
+#set the file name of the NLTE binary file
+set nlte_binary = ${nlte_path}/1D_NLTE_grid_Fe_MARCSfullGrid.bin
+set nlte_model_list = ${nlte_path}/auxData_Fe_MARCSfullGrid.txt
+
+#spherical models
+#set model1 = s${Tefflow}_g${logglow}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model2 = s${Tefflow}_g${logglow}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model3 = s${Tefflow}_g${loggup}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model4 = s${Tefflow}_g${loggup}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model5 = s${Teffup}_g${logglow}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model6 = s${Teffup}_g${logglow}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model7 = s${Teffup}_g${loggup}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model8 = s${Teffup}_g${loggup}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+
+#plane-parallel models
+set model1 = p${Tefflow}_g${logglow}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+set model2 = p${Tefflow}_g${logglow}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+set model3 = p${Tefflow}_g${loggup}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+set model4 = p${Tefflow}_g${loggup}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+set model5 = p${Teffup}_g${logglow}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+set model6 = p${Teffup}_g${logglow}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+set model7 = p${Teffup}_g${loggup}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+set model8 = p${Teffup}_g${loggup}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+
+
+#### the test option is set to .true. if you want to plot comparison model (model_test)
+set test = '.false.'
+set model_test = 'Testwebformat/p5750_g+4.5_m0.0_t01_ap_z-0.25_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00.mod'
+
+# interpolation program (for further details see interpol_modeles.f)
+./interpol_modeles <<EOF
+'${model_path}/${model1}'
+'${model_path}/${model2}'
+'${model_path}/${model3}'
+'${model_path}/${model4}'
+'${model_path}/${model5}'
+'${model_path}/${model6}'
+'${model_path}/${model7}'
+'${model_path}/${model8}'
+'${modele_out}'
+'${modele_out2}'
+'${modele_out3}'
+'${nlte_binary}'
+'${nlte_model_list}'
+${Tref}
+${loggref}
+${zref}
+${test}
+${marcs_binary}
+'${model_test}'
+EOF
+
+end
+end 
+end
