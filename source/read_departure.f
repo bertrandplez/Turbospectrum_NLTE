@@ -85,7 +85,7 @@
         do k=1,8
          read(iunit,1969) coefval(k), power(k,:)
         enddo  
- 1969  format('# ', a15,3(1x,f10.0))
+ 1969   format(2x, a15,3(1x,f10.0))
         read(iunit,*) abundance_nlte
         read(iunit,*) ndepth_read
         print*,'read_departure, ndepth ',ndepth_read

@@ -1,0 +1,19 @@
+The contents of this folder are as follows:
+
+interpol_modeles.f - fortran code to interpolate MARCS model atmospheres for a given set of parameters and generate an interpolated model and a file containing departure coefficients interpolated for the given paraemeters (*_coef.dat)
+
+interpol.script - a bash script to run interpol_modeles.f
+
+NLTEdata/ - a folder containing binary files of grids of departure doefficients computed by MULTI for the entire MARCS grid or a given subset, and auxiliary data files that interpol_modeles uses to search and extract the needed information from the binary grid. You likely don't need all of the binary files (they are large and take a while to download). Just choose the ones for the elements you want to use/test. 
+
+Testout/ - a folder containing some sample output
+
+How to run the interpolator:
+
+1. compile using either an Intel or GNU fortran compiler using the following command:
+		>gfortran -o interpol_modeles interpol_modeles.f
+   (where gfortran can be replaced with ifort, and the -o command names the compiled output to    "interpol modeles")
+2. run the interpol.script after changing the necessary lines (such as what parameters are needed and what values bracket those parameters) using the following command:
+         >./interpol.script
+
+The interpolator does a simple linear interpolation between three dimensions: Teff, logg, and [Fe/H] and outputs the results.
