@@ -38,7 +38,8 @@
 *
       CHARACTER*256 DETOUT,INATOM,INMOD,INLINE,INSPEC,OUTFIL,inabun,
      &              filterfil
-      character*80 filttitle,comment,comment_line
+      character*80 filttitle
+      character*256 comment,comment_line
       character*50 MCODE
 
       real scattfrac,absfrac
@@ -789,6 +790,11 @@ cc        print*,'opened file '
           call read_modelatom(77,modelatomfile,maxnlevel,modnlevel,
      &                          modenergy,modg,modion,modid,
      &                          nlte_specname)
+          print*,'afetr read modelatom',maxnlevel,modenergy
+          print*,modg
+          print*,modion
+          print*,modid
+          print*,nlte_specname
 *
 * read departure coefficients table
 *
@@ -796,6 +802,16 @@ cc        print*,'opened file '
      &                        modnlevel,ndp,ndepth,taumod,
      &                    b_departure,abundance_nlte,header_dep1,
      &                      header_dep2)
+!
+! DUMMY 
+
+          taumod=tau
+!
+!
+!
+!
+!
+
 ! check
 !          print*,'bsyn, modnlevel ',modnlevel
 !          do iii=1,modnlevel
@@ -810,6 +826,7 @@ cc        print*,'opened file '
           print*,'NLTE abundance :',abundance_nlte
 
           if (ndepth.ne.ntau) then
+            print*,'ndepth',ndepth,'ntau',ntau
             stop ' wrong model or departure file! stop in bsyn.f !'
           else
             do iii=1,ntau
@@ -836,6 +853,7 @@ cc        print*,'opened file '
 *
         else
 ! LTE case
+          modnlevel = 0
           do iiii=0,maxlevel
             do iii=1,ntau
               b_departure(iii,iiii)=1.0
@@ -883,7 +901,12 @@ cc          call Hlineadd(lunit,nline,xlboff)
 ! for hydrogen lines a different cut is chosen
           epsmem=eps
           eps=1.e-3
-          call hydropac(lunit,xlboff,nlte)
+! include departure coefficients for hydrogen. BPz 17/11-2020
+          print*,'bsyn nlte, nlte_species',nlte,nlte_species
+          call hydropac(lunit,xlboff,nlte,
+     &                  nlte_species,maxlevel,modnlevel,
+     &                  b_departure,modenergy,
+     &                  modg,modion,modid)
           eps=epsmem
           goto 9874
         endif

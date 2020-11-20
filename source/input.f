@@ -167,8 +167,14 @@ ccc      inatom='DATA/atomdata-v12.1'
         read(iread,*) diflog
       else if (keyword(1:6).eq.'NFILES') then
         read(charvalue,*) noffil
-        do i=1,noffil
-          read(iread,'(a)') linefil(i)
+        i=0
+        do while (i.lt.noffil)
+  2       read(iread,'(a)',end=99) oneline
+          if (oneline(1:1).eq.'#') then
+            goto 2       ! this is a comment. Skip
+          endif
+          i=i+1
+          read(oneline,'(a)') linefil(i)
         enddo
       else if (keyword(1:7).eq.'LOGFILE') then
         read(charvalue,10) detout

@@ -49,7 +49,8 @@ C
 C***********************************************************************
 
       SUBROUTINE HBOP(WAVE, N, NLO, NUP, WAVEH, NH, NHE, NE, T, DOP,
-     *                  NPOP, NL, TOTAL, CONTIN, contonly,lineonly)
+     *                  NPOP, b_departure, NL, TOTAL, CONTIN, contonly,
+     *                lineonly)
 C
 C  Returns the total absorption coefficient due to H bound levels at WAVE, 
 C  for a given line list employing the occupation probability formalism 
@@ -94,6 +95,7 @@ C  nhe    = number density of He I in cm-3
 C  dop    = reduced Doppler width delta_lambda / lambda_0
 C         = reduced Doppler width delta_nu / nu_0
 C  npop   = number density of each level in cm-3
+C  b_departure = departure coefficients (added by BPz 17/11-2020)
 C  nl     = number of levels for which populations are pre-specified 
 C           -- higher levels are assumed in LTE
 C  total  = returns the total (line + continuous) absorption coefficient
@@ -118,7 +120,7 @@ C
       REAL NH, NHE, NE, T, CONTIN, DOP, TOTAL
       REAL NHL, NHEL, NEL, TL
       REAL*8 W(NLEVELS), G(NLEVELS), WGE(NLEVELS)
-      REAL NLTE(NLEVELS), NPOP(*), NP(NLEVELS)
+      REAL NLTE(NLEVELS), NPOP(*), NP(NLEVELS), b_departure(*)
       REAL Z, H, C, HC, K, KT, LINE, SIGMA, CHI, SF, PROF
       REAL IONH, X, HFNM, FNM(NLEVELS,NLEVELS), HLINOP, HBF
       REAL TS, TF
@@ -181,7 +183,13 @@ C
 C
       DO 20 I = 1, NLEVELS
       IF (I .LE. NL) THEN 
-        NP(I) = NPOP(I)        ! non-LTE populations for states below NL
+        if (npop(I).gt.0.) then
+! NLTE number densities are given
+          NP(I) = NPOP(I)        ! non-LTE populations for states below NL
+        else 
+! departure coeffients are given
+          np(i)=b_departure(i)*nlte(i)
+        endif
       ELSE 
         NP(I) = NLTE(I)        ! LTE populations otherwise
       ENDIF

@@ -305,9 +305,13 @@ c
 ! dopple not used for continuum
       dopple=0.0
       xlambda=dble(xla(jp))
+
+! COMPUTE in LTE. CAN BE CHANGED LATER.
+
       call hbop(xlambda,nline,nlo,nup,hlambda,
-     &         nh1,nhe1,ne,t(ntp),dopple,npop,0,total,cont,
+     &         nh1,nhe1,ne,t(ntp),dopple,npop,1.,0,total,cont,
      &         contonly,lineonly)
+
       sumabs=sumabs+cont/rosav(ntp)
 !
 ! now HI bf absorption is included !
