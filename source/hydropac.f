@@ -186,7 +186,7 @@ c
                 do i=1,modnlev
                   bd(i)=b_departure(k,i)
                 enddo
-                do i=max(modnlev,1),nlevlist
+                do i=max(modnlev+1,1),nlevlist
                   bd(i)=1.0
                 enddo
               endif
@@ -249,14 +249,13 @@ c
                 do i=1,modnlev
                   bd(i)=b_departure(k,i)
                 enddo
-                do i=max(modnlev,1),nlevlist
+                do i=max(modnlev+1,1),nlevlist
                   bd(i)=1.0
                 enddo
               endif
               if (.not. kskip(k)) then
 ! include selected H line at that wavelength
 !!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
-                modnlev=max(modnlevel-1,0)
                 call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
      &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,
      &           b_departure,modnlev,

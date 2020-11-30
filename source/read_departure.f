@@ -22,11 +22,13 @@
       real, dimension(8,3) :: power
 
 ! unformatted  file case:
+      header_dep1=' '
+      header_dep2=' '
 
       if (departbin) then
 
-! dummy, for test
-        goto 1
+! DUMMY, for test
+!        goto 1
 !
 
         open(iunit,file=departurefile,form='unformatted',status='old',
@@ -61,21 +63,22 @@
         do j=1,modnlevel
           do i=1,ndepth_read
             read(iunit) b_departure(i,j)
+          print*,'departure ',i,j,b_departure(i,j)
           enddo
         enddo
 
 !
-!   DUMMY
-
-  1     abundance_nlte = 12.
-        ndepth_read=80
-        modnlevel_read = 20
-
-        do j=0,modnlevel
-          do i=1,ndepth_read
-            b_departure(i,j)=1.0
-          enddo
-        enddo
+!   DUMMY  for testing with B=1.0 that LTE is recovered. It works. BPz 20/11-2020
+!
+!  1     abundance_nlte = 12.
+!        ndepth_read=80
+!        modnlevel_read = 20
+!
+!        do j=0,modnlevel
+!          do i=1,ndepth_read
+!            b_departure(i,j)=1.0
+!          enddo
+!        enddo
 !
 ! END OF DUMMY
 ! formatted file case:

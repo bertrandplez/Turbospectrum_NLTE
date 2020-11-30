@@ -803,9 +803,9 @@ cc        print*,'opened file '
      &                    b_departure,abundance_nlte,header_dep1,
      &                      header_dep2)
 !
-! DUMMY 
-
-          taumod=tau
+! DUMMY  for  LTE test
+!
+!          taumod=tau
 !
 !
 !
@@ -813,16 +813,16 @@ cc        print*,'opened file '
 !
 
 ! check
-!          print*,'bsyn, modnlevel ',modnlevel
-!          do iii=1,modnlevel
-!            print*,iii,(b_departure(iiii,iii),iiii=1,ndepth)
-!          enddo
+          print*,'bsyn, modnlevel ',modnlevel
+          do iii=1,modnlevel
+            print*,iii,(b_departure(iiii,iii),iiii=1,ndepth)
+          enddo
 !
 ! a couple of simple checks
 !
           print*,'read departure file header '
-          print*,adjustl(trim(header_dep1))
-          print*,adjustl(trim(header_dep2))
+          print*,trim(adjustl(header_dep1))
+          print*,trim(adjustl(header_dep2))
           print*,'NLTE abundance :',abundance_nlte
 
           if (ndepth.ne.ntau) then
