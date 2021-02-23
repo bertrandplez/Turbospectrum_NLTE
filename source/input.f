@@ -12,7 +12,7 @@
       character*128 filmet,filmol,filwavel
       character*256 linefil,detout,inatom,inmod,inabun,inspec,
      &              outfil,mongofil,filterfil,continopac,inpmod,
-     &              modelatomfile,departurefile,
+     &              modelatomfile,departurefile,nlteinfofile,
      &              contmaskfile,linemaskfile,segmentsfile
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
      &        hydrovelo,pureLTE,departbin,nlte
@@ -30,7 +30,7 @@
      &                 xl1,xl2,del,xlmarg,xlboff,iint,xmyc,scattfrac,
      &                 pureLTE,nlte,modelatomfile,departurefile,
      &                 departbin,contmaskfile,linemaskfile,
-     &                 segmentsfile
+     &                 segmentsfile,nlteinfofile
 
       common/species/atominclude
       data atominclude 
@@ -50,6 +50,7 @@
       segmentsfile=' '
       modelatomfile=' '
       departurefile=' '
+      nlteinfofile=' '
       scattfrac=0.0
       pureLTE=.false.
       departbin=.true.
@@ -141,9 +142,11 @@ ccc      inatom='DATA/atomdata-v12.1'
           abch(iii)=fifi
           print*,iii,fifi
         enddo
-      else if (keyword(1:4).eq.'NLTE'.or.
-     &         keyword(1:4).eq.'nlte') then
+      else if (keyword(1:5).eq.'NLTE '.or.
+     &         keyword(1:5).eq.'nlte ') then
         read(charvalue,*) nlte
+      else if (keyword(1:12).eq.'NLTEINFOFILE') then
+        read(charvalue,10) nlteinfofile
       else if (keyword(1:13).eq.'MODELATOMFILE') then
         read(charvalue,10) modelatomfile
       else if (keyword(1:13).eq.'DEPARTUREFILE') then

@@ -25,6 +25,17 @@
       header_dep1=' '
       header_dep2=' '
 
+      if (departurefile.eq.'') then
+        do j=0,modnlevel
+          do i=1,ndepth
+            b_departure(i,j)=1.0
+          enddo
+        enddo
+        print*,' No departure file for this species,',
+     &         ' setting departure coefficients to 1.0'
+        return
+      endif
+
       if (departbin) then
 
 ! DUMMY, for test

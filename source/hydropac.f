@@ -211,7 +211,7 @@ c
                     corr = (expcorr - 1.)/
      &               ( bd(nlo(nl)) / bd(nup(nl)) * expcorr - 1. )
                     if (k.eq.10) then
-                      print*,'check',l,
+                      print*,'check H NLTE correction',l,
      &                   expcorr,bd(nlo(nl)),bd(nup(nl)),corr
                     endif
                   else
@@ -269,15 +269,19 @@ c
 
                 if (nlte) then
                   xlsingle=sngl(xlambda(l))
-                  expcorr = exp(hckt(k)/xlsingle)
-                  corr = (expcorr - 1.)/
+                  if (nlte_species) then
+                    expcorr = exp(hckt(k)/xlsingle)
+                    corr = (expcorr - 1.)/
      &               ( bd(nlo(nl)) / bd(nup(nl)) * expcorr - 1. )
+                    if (k.eq.10) then
+                      print*,'check',l,
+     &                   expcorr,bd(nlo(nl)),bd(nup(nl)),corr
+                    endif
+                  else
+                    corr=1.0
+                  endif
                   source_function(k,l) = source_function(k,l) + 
      &                                 contrib*bpl(T(k),xlsingle)*corr
-                  if (k.eq.10) then
-                    print*,'check',l,
-     &                 expcorr,bd(nlo(nl)),bd(nup(nl)),corr
-                  endif
                 endif
 
 ! HI bf is already included in babsma.f

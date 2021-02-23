@@ -141,6 +141,7 @@ bsyn_luobj = \
       ../$(SOURCE)/read_segments.f \
       ../$(SOURCE)/read_modelatom.f \
       ../$(SOURCE)/read_departure.f \
+      ../$(SOURCE)/read_nlteinfofile.f \
       ../$(SOURCE)/tint.f \
       ../$(SOURCE)/lint.f \
       ../$(SOURCE)/traneq.f \

@@ -95,6 +95,9 @@ C
       ISTARK = 1
       ISELF = 2
       ICONV = 1
+! Test BPz
+!      ISELF = 1
+!
       IHE = 1
 C
 C We check we have a line which we can handle

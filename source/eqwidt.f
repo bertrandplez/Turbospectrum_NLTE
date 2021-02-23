@@ -137,7 +137,8 @@
      &          departurefile,
      &          speciallinesfile,
      &          contmaskfile,linemaskfile,segmentsfile,
-     &          datcontmaskfile,datlinemaskfile,datsegmentsfile
+     &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
+     &          datnlteinfofile,nlteinfofile
       doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -154,7 +155,8 @@
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
      &                 datmodelatomfile,datdeparturefile,
-     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile
+     &                 datcontmaskfile,datlinemaskfile,datsegmentsfile,
+     &                 datnlteinfofile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -254,6 +256,7 @@ ccc      external commn_handler
       segmentsfile=datsegmentsfile
       linemaskfile=datlinemaskfile
       contlinefile=datcontlinefile
+      nlteinfofile=datnlteinfofile
 
       print*,' EQWIDT CHECK: xl1= ',xl1
       print*,' EQWIDT CHECK: xl2= ',xl2

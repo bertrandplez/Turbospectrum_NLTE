@@ -173,7 +173,8 @@
      &          datmodelatomfile,datdeparturefile,departurefile,
      &          modelatomfile,
      &          contmaskfile,linemaskfile,segmentsfile,
-     &          datcontmaskfile,datlinemaskfile,datsegmentsfile
+     &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
+     &          datnlteinfofile,nlteinfofile
       doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
@@ -191,7 +192,7 @@
      &                 datiint,datxmyc,datscattfrac,datpureLTE,
      &                 datnlte,datmodelatomfile,datdeparturefile,
      &                 datdepartbin,datcontmaskfile,datlinemaskfile,
-     &                 datsegmentsfile
+     &                 datsegmentsfile,datnlteinfofile
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -211,13 +212,12 @@
 ***********************************************
       data debug/.false./
       data nat/92/
-      logical newformat,starkformat
+      logical newformat,starkformat,nlteformat
       character oneline*256
 
 ccc      external commn_handler
 
       nlte=.false.
-      departbin=.true.
       tsuswitch =.false.
       Ames=.false.
       scan2001=.false.
@@ -302,6 +302,7 @@ ccc      external commn_handler
       segmentsfile=datsegmentsfile
       contmaskfile=datcontmaskfile
       linemaskfile=datlinemaskfile
+      nlteinfofile=datnlteinfofile
 
 * fraction of the line opacity to count as scattering.
 *  Remaining is counted in absorption    BPz 27/09-2002
@@ -762,38 +763,52 @@ cc        print*,'opened file '
         read(lunit,*,end=9874) species,ion,nline
         print*,species
         read(lunit,*) comment
+        call getinfospecies(species,iel,natom,atom,isotope)
 *
 * find out if this species is treated in NLTE
-* This is tagged in the line list as the word 'NLTE' appearing anywhere in comment
 *
-        iii=1
+! default values, but are set in call to read_nlteinfo
+        departbin=.true.
         nlte_species=.false.
-        do while (iii.le.len(comment)-3)
-          if (comment(iii:iii+3).eq.'NLTE'.or.
-     &        comment(iii:iii+3).eq.'nlte') then
-            nlte_species=.true.
-*  nlte must be set to .true. if at least one species in nlte
-            if (.not.nlte) then
-              print*,'NLTE must be set to .true. in order to treat',
-     &               ' nlte species consistently'
-              stop 'Set NLTE !'
-            endif
-          endif
-          iii=iii+1
-        enddo
+!
+! not done like this anymore. No flag needed in line list
+!
+!        iii=1
+!        do while (iii.le.len(comment)-3)
+!          if (comment(iii:iii+3).eq.'NLTE'.or.
+!     &        comment(iii:iii+3).eq.'nlte') then
+!            nlte_species=.true.
+!*  nlte must be set to .true. if at least one species in nlte
+!            if (.not.nlte) then
+!              print*,'NLTE must be set to .true. in order to treat',
+!     &               ' nlte species consistently'
+!              stop 'Set NLTE !'
+!            endif
+!          endif
+!          iii=iii+1
+!        enddo
+!
+! The species NLTE information is now centralised in a single file.
+! 2021-02-23
+        if (nlte) then
+          if (nlteinfofile.eq.' ') stop 'missing NLTEINFOFILE !'
+          call read_nlteinfofile(77,nlteinfofile,iel,
+     &      modelatomfile,departurefile,departbin,nlte_species)
+        endif
         if (nlte_species) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
 * read model atom file with level identifications
 ! unit number to open, file name, max number of levels, number of level read, energy of the levels
           print*,'modelatomfile = ',modelatomfile
-          call read_modelatom(77,modelatomfile,maxnlevel,modnlevel,
+          call read_modelatom(77,modelatomfile,maxmodlevel,modnlevel,
      &                          modenergy,modg,modion,modid,
      &                          nlte_specname)
-          print*,'afetr read modelatom',maxnlevel,modenergy
-          print*,modg
-          print*,modion
-          print*,modid
+          print*,'after read modelatom',maxmodlevel,
+     &            modenergy(1:modnlevel)
+          print*,modg(1:modnlevel)
+          print*,modion(1:modnlevel)
+          print*,modid(1:modnlevel)
           print*,nlte_specname
 *
 * read departure coefficients table
@@ -814,7 +829,7 @@ cc        print*,'opened file '
 
 ! check
           print*,'bsyn, modnlevel ',modnlevel
-          do iii=1,modnlevel
+          do iii=0,modnlevel
             print*,iii,(b_departure(iiii,iii),iiii=1,ndepth)
           enddo
 !
@@ -863,7 +878,6 @@ cc        print*,'opened file '
 *
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
-        call getinfospecies(species,iel,natom,atom,isotope)
 * find out if Ames H2O or Joergensen's
         if (iel.eq.10108) then
           do ic=1,77
@@ -940,7 +954,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
         if (nlte_species) then
           if (aname(iel).ne.nlte_specname) then
             print*,' Bsyn: NLTE species is ',aname(iel),
-     &             'but model atom is for ',nlte_specname
+     &             ' but model atom is for ',nlte_specname
             stop 'ERROR'
           else
 ! check abundance
@@ -983,7 +997,9 @@ cc          call Hlineadd(lunit,nline,xlboff)
 * allows backward compatibility for pre-v14.1 format molecular line lists
         read(lunit,'(a)') oneline
         backspace(lunit)
+        nlteformat=.false.
         if (iel.gt.92) then
+          starkformat=.false.
           read(oneline,*,err=11,end=11) xlb,chie,gfelog,fdamp,gu,raddmp,
      &                levlo,levup
           newformat=.true.
@@ -998,11 +1014,20 @@ cc          call Hlineadd(lunit,nline,xlboff)
      &                gamst,levlo,levup
           starkformat=.true.
           newformat=.true.
+          read(oneline,*,err=14,end=14) xlb,chie,gfelog,fdamp,gu,raddmp,
+     &                      gamst,
+     &                      levlo,levup,eqw,eqwerr,comment_line,
+     &                      ilevlo,ilevup,idlevlo,idlevup
+          nlteformat=.true.    ! compatible with newformat line list with/out Stark
           goto 14
 8         starkformat=.false.
           read(oneline,*,err=13,end=13) xlb,chie,gfelog,fdamp,gu,raddmp,
      &                levlo,levup
           newformat=.true.
+          read(oneline,*,err=14,end=14) xlb,chie,gfelog,fdamp,gu,raddmp,
+     &                      levlo,levup,eqw,eqwerr,comment_line,
+     &                      ilevlo,ilevup,idlevlo,idlevup
+          nlteformat=.true.    ! compatible with newformat line list with/out Stark
           goto 14
 13        newformat=.false.
 14        continue
@@ -1017,8 +1042,8 @@ cc          call Hlineadd(lunit,nline,xlboff)
         ILINE=0
         NALLIN=NALLIN+NLINE
 
-        ilevlo=1
-        ilevup=2  ! dummy values
+        ilevlo=0
+        ilevup=0  ! dummy values
 *
 * NLINE is the number of lines of the element IEL.
 *
@@ -1059,16 +1084,36 @@ cc          call Hlineadd(lunit,nline,xlboff)
 *
 * NLTE format includes also 2 more integers for lower and upper level identification
         if (newformat) then
-          if (nlte_species) then
-            if (starkformat) then
+          if (starkformat) then
+            if (nlteformat) then
+! Stark + NLTE level identification
               read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
      &                      levlo,levup,eqw,eqwerr,comment_line,
      &                      ilevlo,ilevup,idlevlo,idlevup
             else
+! Stark without NLTE level identification 
+              read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
+     &                      levlo,levup
+              ilevlo=0
+              ilevup=0
+            endif
+          else
+            if (nlteformat) then
+! no Stark, but NLTE level identification
               read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,
      &                      levlo,levup,eqw,eqwerr,comment_line,
      &                      ilevlo,ilevup,idlevlo,idlevup
+            else
+! no Stark, no NLTE level identification
+              read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
+              ilevlo=0
+              ilevup=0
             endif
+            gamst=0.
+          endif
+
+! check if we have proper level identification or not
+          if (nlte_species) then
             if (ilevlo.gt.modnlevel.or.ilevup.gt.modnlevel) then
               print*,'level number outside range!', ilevlo,ilevup,
      &               ' max =',modnlevel
@@ -1083,21 +1128,14 @@ cc          call Hlineadd(lunit,nline,xlboff)
               stop 'bsyn.f; level identification (<0) is wrong'
             endif
 ! check departure coeff
-            print*,'ilevlo ilevup, lambda',ilevlo,ilevup,sngl(xlb)
-            do k=1,ntau
-               print*,k,b_departure(k,ilevlo),b_departure(k,ilevup)
-            enddo
+!            print*,'ilevlo ilevup, lambda',ilevlo,ilevup,sngl(xlb)
+!            do k=1,ntau
+!               print*,k,b_departure(k,ilevlo),b_departure(k,ilevup)
+!            enddo
 !
           else
-            if (starkformat) then
-              read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
-     &                      levlo,levup
-            else
-              read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,levup
-              gamst=0.
-            endif
-            ilevlo=1
-            ilevup=2  ! dummy values
+            ilevlo=0
+            ilevup=0
           endif
         else
 * allows backward compatibility for older format molecular line lists
@@ -1106,6 +1144,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
             stop
           endif
           read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp
+          gamst=0.
         endif
 *
         if (nsegment.eq.1) then

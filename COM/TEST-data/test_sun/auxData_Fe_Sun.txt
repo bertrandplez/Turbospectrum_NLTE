@@ -1,0 +1,2 @@
+# model atmosphere ID, Teff [K], log(g), [Fe/H], A(X),  pointer
+               'sun_marcs_t5777_4.44_0.00_vmic1_new'   5777.0       4.44       0.00     7.50                                                                1
