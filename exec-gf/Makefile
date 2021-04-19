@@ -140,6 +140,7 @@ bsyn_luobj = \
       ../$(SOURCE)/read_modelatom.f \
       ../$(SOURCE)/read_departure.f \
       ../$(SOURCE)/read_nlteinfofile.f \
+      ../$(SOURCE)/strings_module.f90 \
       ../$(SOURCE)/tint.f \
       ../$(SOURCE)/lint.f \
       ../$(SOURCE)/traneq.f \
@@ -166,13 +167,19 @@ bsyn_luobj = \
 #clean : 
 #	rm *.f bsyn_lu babsma_lu eqwidt_lu 
 
-all : cubint_module.mod  babsma_lu bsyn_lu eqwidt_lu 
+all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu eqwidt_lu 
+
+cubint_module.o : ../${SOURCE}/cubint_module.f90
+	$(F)  -c ../${SOURCE}/cubint_module.f90
 
 cubint_module.mod : ../$(SOURCE)/cubint_module.f90 cubint_module.o
 	$(F)  -c ../$(SOURCE)/cubint_module.f90
 
-cubint_module.o : ../${SOURCE}/cubint_module.f90
-	$(F)  -c ../${SOURCE}/cubint_module.f90
+strings_module.o : ../${SOURCE}/strings_module.f90
+        $(F)  -c ../${SOURCE}/strings_module.f90
+
+strings_module.mod : ../$(SOURCE)/strings_module.f90 strings_module.o
+        $(F)  -c ../$(SOURCE)/strings_module.f90
 
 babsma_lu : $(babsma_luobj)
 	$(F) $(LINKOPT) -o babsma_lu $(babsma_luobj)

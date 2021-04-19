@@ -24,6 +24,7 @@
 * matrix inversion.  BPz 09/07-1999
 *-----------------------------------------------------------------------
 *
+      use strings_module
       INCLUDE 'spectrum.inc'
       include 'tsuji.par'
 *
@@ -744,7 +745,7 @@ ccc      write(*,'(i3,15e10.3,/,3x,15e10.3)') k,presmo
 *
 * first, loop over line files
 *
-      do 98 ifil=1,noffil
+      do ifil=1,noffil
 *
         inline=linefil(ifil)
 c        print*,'soon opening file :' , inline(1:index(inline,' '))
@@ -952,7 +953,7 @@ cc          call Hlineadd(lunit,nline,xlboff)
 
 ! NLTE: check model atom id:
         if (nlte_species) then
-          if (aname(iel).ne.nlte_specname) then
+          if (to_lower(aname(iel)).ne.to_lower(nlte_specname)) then
             print*,' Bsyn: NLTE species is ',aname(iel),
      &             ' but model atom is for ',nlte_specname
             stop 'ERROR'
@@ -1035,6 +1036,15 @@ cc          call Hlineadd(lunit,nline,xlboff)
         if (.not.newformat.and.nlte_species) then
           print*,'bsyn.f'
           stop 'old line list format and NLTE. Incompatible options'
+        endif
+        if (nlte_species.and..not.nlteformat) then
+          print*,'**********************************************'
+          print*,' W A R N I N G     B S Y N'
+          print*,' Element ',lele, iel, ion
+          print*,' asking for NLTE calculation with a line list',
+     &           ' missing level identification'
+          print*,' calculation will be LTE for this element !'
+          print*,'**********************************************'
         endif
 
 * Start wavelength loop
@@ -1613,7 +1623,7 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
 *
 ******************************************************
 9874    close(lunit)
-98    continue
+      enddo
 * 
       WRITE(6,214) NREJCT,XL1L,XL2R,XLM
  214  FORMAT(1X,I8,' LINES WERE REJECTED, ONLY LINES BETWEEN',F10.3,

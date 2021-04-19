@@ -36,13 +36,14 @@
       COMMON /RHOC/RHO(NDP)
       COMMON /CSPHER/NCORE,DIFLOG,RADIUS,RR(NDP)
       COMMON /CSTYR/MIHAL  /CTAUM/TAUM
+! taut is the monochromatic optical depth, computed in traneq/trrays
       COMMON /SPACE2/ SPACEDUM1(NDP*7+NDP*NRAYS*5+NRAYS),
      &                nimpac,kimpac(nrays),pimpac(nrays),
-     &                MMU(NDP),SPACEDUM2(NDP*2),PFEAU(NRAYS,NDP),
+     &                MMU(NDP),taut(ndp),dtaut(ndp),PFEAU(NRAYS,NDP),
      &                XMU(NRAYS,NDP)
       COMMON /TRDBUG/IDEBUG
       common /limbdk/ pos,intens,totintens,tottrans
-      logical debug,extrap
+      logical debug,extrap,write_radius
       real fluxme
       dimension y1c(nrays),xmuc(nrays)
       dimension fcfc(lpoint),xlm(lpoint),jlcont(lpoint)
@@ -86,6 +87,7 @@ CCC      COMMON/CANGLE/ NMY,XMY(6),XMY2(6),WMY(6)
       character*4 iblnk
       DATA IBLNK/'    '/,profold/0./,first/.true./
       data debug/.false./
+      data write_radius/.false./
 !
 !      data muout /-1.0, -0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1/
 ! use log(mu) instead ot better cover the limb
@@ -158,20 +160,26 @@ ccc      if(iweak.gt.0) write(7,202) eps
 ! in traneq, the source function is iterated to get the scattering part as well: S=(kB+sJ)/(k+s)
 !
         call traneq
-
+!
+        if (idebug.gt.1) then
+! this wavelngth gave non-positive result. We flag it with a negative flux ! BPz 6-Apr-2021
+          print*,'lambda = ',xlsingle,' skipped'
+          hsurf=-1.0
+        endif
+!
 * save traneq continuum flux
         hflux1ctr=4.*pi*hsurf*(rr(1)/radius)**2
-        hflux1ctr=amax1(1e-30,hflux1ctr)
+        if (hflux1ctr.ge.0.) hflux1ctr=amax1(1e-30,hflux1ctr)
 *
 *
 * PRINT OUT lambda number 10
 *
-        if (j.eq.10) then
-          do k=1,mmu(1)
-            write(97,*) xmu(k,1),y1(k),'traneq'
-          enddo
-        endif
-
+!        if (j.eq.10) then
+!          do k=1,mmu(1)
+!            write(97,*) xmu(k,1),y1(k),'traneq'
+!          enddo
+!        endif
+!
         if (computeIplus) then
 *
 ************************************************************************
@@ -330,6 +338,12 @@ C
 * Start loop over wavelengths with lines
 *
       numb=0
+      if (write_radius) then
+! used for optical depth check
+        open(99, file='radius_tau1.txt')
+        write(99,998)
+998     format('lambda, k, taulambda, tauross, T, r/radius')
+      endif
       do j=1,maxlam
         do k=1,ntau
 ! the continuum opacity is not included in abso
@@ -353,21 +367,45 @@ C
 ! source function is iterated in traneq to get S=(kB+sJ)/(k+s). 
 !
         call traneq
+!
+        if (idebug.gt.1) then
+! this wavelngth gave non-positive result. We flag it with a negative flux ! BPz 6-Apr-2021
+          print*,'lambda = ',xlsingle,' skipped'
+          hsurf=-1.0
+        endif
+!
+!
+! check optical depth unity and print out
+        if (write_radius) then
+          do k=1,ntau
+            if (taut(k).ge.1.0) then
+!
+!
+!
+            write(99,999) xlsingle,k,taut(k),tau(k),T(k),rr(k)/radius
+999         format(f11.3,1x,i3,1x,1pe12.5,1x,1pe12.5,1x,0pf8.1,1x,f8.4)
+!
+!
+!
+            exit
+            endif
+          enddo
+        endif
 *
 * calculate emergent intensity
 *
         
 * save traneq's fluxes
         hflux1tr=4.*pi*hsurf*(rr(1)/radius)**2
-        hflux1tr=amax1(1e-30,hflux1tr)
-*
-* PRINT OUT lambda number 10
-*
-        if (j.eq.10) then
-          do k=1,mmu(1)
-            write(99,*) xmu(k,1),y1(k),'traneq'
-          enddo
-        endif
+        if (hflux1tr.ge.0.) hflux1tr=amax1(1e-30,hflux1tr)
+!*
+!* PRINT OUT lambda number 10
+!*
+!        if (j.eq.10) then
+!          do k=1,mmu(1)
+!            write(111,*) xmu(k,1),y1(k),'traneq'
+!          enddo
+!        endif
 
         if (computeIplus) then
 *
@@ -518,14 +556,14 @@ cccc          if (hydrovelo) then
             ENDDO
             HSURF=0.5*TRQUA2(NMU,XMU,FUN,DMU,DER)
 cccc          endif
-*
-* PRINT OUT lambda number 10
-*
-          if (j.eq.10) then
-            do k=1,mmu(1)
-             write(99,*) xmu(k,1),y1(k),'Ipluscalc'
-            enddo
-          endif
+!*
+!* PRINT OUT lambda number 10
+!*
+!          if (j.eq.10) then
+!            do k=1,mmu(1)
+!             write(111,*) xmu(k,1),y1(k),'Ipluscalc'
+!            enddo
+!          endif
 
         endif
 ************************************************************************
@@ -541,15 +579,15 @@ cccc          endif
         do k=1,10
           isurf(k,j)=yout(k)
         enddo
-*
-* PRINT OUT lambda number 10
-*
-        if (j.eq.10) then
-          do k=1,10
-            write(99,*) muout(k),isurf(k,j)
-          enddo
-        endif
-
+!*
+!* PRINT OUT lambda number 10
+!*
+!        if (j.eq.10) then
+!          do k=1,10
+!            write(111,*) muout(k),isurf(k,j)
+!          enddo
+!        endif
+!
 *
 * Spherical fluxes
 *
@@ -557,7 +595,7 @@ cccc          endif
 *
 * renormalize to standard radius at tauross=1
         hflux1=4.*pi*hsurf*(rr(1)/radius)**2
-        hflux1=amax1(1e-30,hflux1)
+        if (hflux1.ge.0.) then hflux1=amax1(1e-30,hflux1)
         hflux2=4.*pi*hflux(ntau)*(rr(ntau)/radius)**2
 * starting with version 12.1, flux is not divided by pi anymore. 
 * F_lambda integrated over lambda is sigma.Teff^4
@@ -565,7 +603,12 @@ cccc          endif
         fluxme=hflux1
 
 * divide by continuum flux
-        prf=fluxme/fcfc(j)
+        if (fcfc(j).gt.0.) then
+          prf=fluxme/fcfc(j)
+        else
+! flag wavelngth that did not converge in traneq ! BPz 6-Apr-2021
+          prf=-1.
+        endif
 
         if (debug) print*,j,xlsingle,fluxme,prf
 *
@@ -655,6 +698,7 @@ cc            write(46,1965) xlambda(j),prf,fluxme,y1(1)
 *
 * End of wavelength loop
       enddo
+      if (write_radius) close(99)
 *
       call clock
       RETURN
