@@ -1,86 +1,86 @@
       program interpol_modeles
 
- 
+
 ****************************************************************************
 *     interpolation of model atmosphere + NLTE departure coefficients
-*       
-* parameter space of interpolation {Teff,logg,z}                  
-* 8 MARCS binary models as input required: 
+*
+* parameter space of interpolation {Teff,logg,z}
+* 8 MARCS binary models as input required:
 * ! the order of input models matters !
-* ! only standard composition has been tested, no guaranty for peculiar composition ! 
-* turbospectrum/babsma format compatible output 
+* ! only standard composition has been tested, no guaranty for peculiar composition !
+* turbospectrum/babsma format compatible output
 
 * Interpolation scheme of model atmosphere(@)
-* in {Teff,logg,z} stellar parameter space 
+* in {Teff,logg,z} stellar parameter space
 *         ^ z
 *         |_ _ _ _ _
-*         |        /| 
-*        /|       / 
+*         |        /|
+*        /|       /
 *       _ |_ _ _ /  |
-*       | |      |  
-*         |         |  
+*       | |      |
+*         |         |
 *       | |    @ |
 *         |--------------> logg
-*       |/       | / 
+*       |/       | /
 *       /_ _ _ _ ./
-*      /          
+*      /
 *     /
 *    Teff
 *
 * Each structure component of each model (T,Pe,Pg,xit,optical depth, kappaross)
 * is first resampled on a common optical depth basis tau(5000 or ross) (see resample routine).
 *
-* Then each component of the atmosphere(@) (T,Pe,Pg,xit,kappa,geom depth +tau5000 and tauross)) 
-* is interpolated individually along each dimension between each input model value(*) 
-* (physically it is impossible to ensure a simple relationship between models in more than one dimension at the same time, 
+* Then each component of the atmosphere(@) (T,Pe,Pg,xit,kappa,geom depth +tau5000 and tauross))
+* is interpolated individually along each dimension between each input model value(*)
+* (physically it is impossible to ensure a simple relationship between models in more than one dimension at the same time,
 * that's why the input models MUST form a "cube" in the stellar parameter space {Teff,logg,z})
 * The interpolation is successively done at each optical depth (tau)
-* + interpolation point weighted by an empirical value (see TM thesis + manual) 
+* + interpolation point weighted by an empirical value (see TM thesis + manual)
 *
 *
-*                 ^ T,Pe,Pg,xit or radius 
+*                 ^ T,Pe,Pg,xit or radius
 *                 |
 *                 |            *
 *                 |           /|
 *                 |          @
-*                 |         /| | 
-*                 |   /    /   
-*                 |  /    /  | | 
-*         ^       | /    *   
+*                 |         /| |
+*                 |   /    /
+*                 |  /    /  | |
+*         ^       | /    *
 *         |       |/     |   | |
-*         |       -----------------------> Teff, logg and z 
-*         |      /      low ref up             
+*         |       -----------------------> Teff, logg and z
+*         |      /      low ref up
 *         |     /*      /   / /
-*         |    / |\           
-*         |   /    \  /   / / 
-*         |  /   |  \     
-*         | /       /@  / /  
-*         |/     |   |\      
-*         / _  _ /_ _ /*_ _ _ _ _    
-*        /      low ref up            
-*       /    
+*         |    / |\
+*         |   /    \  /   / /
+*         |  /   |  \
+*         | /       /@  / /
+*         |/     |   |\
+*         / _  _ /_ _ /*_ _ _ _ _
+*        /      low ref up
+*       /
 *   tau{5000 or Ross}
 *
 ***************************************************************************
-* TM 07/2003  
+* TM 07/2003
 
-c  07/2004 resampling of each model on a common optical depth basis                                     
-c  06/2006 works for spherical geometry models  
+c  07/2004 resampling of each model on a common optical depth basis
+c  06/2006 works for spherical geometry models
 c  09/2007 new calibration of free parameter alpha
-c           + modified to read Uppsala ascii models 
-c           + kappa interpolation 
-c           + rhox calculation 
+c           + modified to read Uppsala ascii models
+c           + kappa interpolation
+c           + rhox calculation
 c           + 2 outputs (babsma and ATLAS/MOOG)
 c  10/2007 error estimates
-c  10/2011 two non crucial bugs fixed 
-c             -unformatted->formatted read for ascii models because there is a couple of trouble makers in the grid  
-c             -dimension of taubas was not matching tauR (emo@astro.indiana.edu)          
+c  10/2011 two non crucial bugs fixed
+c             -unformatted->formatted read for ascii models because there is a couple of trouble makers in the grid
+c             -dimension of taubas was not matching tauR (emo@astro.indiana.edu)
 c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopefully fixed) /BE
 ****************************************************************************
-!  compile with Fortran 90 or 95  
+!  compile with Fortran 90 or 95
 c
 c    MB: 2020 added a new module to interpolate in the grid of NLTE departure coefficients
-c      
+c
 c     use IFPORT
       implicit none
       integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,nlinemod
@@ -88,14 +88,14 @@ c     use IFPORT
       parameter (nfile=11)
 
       integer :: nlte_file, icomp
-      
-! MB: these TWO PARAMETERS HAVE TO BE SET BY HAND   
+
+! MB: these TWO PARAMETERS HAVE TO BE SET BY HAND
 c      parameter (nlte_file=14499)
       parameter (nlte_file=14627) !updated by the user. is the length of the number in lines in the auxiliary nlte data file (which is the number of models)
 c      parameter (nlte_file=188)
 c      parameter (nlte_file=3)
       parameter (icomp=8)
-      
+
       logical :: verif,check,test,extrapol,binary,optimize
       real :: lambda_ref,temp_ref,logg_ref,z_ref,x,y,z,xinf,
      &        xsup,yinf,ysup,zinf,zsup,teffpoint,loggpoint,metpoint
@@ -103,20 +103,20 @@ c      parameter (nlte_file=3)
       character*256 :: FILE_ALT
       real, dimension (:,:), allocatable:: taus,tauR,T,Pe,Pg,xit,rr,
      &        xkapref,rhox,taus_aux,tauR_aux,T_aux,Pe_aux,Pg_aux,
-     &        xit_aux,rr_aux,xkapref_aux 
+     &        xit_aux,rr_aux,xkapref_aux
       integer, dimension (nfile) :: ndepth
       real, dimension (nfile) :: xlr,teff,logg,metal
       logical, dimension (nfile) :: sph
       external :: blend_103
       real, external :: inf,sup
       real, dimension(8,3) :: lin_dif,power
-******MB      
+******MB
       character*15, dimension (8) :: coefval
       character*256 :: nlte_binary, nlte_model_list
-      integer :: n_dep, n_lev, cnt, cnt1
+      integer*4 :: n_dep, n_lev, cnt, cnt1
       character*500, dimension (nlte_file) :: id_model
-      character*1000 :: n_comment
-      real*8, allocatable :: nlte_tau(:), nlte_data(:,:), 
+      character*1000 :: NLTEgrid_header
+      real*8, allocatable :: nlte_tau(:), nlte_data(:,:),
      &     bvals_aux(:,:,:), bvals(:,:,:), nnbvals(:,:,:),
      &     nntau_aux(:,:), nntau(:,:)
       real, dimension (nlte_file) :: n_logg,n_metal,n_teff,n_abu
@@ -125,7 +125,6 @@ c      parameter (nlte_file=3)
       integer, dimension (nlte_file) :: n_dummy
       integer*8, dimension (nlte_file) :: n_pos1, nnpos
       real :: n_result
-      integer*4           ::  tmp(1)
       character*65, dimension (nlte_file) :: n_pos
       integer*8 :: int1, stat1, pos1
 
@@ -138,39 +137,39 @@ c      parameter (nlte_file=3)
       real y110
       real y111
 
-******ES/MB: printing the binary files      
+******ES/MB: printing the binary files
       CHARACTER*350 BinaryName, formatBin
       CHARACTER*1000 BinaryHeader
       CHARACTER*10 ABNDstring
-      
-******MB      
-      DATA coefval/'tau500', 'tauross', 'T', 'logpe',  
+
+******MB
+      DATA coefval/'tau500', 'tauross', 'T', 'logpe',
      &             'logpg', 'xit', 'rr', 'logkapref'/
-      
+
       INTERFACE reec
         subroutine resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
         real, dimension (:,:) :: taus,tauR,T,Pe,Pg,xit,rr,xkapref
-        end 
+        end
       END INTERFACE reec
 
       write(*,*) '*****************************'
       write(*,*) '* begining of interpolation *'
-      write(*,*) '*****************************'  
+      write(*,*) '*****************************'
 
 ******* you can choose here to switch of the "optimization" and prefer simple linear interpolation
- 
+
       optimize = .true.
 
-******  read 8 models, put in tables, 
+******  read 8 models, put in tables,
 ****** check number of layer, reference optical depth, and geometry compatibility ******
 
       out=9
 
-******MB: loop to 11 : new string added (interpolation coefficients)      
+******MB: loop to 11 : new string added (interpolation coefficients)
       do file=1,11
          read(*,*) FILE_IN(file)
       end do
-      
+
 ******MB: read a binary file with NLTE departures
        read(*,*) nlte_binary
        write(*,76) nlte_binary
@@ -178,8 +177,8 @@ c      parameter (nlte_file=3)
 
        read(*,*) nlte_model_list
        write(*,77) nlte_model_list
- 77    format('NLTE model list: ', a200)       
-       
+ 77    format('NLTE model list: ', a200)
+
        read(*,*) temp_ref
        read(*,*) logg_ref
        read(*,*) z_ref
@@ -188,7 +187,7 @@ c      parameter (nlte_file=3)
       verif=.true.
       check=.true.
       nlinemod=ndp
-      
+
       allocate(taus_aux(nlinemod,nfile),tauR_aux(nlinemod,nfile),
      & T_aux(nlinemod,nfile),Pe_aux(nlinemod,nfile),
      & Pg_aux(nlinemod,nfile),xit_aux(nlinemod,nfile),
@@ -207,9 +206,9 @@ c      parameter (nlte_file=3)
         if (.not.(((sph(1).and.sph(file))).or.
      &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
          write(*,*) 'geometry compatibility problem with'
-         write(*,78) file,teff(file),logg(file),metal(file)     
+         write(*,78) file,teff(file),logg(file),metal(file)
          stop
-        endif  
+        endif
         write(*,78) file,teff(file),logg(file),metal(file)
       end do
       else
@@ -223,9 +222,9 @@ c      parameter (nlte_file=3)
         if (.not.(((sph(1).and.sph(file))).or.
      &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
         write(*,*) 'geometry compatibility problem with'
-        write(*,78) file,teff(file),logg(file),metal(file)     
+        write(*,78) file,teff(file),logg(file),metal(file)
         stop
-       end if   
+       end if
        write(*,78) file,teff(file),logg(file),metal(file)
       end do
       endif
@@ -248,10 +247,10 @@ c      parameter (nlte_file=3)
 c         print*, n_metal(cnt), metal(1)
 c        print*, n_pos(cnt), n_pos1(cnt)
       enddo
-      
+
  79   format(a71,2x,f7.1,6x,f5.2,6x,f5.2,4x,f5.2,a65)
       close(199)
-      
+
 *********MB: cross-correlate the parameters with those in the input file
 
       do cnt = 1, 8
@@ -265,11 +264,11 @@ c        print*, n_pos(cnt), n_pos1(cnt)
             exit
            endif
          enddo
-      enddo   
+      enddo
 
       write(*,*)
      &    'new NLTE array: Teff, Logg, [Fe/H], position / binary'
-         
+
 *********MB create a new NLTE array
 
       do cnt = 1, 8
@@ -285,11 +284,19 @@ c        print*, n_pos(cnt), n_pos1(cnt)
 
 *********MB:read NLTE binary
 ********* do not read the entire binary file, but use pointers set by AUX
-********* the pointers were re-ordered to match (T,g,m) of the input MARCS binary models      
-      
-      open(unit=200,file=nlte_binary,form='unformatted',access="stream")
-*     read(200) n_comment
-*     rewind(200)
+********* the pointers were re-ordered to match (T,g,m) of the input MARCS binary models
+
+********* ES: changed the way NLTE bindary is read
+********* following the changes in the girds' format
+********* I will request the changes to be merged with master
+********* once I transfer all the grids into the new format
+********* 02.03.2021
+
+     open(unit=200,file=nlte_binary,form='unformatted',access="stream")
+     * NLTEgrid_header stores all the info about how NLTE grid was computed
+     * it shoud be treated as a main source of info about the grid
+     read(200) NLTEgrid_header
+     rewind(200)
 
       do cnt=1, 8
         pos1 = nnpos(cnt)
@@ -298,34 +305,27 @@ c        print*, n_pos(cnt), n_pos1(cnt)
         write(*,fmt='("NLTE: ", i1,1x,A50,1x, i10)')
      &        cnt, trim(adjustl(id_model(cnt))), pos1
 
-        pos1 = pos1 + 500
-        read(200, pos = pos1) tmp
-        n_dep = tmp(1)
-        pos1 = pos1 + icomp
-        read(200, pos = pos1) tmp
-        n_lev = tmp(1)
+        read(200) n_dep
+        read(200) n_lev
 
         if (cnt.eq.1)  allocate(bvals_aux(n_dep, n_lev, 8))
 
         if (cnt.eq.1)  allocate(nntau_aux(n_dep,8))
-        
-        pos1 = pos1 + icomp
+
         allocate(nlte_tau(n_dep))
-        read(200, pos = pos1), nlte_tau
+        read(200) nlte_tau
         nntau_aux(:,cnt) = nlte_tau
         deallocate(nlte_tau)
 
-        pos1 = pos1 + n_dep*icomp
         allocate(nlte_data(n_dep, n_lev))
-        read(200, pos = pos1), nlte_data
+        read(200), nlte_data
         bvals_aux(:,:,cnt) = nlte_data
         deallocate(nlte_data)
         rewind(200)
       end do
-*      stop
 
 *********MB: print the selected departure values into a text file
-      
+
       open(unit=28, file='test_nlte_input.txt')
       do cnt=1,8
         write(28, *) '*'
@@ -335,16 +335,16 @@ c        print*, n_pos(cnt), n_pos1(cnt)
        enddo
       enddo
       close(28)
-      
-      print*, 'NLTE file:  8 models read'  
+
+      print*, 'NLTE file:  8 models read'
       close(200)
 
       allocate(bvals(n_dep, n_lev, icomp))
       bvals = bvals_aux(1:n_dep,:,:)
-      
+
       allocate(nntau(n_dep, icomp))
       nntau = nntau_aux(1:n_dep,:)
-      
+
 *********MB:re-order NLTE departure files - NO NEED TO REORDER ANYMORE -
 *
       allocate(nnbvals(n_dep, n_lev, out))
@@ -355,24 +355,24 @@ c        print*, n_pos(cnt), n_pos1(cnt)
 c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
          endif
       enddo
-      
-      
+
+
 *********MB:print checks
-      
+
       write(*,80) temp_ref,logg_ref,z_ref
  80   format('Interpolation point : Teff=',f8.0,'  logg=',f5.2,
      &     '  z=',f6.2)
-      
+
 **************check if files are length and depth ref compatible *******
-      
+
       if (.not.(check)) then
-         write(*,*) 'All the models do not have the same' 
+         write(*,*) 'All the models do not have the same'
           write(*,*) 'lambda ref'
           write(*,*) 'no interpolation done'
           stop
-       else    
+       else
       if (.not.(verif)) then
-         write(*,*) 'WARNING : All the models do not have the same' 
+         write(*,*) 'WARNING : All the models do not have the same'
          write(*,*) 'number of layers, resampling to',
      &                 ndepth(1),'layers'
       end if
@@ -382,20 +382,20 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
 
 *********MB:check if NLTE n_depths are consistent with the input MARCS binary models
 *********only  the last entry in the binary file is checked (suboptimal)
-      
+
       if (ndepth_ref.ne.n_dep) then
        write(*,*) 'ERROR: NLTE departures are on a different tau scale!'
       else if (ndepth_ref.eq.n_dep) then
        write(*,*) '*** # depths (NLTE, MARCS) consistent'
       endif
-      
+
 ********* calculation of the interpolation point(x,y,z) in {Teff,logg,z} space******************
-      
+
        allocate(taus(ndepth_ref,nfile),tauR(ndepth_ref,nfile),
      & T(ndepth_ref,nfile),Pe(ndepth_ref,nfile),Pg(ndepth_ref,nfile),
      & xit(ndepth_ref,nfile),rr(ndepth_ref,nfile),
      &     xkapref(ndepth_ref,nfile))
-       
+
        taus=taus_aux(1:ndepth_ref,:)
        tauR=tauR_aux(1:ndepth_ref,:)
        T=T_aux(1:ndepth_ref,:)
@@ -415,15 +415,15 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
             teffpoint=0
          else
           teffpoint=(temp_ref-xinf)/(xsup-xinf)
-         end if 
+         end if
          if (ysup.eq.yinf) then
             loggpoint=0
-         else      
+         else
           loggpoint=(logg_ref-yinf)/(ysup-yinf)
          end if
          if (zsup.eq.zinf) then
             metpoint=0
-         else   
+         else
           metpoint=(z_ref-zinf)/(zsup-zinf)
          end if
          extrapol=((teffpoint.lt.0).or.(teffpoint.gt.1)
@@ -433,51 +433,51 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
          write(*,*) '!!!  WARNING : extrapolation  !!!'
          end if
 
-*     
+*
 *******resample each layer of each input model on a common depth basis(tau5000 or tauRoss, see resample routine)*****************
-!if you don't want to resample all the model to the same depth scale, just comment the following line  
+!if you don't want to resample all the model to the same depth scale, just comment the following line
          call resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
 
 
 ****** initialisation of empirical constants for optimized interpolation (see TM thesis)*************
-         
+
          lin_dif(1,1)=0                          !tau5000 vs Teff
          lin_dif(1,2)=0                          ! ...    vs logg
-         lin_dif(1,3)=0                          ! ...    vs z    
+         lin_dif(1,3)=0                          ! ...    vs z
          lin_dif(2,1)=0                          !tauross vs Teff
-         lin_dif(2,2)=0                          ! ...    vs logg 
-         lin_dif(2,3)=0                          ! ...    vs z    
+         lin_dif(2,2)=0                          ! ...    vs logg
+         lin_dif(2,3)=0                          ! ...    vs z
          lin_dif(3,1)=0.15                       !T       vs Teff
-         lin_dif(3,2)=0.3                        ! ...    vs logg 
-         lin_dif(3,3)=1-(temp_ref/4000)**2.0     ! ...    vs z    
+         lin_dif(3,2)=0.3                        ! ...    vs logg
+         lin_dif(3,3)=1-(temp_ref/4000)**2.0     ! ...    vs z
          lin_dif(4,1)=0.15                       !logPe   vs Teff
-         lin_dif(4,2)=0.06                       ! ...    vs logg 
-         lin_dif(4,3)=1-(temp_ref/3500)**2.5     ! ...    vs z    
+         lin_dif(4,2)=0.06                       ! ...    vs logg
+         lin_dif(4,3)=1-(temp_ref/3500)**2.5     ! ...    vs z
          lin_dif(5,1)=-0.4                       !logPg   vs Teff
-         lin_dif(5,2)=0.06                       ! ...    vs logg  
-         lin_dif(5,3)=1-(temp_ref/4100)**4       ! ...    vs z    
+         lin_dif(5,2)=0.06                       ! ...    vs logg
+         lin_dif(5,3)=1-(temp_ref/4100)**4       ! ...    vs z
          lin_dif(6,1)=0                          !xit     vs Teff
-         lin_dif(6,2)=0                          ! ...    vs logg  
-         lin_dif(6,3)=0                          ! ...    vs z    
+         lin_dif(6,2)=0                          ! ...    vs logg
+         lin_dif(6,3)=0                          ! ...    vs z
          lin_dif(7,1)=0                          !rr      vs Teff
-         lin_dif(7,2)=0                          ! ...    vs logg  
-         lin_dif(7,3)=0                          ! ...    vs z    
+         lin_dif(7,2)=0                          ! ...    vs logg
+         lin_dif(7,3)=0                          ! ...    vs z
          lin_dif(8,1)=-0.15                      !logxkapref vs Teff
-         lin_dif(8,2)=-0.12                      ! ...    vs logg  
-         lin_dif(8,3)=1-(temp_ref/3700)**3.5     ! ...    vs z    
-       
+         lin_dif(8,2)=-0.12                      ! ...    vs logg
+         lin_dif(8,3)=1-(temp_ref/3700)**3.5     ! ...    vs z
+
          if (optimize) then
           write(*,*) 'optimized interpolation applied for standard compo
      &sition models'
          else
             lin_dif=0.
              write(*,*) 'linear interpolation applied'
-         end if   
+         end if
 !these constants are calibrated on a broad range of stellar parameters; scale them now to the present one.
             power(:,1)= 1-(lin_dif(:,1)*(abs(xsup-xinf)/(7000-3800)))
             power(:,2)= 1-(lin_dif(:,2)*(abs(ysup-yinf)/(5-0.0)))
             power(:,3)= 1-(lin_dif(:,3)*(abs(zsup-zinf)/(0-(-4))))
-                  
+
 ****** interpolation of each component of the atmosphere (taus,teff,Pe,Pg,microt,rr) and at each layer *****************
 
 
@@ -495,38 +495,38 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
           call blend_103(x,y,z,tauR(k,1),tauR(k,2),
      &     tauR(k,3),tauR(k,4),tauR(k,5),tauR(k,6),tauR(k,7),tauR(k,8)
      &     ,tauR(k,out))
-          
+
           x=(teffpoint)**power(3,1)
           y=(loggpoint)**power(3,2)
           z=(metpoint)**power(3,3)
           call blend_103(x,y,z,T(k,1),T(k,2),T(k,3),T(k,4)
      &     ,T(k,5),T(k,6),T(k,7),T(k,8),T(k,out))
-          
+
           x=(teffpoint)**power(4,1)
           y=(loggpoint)**power(4,2)
           z=(metpoint)**power(4,3)
           call blend_103(x,y,z,Pe(k,1),Pe(k,2),Pe(k,3),Pe(k,4)
      &     ,Pe(k,5),Pe(k,6),Pe(k,7),Pe(k,8),Pe(k,out))
-          
+
           x=(teffpoint)**power(5,1)
           y=(loggpoint)**power(5,2)
           z=(metpoint)**power(5,3)
           call blend_103(x,y,z,Pg(k,1),Pg(k,2),Pg(k,3),Pg(k,4)
      &     ,Pg(k,5),Pg(k,6),Pg(k,7),Pg(k,8),Pg(k,out))
-          
+
           x=(teffpoint)**power(6,1)
           y=(loggpoint)**power(6,2)
           z=(metpoint)**power(6,3)
           call blend_103(x,y,z,xit(k,1),xit(k,2),
      &     xit(k,3),xit(k,4),xit(k,5),xit(k,6),xit(k,7),xit(k,8)
-     &     ,xit(k,out))       
- 
+     &     ,xit(k,out))
+
           x=(teffpoint)**power(7,1)
           y=(loggpoint)**power(7,2)
           z=(metpoint)**power(7,3)
           call blend_103(x,y,z,rr(k,1),rr(k,2),
      &     rr(k,3),rr(k,4),rr(k,5),rr(k,6),rr(k,7),rr(k,8)
-     &     ,rr(k,out))        
+     &     ,rr(k,out))
 
           x=(teffpoint)**power(8,1)
           y=(loggpoint)**power(8,2)
@@ -563,19 +563,19 @@ c     &     xkapref(k,7),xkapref(k,8),xkapref(k,out)
            call blend_103(x,y,z,
      &      y000, y001, y010, y011,
      &      y100, y101, y110, y111, n_result)
-           
+
            nnbvals(k,n,out)=n_result
-c           if (n.eq.1) then 
+c           if (n.eq.1) then
 c           write(*,fmt="(i2, 9(f10.5,2x))") k,
-c     &      nnbvals(k,n,1), nnbvals(k,n,2),nnbvals(k,n,3), 
-c     &      nnbvals(k,n,4), nnbvals(k,n,5),nnbvals(k,n,6), 
+c     &      nnbvals(k,n,1), nnbvals(k,n,2),nnbvals(k,n,3),
+c     &      nnbvals(k,n,4), nnbvals(k,n,5),nnbvals(k,n,6),
 c     &      nnbvals(k,n,7), nnbvals(k,n,8), n_result
 c           endif
 
-           if (n.eq.1) then 
+           if (n.eq.1) then
            write(*,fmt="('New b-values: ', i2, f10.5)") k, n_result
            endif
-           
+
         enddo
       end do
 
@@ -596,7 +596,7 @@ c           endif
 
 ********write interpolated model in file nber out (basma compatible format)***********
 ********MB add print of interpolation coefficients
-      
+
       write(*,*) 'now write result'
 c      write(*,*) FILE_IN(out)
 c      stop
@@ -611,7 +611,7 @@ c      stop
          do k=1,ndepth_ref
            write(23,1968) taus(k,out),T(k,out),Pe(k,out),
      &                    Pg(k,out),xit(k,out),rr(k,out),taur(k,out)
-         enddo  
+         enddo
  1968   format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
         write(25,19671) ndepth_ref,xlr(out)
 19671   format('sphINTERPOL',1x,i3,f8.0)
@@ -622,7 +622,7 @@ c      stop
      &     rhox(k,out)
 19681      format(i5,1x,f8.4,1x,f8.2,2(1x,f8.4),1x,e15.6)
         enddo
-        
+
         else
         write(*,*) 'plane parallel models'
         write(23,1966) ndepth_ref,xlr(out),logg_ref
@@ -633,18 +633,18 @@ c      stop
 1965       format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
           enddo
         write(25,19661) xlr(out)
-19661   format('ppINTERPOL',f8.0) 
+19661   format('ppINTERPOL',f8.0)
         write(25,19672)
          do k=1,ndepth_ref
            write(25,19681) k,taus(k,out),T(k,out),Pe(k,out),Pg(k,out),
      &                   rhox(k,out)
-         enddo  
+         enddo
       end if
-      
-******** MB write interpolation coefficients into a TEXT file      
+
+******** MB write interpolation coefficients into a TEXT file
        do k=1,8
          write(27,1969) coefval(k), power(k,:)
-       enddo  
+       enddo
  1969  format('# ', a15,3(1x,f10.6))
        write(27,1971) z_ref+7.50
  1971  format(f6.2,1x)
@@ -660,7 +660,7 @@ c      stop
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
  1975  format(1000(f10.5,2x))
-         
+
        write(23,*) (FILE_IN(file),file=1,8)
        write(25,*) (FILE_IN(file),file=1,8)
        write(27,*) (FILE_IN(file),file=1,8)
@@ -670,7 +670,7 @@ c      stop
        close(27)
 c
 c
-******** MB write interpolation coefficients into a BINARY file  
+******** MB write interpolation coefficients into a BINARY file
 c
 c
 c  WRITES DEPARTURE COEFFICENTS AND LOG(TAU500) SCALE INTO
@@ -685,7 +685,7 @@ C
 c      ABND = 7.0
 c      ATOMID = 'Fe'
 c      ATMOID = ''
-c      
+c
 c      write(ABNDstring, '(F10.2)') ABND
 c      ABNDstring = TRIM(ADJUSTL(ABNDstring))
 c
@@ -698,9 +698,9 @@ c         write(BinaryName, '(A200, A3, A2, A1, A10)')
 c     &        TRIM(ATMOID), '_A_',
 c     &        TRIM(ATOMID(1:2)), '_', ABNDstring
 c      endif
-c      
+c
 c      BinaryName = ADJUSTL(TRIM(BinaryName))
-c      
+c
 c      write(BinaryName, '(A220, A6)') TRIM(BinaryName), '.tsbin'
 c      BinaryName = ADJUSTL(TRIM(BinaryName))
 c
@@ -715,34 +715,34 @@ c      write(LBIN4TS) BinaryHeader
 c      write(LBIN4TS) ndepth_ref
 c      write(LBIN4TS) n_lev
 c      write(LBIN4TS) taus(1:ndepth_ref,out)
-c      
+c
 c      DO I = 1, NK
 c          WRITE(LBIN4TS) N(I,1:NDEP)/NSTAR(I,1:NDEP)
 c      ENDDO
 c      CALL CLOSE(LBIN4TS)
 c      END
-       
-       
+
+
 
 ********** write a file compatible for sm (used for a control plot) ************
       open (unit=24,file='modele.sm')
       do file=1,8
        do k=1,ndepth_ref
         write(24,*) taus(k,file),T(k,file),Pe(k,file),
-     &   Pg(k,file),taur(k,file)   
+     &   Pg(k,file),taur(k,file)
        end do
       end do
-      
+
 !case of a 10th comparison model
       read(*,*) FILE_IN(11)
-      if (test) then 
+      if (test) then
          file = 11
-      if (binary) then   
+      if (binary) then
       call extract_bin(FILE_IN(file),teff(file),logg(file),metal(file),
      & ndepth(file),xlr(file),taus_aux(:,file),tauR_aux(:,file),
      & T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),xit_aux(:,file),
      & rr_aux(:,file),sph(file),xkapref_aux(:,file))
-      else 
+      else
       call extract_ascii(FILE_IN(file),teff(file),logg(file),
      & metal(file),ndepth(file),xlr(file),taus_aux(:,file),
      & tauR_aux(:,file),T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),
@@ -750,10 +750,10 @@ c      END
       endif
       do k=1,ndepth(file)
        write(24,*) taus_aux(k,file),T_aux(k,file),Pe_aux(k,file),
-     &               Pg_aux(k,file),tauR_aux(k,file)  
+     &               Pg_aux(k,file),tauR_aux(k,file)
       end do
       end if
-      close(24)      
+      close(24)
 
       if (extrapol) then
           write (*,*) 'extrapolation done'
@@ -799,11 +799,11 @@ c-------------------------------------------------------------------------------
 
 
 
-   
+
 
 
 c---------------------------------------------------------------------------------
-      subroutine blend_103 (r,s,t,x000,x001,x010,x011,x100,x101,x110, 
+      subroutine blend_103 (r,s,t,x000,x001,x010,x011,x100,x101,x110,
      & x111, x )
 !
 !*******************************************************************************
@@ -915,15 +915,15 @@ c-------------------------------------------------------------------------------
 !
 !  Interpolate the interior point.
 !
-      
-      x = 
-     & 1.0E+00     * ( + x000 ) 
-     & + r         * ( - x000 + x100 ) 
-     & +     s     * ( - x000        + x010 ) 
-     & +         t * ( - x000               + x001 ) 
-     & + r * s     * ( + x000 - x100 - x010                      + x110) 
-     & + r     * t * ( + x000 - x100        - x001        + x101 ) 
-     & +     s * t * ( + x000        - x010 - x001 + x011 ) 
+
+      x =
+     & 1.0E+00     * ( + x000 )
+     & + r         * ( - x000 + x100 )
+     & +     s     * ( - x000        + x010 )
+     & +         t * ( - x000               + x001 )
+     & + r * s     * ( + x000 - x100 - x010                      + x110)
+     & + r     * t * ( + x000 - x100        - x001        + x101 )
+     & +     s * t * ( + x000        - x010 - x001 + x011 )
      & + r * s * t * ( - x000 + x100 + x010 + x001 - x011 - x101 - x110+
      &                                                            x111 )
 
@@ -993,7 +993,7 @@ c         open(21,file=file2,status='unknown')
          prese(k)=log10(pe(k))
          presg(k)= log10(pg(k))
          kappa(k)=log10(xkapr(k))
-      end do   
+      end do
          xit=2.0
          xlr_ref=xlr(nlp)
          grav=log10(GG)
@@ -1068,7 +1068,7 @@ C        CONVERT TO 'PHYSICAL FLUX'
         print*, ' is larger than ndp!! Increase NDP.'
         stop
       endif
-      if (radius.le.2.) then 
+      if (radius.le.2.) then
          spherical = .false.
       else
          spherical = .true.
@@ -1130,7 +1130,7 @@ c     &  ' solar luminosities'
 c---------------------------------------------------------------------------------
       subroutine extract_ascii(FILE,TEFF,grav,metal,ndepth,xlr_ref,tau5,
      &                tauR,temp,prese,presg,xit,rad,sph,xkapr)
-c     adapted from P. DeLaverny   
+c     adapted from P. DeLaverny
       implicit none
       integer :: ndp,k
       parameter(ndp=200)
@@ -1138,7 +1138,7 @@ c     adapted from P. DeLaverny
       CHARACTER*117 ADUM
       CHARACTER*256 FILE,file2
       CHARACTER*30 COMMENT
-      CHARACTER*50 MOCODE,blabla      
+      CHARACTER*50 MOCODE,blabla
       real metal,radius,mass,grav,xlr_ref,TEFF,GG,xic
       logical :: sph
       real :: tau(ndp),t(ndp),z(ndp),ptot(ndp),prad(ndp),
@@ -1147,10 +1147,10 @@ c     adapted from P. DeLaverny
      &  xit(ndp),geff(ndp),gradptur(ndp),dp(ndp),taus(ndp),xlr(30),
      &   coldens(ndp)
       real :: tau5(ndp),tauR(ndp),temp(ndp),prese(ndp),
-     &   presg(ndp),rad(ndp),emu(ndp),vconv(ndp),fconv(ndp) 
+     &   presg(ndp),rad(ndp),emu(ndp),vconv(ndp),fconv(ndp)
       real :: dimension xlb(155000),w(155000),fluxme(155000)
 
-      
+
 
           blabla=''
           imod =10
@@ -1181,7 +1181,7 @@ c          endif
           backspace(imod)
           read(imod,*)ndepth
           read(imod,*)
-          read(imod,*)          
+          read(imod,*)
           do k=1,ndepth
             read(imod,*) idum,tauR(k),tau5(k),rad(k),temp(k),
      &                   Pe(k),Pg(k)
@@ -1203,23 +1203,23 @@ C
 
 
       subroutine resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
-      implicit  none 
+      implicit  none
       integer :: nlinemod,file,nfile,k,i
       real,dimension(:,:) :: taus,tauR,T,Pe,Pg,xit,rr,xkapref
       real,dimension(:,:),allocatable :: taubas
       real,dimension(:),allocatable :: tauresample,taustemp,tauRtemp,
      & Ttemp,Petemp,Pgtemp,xittemp,rrtemp,xkapreftemp
 
-      INTERFACE 
+      INTERFACE
       function SevalSingle(u,x,y)
       REAL,INTENT(IN) :: u  ! abscissa at which the spline is to be evaluated
       REAL,INTENT(IN),DIMENSION(:) :: x ! abscissas of knots
       REAL,INTENT(IN),DIMENSION(:):: y ! ordinates of knots
       real SevalSingle
       end
-      END INTERFACE 
+      END INTERFACE
 
-      
+
       nlinemod=size(taus,1)
       nfile=size(taus,2)-3
 
@@ -1228,7 +1228,7 @@ C
      & ,Petemp(nlinemod),Pgtemp(nlinemod),xittemp(nlinemod),
      & rrtemp(nlinemod),xkapreftemp(nlinemod),
      &   taubas(nlinemod,size(taus,2)))
-      
+
 !!!!choose here the depth basis for interpolation (tau5000,tauRoss)!!!!!
       taubas=tauR
       write(*,*) 'resample models on common depth basis: tauRoss'
@@ -1241,11 +1241,11 @@ c now do the resampling with the common tau
 
        taustemp(k)=SevalSingle(tauresample(k),taubas(:,file)
      &                                                  ,taus(:,file))
-       
+
        tauRtemp(k)=SevalSingle(tauresample(k),taubas(:,file)
      &                                                  ,tauR(:,file))
        Ttemp(k)=SevalSingle(tauresample(k),taubas(:,file),T(:,file))
-       Petemp(k)=SevalSingle(tauresample(k),taubas(:,file),Pe(:,file)) 
+       Petemp(k)=SevalSingle(tauresample(k),taubas(:,file),Pe(:,file))
        Pgtemp(k)=SevalSingle(tauresample(k),taubas(:,file),Pg(:,file))
        xittemp(k)=SevalSingle(tauresample(k),taubas(:,file),xit(:,file))
        rrtemp(k)=SevalSingle(tauresample(k),taubas(:,file),rr(:,file))
@@ -1255,18 +1255,18 @@ c now do the resampling with the common tau
 
          taus(:,file)=taustemp
          tauR(:,file)=tauRtemp
-         T(:,file)=Ttemp 
+         T(:,file)=Ttemp
          Pe(:,file)=Petemp
          Pg(:,file)=Pgtemp
          xit(:,file)=xittemp
          rr(:,file)=rrtemp
          xkapref(:,file)=xkapreftemp
-       end do  
+       end do
 
        deallocate(tauresample,taustemp,tauRtemp,Ttemp,Petemp
-     &,Pgtemp,xittemp,rrtemp,xkapreftemp,taubas) 
+     &,Pgtemp,xittemp,rrtemp,xkapreftemp,taubas)
 
-       end       
+       end
 
 
 !*******************************************************************************
@@ -1278,8 +1278,8 @@ c now do the resampling with the common tau
       real,dimension(nlinemod) :: tauresample
 
       tauresample=0
-c initialize the common tau(5000) with min depth = max of the min depth of the models 
-c                                  and max depth = min of the max depth of the models 
+c initialize the common tau(5000) with min depth = max of the min depth of the models
+c                                  and max depth = min of the max depth of the models
 c essential for  the resampling with cubic spline
       tauresample(1)=tau(1,1)
       tauresample(nlinemod)=tau(nlinemod,1)
@@ -1290,7 +1290,7 @@ c essential for  the resampling with cubic spline
          if (tauresample(nlinemod).gt.tau(nlinemod,file)) then
             tauresample(nlinemod)=tau(nlinemod,file)
          end if
-      end do   
+      end do
       call blend_i_0d1 ( tauresample, nlinemod )
       end
 
@@ -1343,17 +1343,17 @@ c essential for  the resampling with cubic spline
 !
 !  Parameters:
 !
-!    Input/output, real X(M).  
+!    Input/output, real X(M).
 !
-!    On input, X(1) and X(M) contain scalar values which are to be 
+!    On input, X(1) and X(M) contain scalar values which are to be
 !    interpolated through the entries X(2) through X(M).  It is assumed
-!    that the dependence of the data is linear in the vector index I.  
-!    
-!    On output, X(2) through X(M-1) have been assigned interpolated 
+!    that the dependence of the data is linear in the vector index I.
+!
+!    On output, X(2) through X(M-1) have been assigned interpolated
 !    values.
 !
 !    Input, integer M, the number of entries in X.
-                               
+
       implicit none
 !
       integer m
@@ -1418,7 +1418,7 @@ c essential for  the resampling with cubic spline
 !
 !  Parameters:
 !
-!    Input, real R, the coordinate where an interpolated value is desired.  
+!    Input, real R, the coordinate where an interpolated value is desired.
 !
 !    Input, real X0, X1, the data values at the ends of the line.
 !
@@ -1437,7 +1437,7 @@ c essential for  the resampling with cubic spline
       end
 !----------------------------------------------------------------------------
 
-      REAL FUNCTION SevalSingle(u,x,y) 
+      REAL FUNCTION SevalSingle(u,x,y)
 ! ---------------------------------------------------------------------------
 !http://www.pdas.com/fmm.htm
 !  PURPOSE - Evaluate the cubic spline function
@@ -1455,7 +1455,7 @@ c essential for  the resampling with cubic spline
       INTEGER :: j, k, n
       REAL:: dx
 
-      INTERFACE 
+      INTERFACE
          subroutine FMMsplineSingle(x, y, b, c, d)
         REAL,DIMENSION(:), INTENT(IN)  :: x ! abscissas of knots
         REAL,DIMENSION(:), INTENT(IN)  :: y ! ordinates of knots
@@ -1474,7 +1474,7 @@ c essential for  the resampling with cubic spline
        IF ( (u < x(i))  .OR.  (u >= x(i+1)) ) THEN
          i=1   ! binary search
          j=n+1
-     
+
          DO
            k=(i+j)/2
            IF (u < x(k)) THEN
@@ -1485,10 +1485,10 @@ c essential for  the resampling with cubic spline
            IF (j <= i+1) EXIT
          END DO
        END IF
-     
+
         dx=u-x(i)   ! evaluate the spline
         SevalSingle=y(i)+dx*(b(i)+dx*(c(i)+dx*d(i)))
-     
+
         RETURN
         deallocate(b,c,d)
       END Function SevalSingle  ! -------------------------------------------------------
@@ -1510,7 +1510,7 @@ c essential for  the resampling with cubic spline
         REAL,DIMENSION(:), INTENT(OUT) :: b ! linear coeff
         REAL,DIMENSION(:), INTENT(OUT) :: c ! quadratic coeff.
         REAL,DIMENSION(:), INTENT(OUT) :: d ! cubic coeff.
-     
+
         INTEGER:: k,n
         REAL:: t,aux
         REAL,PARAMETER:: ZERO=0.0, TWO=2.0, THREE=3.0
@@ -1528,7 +1528,7 @@ c essential for  the resampling with cubic spline
          d(2)=ZERO
          RETURN
        END IF
-  
+
 !.....Set up tridiagonal system.........................................
 !.    b=diagonal, d=offdiagonal, c=right-hand side
         d(1)=x(2)-x(1)
@@ -1539,7 +1539,7 @@ c essential for  the resampling with cubic spline
          c(k+1)=(y(k+1)-y(k))/d(k)
          c(k)=c(k+1)-c(k)
        END DO
-    
+
 !.....End conditions.  third derivatives at x(1) and x(n) obtained
 !.       from divided differences.......................................
        b(1)=-d(1)
@@ -1552,18 +1552,18 @@ c essential for  the resampling with cubic spline
          c(1)=c(1)*d(1)*d(1)/(x(4)-x(1))
          c(n)=-c(n)*d(n-1)*d(n-1)/(x(n)-x(n-3))
        END IF
-     
+
        DO k=2,n    ! forward elimination
          t=d(k-1)/b(k-1)
          b(k)=b(k)-t*d(k-1)
          c(k)=c(k)-t*c(k-1)
        END DO
-     
+
        c(n)=c(n)/b(n)   ! back substitution ( makes c the sigma of text)
        DO k=n-1,1,-1
          c(k)=(c(k)-d(k)*c(k+1))/b(k)
        END DO
-     
+
 !.....Compute polynomial coefficients...................................
        b(n)=(y(n)-y(n-1))/d(n-1)+d(n-1)*(c(n-1)+c(n)+c(n))
        DO k=1,n-1
@@ -1573,7 +1573,7 @@ c essential for  the resampling with cubic spline
        END DO
        c(n)=THREE*c(n)
        d(n)=d(n-1)
-     
+
        RETURN
        END Subroutine FMMsplineSingle ! ---------------------------------------------------
 
@@ -1581,15 +1581,15 @@ c essential for  the resampling with cubic spline
 ! ---------------------------------------------------------------------------
 ! PURPOSE - Construct the natural spline thru a set of points
 ! NOTES - A natural spline has zero second derivative at both endpoints.
-     
+
        REAL,INTENT(IN),DIMENSION(:):: x,y   ! coordinates of knots
        REAL,INTENT(OUT),DIMENSION(:):: b,c,d  ! cubic coeff.
-     
+
        INTEGER:: k,n
        REAL,PARAMETER:: ZERO=0.0, TWO=2.0, THREE=3.0
 !-----------------------------------------------------------------------
        n=SIZE(x)
-      
+
        IF (n < 3) THEN   ! Straight line - special case for n < 3
          b(1)=ZERO
          IF (n == 2) b(1)=(y(2)-y(1))/(x(2)-x(1))
@@ -1611,15 +1611,15 @@ c essential for  the resampling with cubic spline
          b(k)=TWO*(d(k-1)+d(k))-d(k-1)*d(k-1)/b(k-1)
        c(k)=(y(k+1)-y(k))/d(k)-(y(k)-y(k-1))/d(k-1)-d(k-1)*c(k-1)/b(k-1)
        END DO
-     
+
        c(n-1)=c(n-1)/b(n-1)   ! Back substitute to get c-array
        DO  k=n-2,2,-1
          c(k)=(c(k)-d(k)*c(k+1))/b(k)
        END DO
        c(1)=ZERO
-       c(n)=ZERO   ! c now holds the sigma array of the text 
-     
-     
+       c(n)=ZERO   ! c now holds the sigma array of the text
+
+
 !.....Compute polynomial coefficients ..................................
        b(n)=(y(n)-y(n-1))/d(n-1)+d(n-1)*(c(n-1)+c(n)+c(n))
        DO  k=1,n-1
@@ -1630,15 +1630,15 @@ c essential for  the resampling with cubic spline
        c(n)=THREE*c(n)
        d(n)=d(n-1)
        RETURN
-  
-       END Subroutine NaturalSplineSingle 
+
+       END Subroutine NaturalSplineSingle
 
 
 
 !----------------------------------------------------------------
       subroutine calcrhox(tau,kappa,ndepth,rhox)
 c     2 ways to calculate rhox : int(ro*dx) or int(1/kappa*dtau)
-c      A&A 387, 595-604 (2002)      
+c      A&A 387, 595-604 (2002)
       implicit none
       integer :: i,ndepth
       real :: first
@@ -1650,7 +1650,7 @@ c      A&A 387, 595-604 (2002)
       f=(1/10**kappa)
       x=10**(tau)
       first = x(1)*f(1)
-      tot=rinteg(x,f,rhox,ndepth,first) 
+      tot=rinteg(x,f,rhox,ndepth,first)
       do i=2,ndepth
            rhox(i) = rhox(i-1) + rhox(i)
       enddo
@@ -1667,16 +1667,16 @@ c******************************************************************************
       real :: start
 
       call parcoe (f,x,a,b,c,n)
-      fint(1) = start 
+      fint(1) = start
       rinteg = start
       n1 = n - 1
       do 10 i=1,n1
-         fint(i+1)= (a(i)+b(i)/2.*(x(i+1)+x(i))+ 
+         fint(i+1)= (a(i)+b(i)/2.*(x(i+1)+x(i))+
      .     c(i)/3.*((x(i+1)+x(i))*x(i+1)+x(i)*x(i)))*(x(i+1)-x(i))
 10    rinteg = rinteg + fint(i+1)
 
       return
-      end 
+      end
 
 
 
@@ -1694,11 +1694,11 @@ c******************************************************************************
       n1=n-1
       c(n)=0.
       b(n)=(f(n)-f(n1))/(x(n)-x(n1))
-      a(n)=f(n)-x(n)*b(n) 
+      a(n)=f(n)-x(n)*b(n)
       if(n.eq.2)return
       do 1 j=2,n1
       j1=j-1
-      d=(f(j)-f(j1))/(x(j)-x(j1)) 
+      d=(f(j)-f(j1))/(x(j)-x(j1))
       c(j)=f(j+1)/((x(j+1)-x(j))*(x(j+1)-x(j1)))-f(j)/((x(j)-x(j1))*
      1(x(j+1)-x(j)))+f(j1)/((x(j)-x(j1))*(x(j+1)-x(j1)))
       b(j)=d-(x(j)+x(j1))*c(j)
@@ -1720,7 +1720,7 @@ c******************************************************************************
       b(n1)=b(n)
       c(n1)=c(n)
       return
-      end 
+      end
 
 ***********************************************************************************
       subroutine calc_error(xinf,xsup,yinf,ysup,zinf,zsup,teff_ref,
@@ -1732,7 +1732,7 @@ c******************************************************************************
      &        errorTeffPe,errorloggPe,errorzPe,
      &         errorTeffPg,errorloggPg,errorzPg,
      &         errorTeffkappa,errorloggkappa,errorzkappa
- 
+
 ! values read out of the figures of the manual and scaled down o the according step
               errorTeffT=0.055/32
               errorloggT=0.008/5
@@ -1746,33 +1746,33 @@ c******************************************************************************
               errorTeffkappa=0.8/32
               errorloggkappa=0.36/5
               errorzkappa=0.38/4
-   
 
-   
+
+
       error_T=min((xsup-teff_ref),(teff_ref-xinf))/100*errorTeffT +
      &         min((ysup-logg_ref),(logg_ref-yinf))*errorloggT +
-     &         min((zsup-z_ref),(z_ref-zinf))*errorzT 
+     &         min((zsup-z_ref),(z_ref-zinf))*errorzT
       write(*,1409) 'estimated max error on T =',error_T*100,'%'
 
-                  
+
       error_Pe=min((xsup-teff_ref),(teff_ref-xinf))/100*errorTeffPe +
      &         min((ysup-logg_ref),(logg_ref-yinf))*errorloggPe +
-     &         min((zsup-z_ref),(z_ref-zinf))*errorzPe 
+     &         min((zsup-z_ref),(z_ref-zinf))*errorzPe
        write(*,1409) 'estimated max error on Pe =',error_Pe*100,'%'
-             
+
 
       error_Pg=min((xsup-teff_ref),(teff_ref-xinf))/100*errorTeffPg +
      &         min((ysup-logg_ref),(logg_ref-yinf))*errorloggPg +
-     &         min((zsup-z_ref),(z_ref-zinf))*errorzPg 
+     &         min((zsup-z_ref),(z_ref-zinf))*errorzPg
        write(*,1409) 'estimated max error on Pg =',error_Pg*100,'%'
-              
+
 
       error_kappa=min((xsup-teff_ref),(teff_ref-xinf))/100
      &                                                *errorTeffkappa +
      &         min((ysup-logg_ref),(logg_ref-yinf))*errorloggkappa +
-     &         min((zsup-z_ref),(z_ref-zinf))*errorzkappa 
+     &         min((zsup-z_ref),(z_ref-zinf))*errorzkappa
       write(*,1409) 'estimated max error on kappa =',error_kappa*100,'%'
-            
+
  1409 format(a30,f5.1,a2)
       end
 ***********************************************************************************
@@ -1782,6 +1782,6 @@ c******************************************************************************
       character(len=*),intent(in)   :: str
       integer*8,intent(out)         :: int
       integer*8,intent(out)         :: stat
-  
+
       read(str,*,iostat=stat)  int
-      end 
+      end
