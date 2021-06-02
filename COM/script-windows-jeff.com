@@ -25,7 +25,9 @@ set TURBVEL = 1.0
 
 time /Users/gerber/gitprojects/TurboSpectrum2020_gitversion/Turbospectrum2020/exec-gf/babsma_lu <<EOF
 ###########
+# if PURE-LTE is true, the scattering part of the continuum opacity is added
 # into the absorption part. This happens in babsma.f only. SHOULD BE IMPLEMENTED IN BSYN ALSO!
+# DON'T TOUCH THIS IF YOU ARE NOT SURE OF WHAT YOU DO. LEAVE IT TO FALSE.
 #
 'PURE-LTE  :'  '.false.'
 ###########
@@ -77,6 +79,7 @@ time /Users/gerber/gitprojects/TurboSpectrum2020_gitversion/Turbospectrum2020/ex
 # if PURE-LTE is true, the scattering part of the continuum opacity is added
 # into the absorption part. This happens in babsma.f only. SHOULD BE IMPLEMENTED IN BSYN ALSO!
 # Nothing happens if it is set to true in bsyn.f only.
+# DON'T TOUCH THIS IF YOU ARE NOT SURE OF WHAT YOU DO. LEAVE IT TO FALSE.
 #
 'PURE-LTE  :'  '.false.'
 ###########

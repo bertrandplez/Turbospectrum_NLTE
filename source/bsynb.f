@@ -133,10 +133,10 @@ ccc      if(iweak.gt.0) write(7,202) eps
 * continuum flux, and allows to save continuum intensity at various angles.
 * 
       do j=1,maxlam
+        xlsingle=xlambda(j)
         do k=1,ntau
           x(k)=absocont(k,j)
           s(k)=absoscont(k,j)
-          xlsingle=xlambda(j)
 *
 * NLTE case implemented for continuum
 *
@@ -345,12 +345,12 @@ C
 998     format('lambda, k, taulambda, tauross, T, r/radius')
       endif
       do j=1,maxlam
+        xlsingle=xlambda(j)
         do k=1,ntau
 ! the continuum opacity is not included in abso
 
           x(k)=abso(k,j)+absocont(k,j)
           s(k)=absos(k,j)+absoscont(k,j)
-          xlsingle=xlambda(j)
 *
 * NLTE case implemented for lines
 *

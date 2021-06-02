@@ -14,5 +14,5 @@
 #
 # atomic (N)LTE setup
 1	'H'	'lte'	'atom.h20'	'../sun_marcs_t5777_4.44_0.00_vmic1_new_A__H_12.00.tsbin'	'binary'
-20      'Ca'	'nlte'	'atom.ca105b'   'NLTEgrid_Ca_Sun.ascii' 'ascii'
-26	'Fe'	'nlte'	'atom.fe607a'	'NLTEgrid_Fe_Sun.ascii'	'ascii'
+20      'Ca'	'lte'	'atom.ca105b'   'NLTEgrid_Ca_Sun.ascii' 'ascii'
+26	'Fe'	'lte'	'atom.fe607a'	'NLTEgrid_Fe_Sun.ascii'	'ascii'
