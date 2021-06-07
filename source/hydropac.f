@@ -258,7 +258,7 @@ c
 !!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
                 call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
      &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,
-     &           b_departure,modnlev,
+     &           bd,modnlev,
      &           total,cont,contonly,lineonly)
                 contrib = (total - cont)/xkapr(k)/ro(k)
                 abso(k,l) = abso(k,l) + contrib
