@@ -87,7 +87,7 @@ CCC      COMMON/CANGLE/ NMY,XMY(6),XMY2(6),WMY(6)
       character*4 iblnk
       DATA IBLNK/'    '/,profold/0./,first/.true./
       data debug/.false./
-      data write_radius/.false./
+      data write_radius/.true./
 !
 !      data muout /-1.0, -0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1/
 ! use log(mu) instead ot better cover the limb

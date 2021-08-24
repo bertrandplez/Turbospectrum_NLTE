@@ -3,8 +3,9 @@
 *                                         27_octobre_1996
       INTEGER NDP,NRAYS,lpoint
 
-      PARAMETER (NDP=150,NRAYS=150,lpoint=1000000)
+      PARAMETER (NDP=200,NRAYS=200,lpoint=1000000)
 
+*      PARAMETER (NDP=150,NRAYS=150,lpoint=1000000)
 *      PARAMETER (NDP=60,NRAYS=80,lpoint=1000000)
 ***      PARAMETER (NDP=80,NRAYS=100,lpoint=1000000)
 *      PARAMETER (NDP=90,NRAYS=90,lpoint=300000)

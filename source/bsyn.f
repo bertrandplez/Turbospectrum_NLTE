@@ -564,7 +564,7 @@ ccc          stop
 !
 ! TEST !!
 ! 
-          RESOLUTION = 1000000.
+          RESOLUTION = 500000.
 !
 ! END OF TEST !!
 !

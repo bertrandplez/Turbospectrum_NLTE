@@ -47,6 +47,7 @@ ccc      READ(12,100) MCODE,NTAU,XLS
          stop
       endif
       READ(12,104) (XLP(I), I=1,NLQ)
+      mmm=-1
       DO 11 K=1,NTAU
         if (hydrovelo) then
           READ(12,*,err=99) RR(K),TAU(K),T(K),PE(K),PG(K),
@@ -80,7 +81,11 @@ ccc      READ(12,100) MCODE,NTAU,XLS
         IF(K.EQ.1) GOTO 11
         DTAULN(K)=TAULN(K)-TAULN(K-1)
   11  CONTINUE
-      RADIUS=RR(mmm)
+      if (mmm.lt.0) then
+        stop 'readmo : not found layer where tau is close to one '
+      else
+        RADIUS=RR(mmm)
+      endif
       REWIND 12
       JTAU=NTAU
 *

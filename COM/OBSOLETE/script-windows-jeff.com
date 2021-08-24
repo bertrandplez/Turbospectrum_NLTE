@@ -1,10 +1,10 @@
 #!/bin/csh -f
 
 date
-set mpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
-set dpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
+set mpath = /Users/gerber/gitprojects/TurboSpectrum2020/Turbospectrum2020/COM/TEST-data
+set dpath = /Users/gerber/gitprojects/TurboSpectrum2020/Turbospectrum2020/COM/TEST-data
 
-set MODEL = atmos.sun_marcs_t5777_4.44_0.00_vmic1_new
+set MODEL = 5777g+4.44z-0.25.interpol
 
 set Caabu = 6.34
 set Feabu = 7.50
@@ -23,7 +23,7 @@ set TURBVEL = 1.0
 #
 # ABUNDANCES FROM THE MODEL ARE NOT USED !!!
 
-time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
+time /Users/gerber/gitprojects/TurboSpectrum2020_gitversion/Turbospectrum2020/exec-gf/babsma_lu <<EOF
 ###########
 'LAMBDA_MIN:'  '${lam_min}'
 'LAMBDA_MAX:'  '${lam_max}'
@@ -65,10 +65,10 @@ $TURBVEL
 EOF
 
 ########################################################################
-set SUFFIX     = _${lam_min}-${lam_max}_xit${TURBVEL}-NLTE-windows.spec
+set SUFFIX     = _${lam_min}-${lam_max}_xit${TURBVEL}-NLTE-windows-test-gfortran.spec
 set result     = ${MODEL}${SUFFIX}
 
-time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
+time /Users/gerber/gitprojects/TurboSpectrum2020_gitversion/Turbospectrum2020/exec-gf/bsyn_lu <<EOF
 ###########
 # Use NLTE if true. Source function is computed with departure coefficients 
 # from departure coefficient file for the atom in model atom file, if they 
@@ -76,19 +76,24 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 #
 'NLTE :'          '.true.'
 ###########
-# file containing NLTE information (species and associated files)
+# file containing model atom (levels and energies)
 #
-'NLTEINFOFILE:'  'DATA/SPECIES_LTE_NLTE.dat'
+'MODELATOMFILE:'  '${mpath}/atom.FeNewer'
+###########
+# departure coefficients file. It must have been computed for the same 
+# model atomsphere used here.
 #
+'DEPARTUREFILE:'  '${mpath}/5777g+4.44z-0.25_coef.dat'
+'DEPARTBINARY:'   '.false.'
 ###########
 # if present these files will be used to compute the spectrum in a number of 
-# windows given by SEGMENTSFILE. 
+# windows givent by LINEMASKFILE and CONTMASKFILE, using lines and continuum
+# opacities collected in windows given by SEGMENTSFILE. 
 # Comment out if not needed
 #
+'CONTMASKFILE:'     '${dpath}/uves_giant_Fe-cmask.txt'
+'LINEMASKFILE:'     '${dpath}/uves_giant_Fe-lmask.txt'
 'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
-#
-## Not implemented yet: spectral resolution  to be used in these windows
-#'RESOLUTION:'     '300000.'
 ###########
 # spectral interval
 #
@@ -129,10 +134,8 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 # line lists. First how many there are, and then the list
 #
 'NFILES   :' '2'
-~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data/nlte_linelist_test.txt
 DATA/Hlinedata
-#
-#/Users/gerber/gitprojects/TurboSpectrum2020/Turbospectrum2020/COM/TEST-data/nlte_ges_linelist_feh_only.txt
+/Users/gerber/gitprojects/TurboSpectrum2020/Turbospectrum2020/COM/TEST-data/nlte_ges_linelist_feh_only.txt
 #'NFILES   :' '1'
 #~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data/CaI_lte_linelist.dat
 ###########
