@@ -18,7 +18,7 @@
      &        hydrovelo,pureLTE,departbin,nlte
       integer iint,k
       real    isoch(1000),isochfact(1000),xic,xmyc,scattfrac
-      doubleprecision xl1,xl2,del,xlmarg,xlboff
+      doubleprecision xl1,xl2,del,xlmarg,xlboff,resolution
       common/inputdata/mmaxfil,tsuji,filmet,filmol,noffil,
      &                 linefil(maxfil),spherical,mihal,taum,ncore,
      &                 diflog,detout,inatom,
@@ -27,7 +27,9 @@
      &                 overall,abfind,multidump,isoch,isochfact,
      &                 helium,alpha,rabund,sabund,xifix,xic,mrxf,
      &                 inpmod,continopac,filwavel,hydrovelo,
-     &                 xl1,xl2,del,xlmarg,xlboff,iint,xmyc,scattfrac,
+     &                 xl1,xl2,del,xlmarg,xlboff,
+     &                 resolution,
+     &                 iint,xmyc,scattfrac,
      &                 pureLTE,nlte,modelatomfile,departurefile,
      &                 departbin,contmaskfile,linemaskfile,
      &                 segmentsfile,nlteinfofile
@@ -51,6 +53,7 @@
       modelatomfile=' '
       departurefile=' '
       nlteinfofile=' '
+      resolution = 500000.
       scattfrac=0.0
       pureLTE=.false.
       departbin=.true.
@@ -156,10 +159,15 @@ ccc      inatom='DATA/atomdata-v12.1'
       else if (keyword(1:12).eq.'SEGMENTSFILE') then
         read(charvalue,10) segmentsfile
         print*,'input : segmentsfile',segmentsfile
-      else if (keyword(1:12).eq.'LINEMASKFILE') then
-        read(charvalue,10) linemaskfile
-      else if (keyword(1:12).eq.'CONTMASKFILE') then
-        read(charvalue,10) contmaskfile
+      else if (keyword(1:10).eq.'RESOLUTION') then
+        read(charvalue,10) resolution
+        print*,'input : spectral resolution',resolution
+!
+! obsolete      else if (keyword(1:12).eq.'LINEMASKFILE') then
+! obsolete        read(charvalue,10) linemaskfile
+! obsolete      else if (keyword(1:12).eq.'CONTMASKFILE') then
+! obsolete        read(charvalue,10) contmaskfile
+!
       else if (keyword(1:5).eq.'TSUJI') then
         read(charvalue,*) tsuji
       else if (keyword(1:9).eq.'SPHERICAL') then

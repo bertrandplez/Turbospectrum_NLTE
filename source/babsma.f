@@ -98,7 +98,8 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
      &        datpureLTE,pureLTE,datnlte,nlte
       integer datiint
       real    datisoch(1000),datisochfact(1000),datxmyc
-      doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
+      doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff,
+     &                 datresolution
       common/inputdata/datmmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil(maxfil),datspherical,
      &                 datmihal,dattaum,datncore,
@@ -110,7 +111,9 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
      &                 datrabund,datsabund,datxifix,datxic,datmrxf,
      &                 datinpmod,datcontinopac,datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
+     &                 datresolution,
+     &                 datiint,datxmyc,datscattfrac,
+     &                 datpureLTE,datnlte,
      &                 datmodelatomfile,datdeparturefile,
      &                 datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &                 datnlteinfofile
@@ -199,6 +202,7 @@ c bsyn uses air wavelengths:
       XL1L=XL1-XLMARG
       XL2R=XL2+XLMARG
 ************ !!! ******************
+* lambda step set to 1A if smaller in input
       DEL=max(del,1.0d0)
 ************ !!! ******************
       maxlam=int((xl2-xl1)/del)+1

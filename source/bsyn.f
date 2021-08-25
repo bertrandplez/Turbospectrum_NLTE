@@ -176,7 +176,8 @@
      &          contmaskfile,linemaskfile,segmentsfile,
      &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &          datnlteinfofile,nlteinfofile
-      doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff
+      doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff,
+     &                 datresolution
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
      &                 datspherical,datmihal,dattaum,datncore,
@@ -190,7 +191,9 @@
      &                 datxifix,datxic,datmrxf,datinpmod,datcontinopac,
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE,
+     &                 datresolution,
+     &                 datiint,datxmyc,datscattfrac,
+     &                 datpureLTE,
      &                 datnlte,datmodelatomfile,datdeparturefile,
      &                 datdepartbin,datcontmaskfile,datlinemaskfile,
      &                 datsegmentsfile,datnlteinfofile
@@ -300,7 +303,13 @@ ccc      external commn_handler
       modelatomfile=datmodelatomfile
       departbin=datdepartbin
       departurefile=datdeparturefile
+!
+! when computing for multiple spectral segments, use resolution to define 
+! wavelength step within each segment. Default set in input.f at 500000.
+!
       segmentsfile=datsegmentsfile
+      resolution=datresolution
+!
       contmaskfile=datcontmaskfile
       linemaskfile=datlinemaskfile
       nlteinfofile=datnlteinfofile
@@ -560,14 +569,6 @@ ccc          stop
           xl2r=max(xl2r,xlsegmax(i))
 ! define lambdas for each segment
           nlseg(i)=0
-! use constant resolution within interval
-!
-! TEST !!
-! 
-          RESOLUTION = 500000.
-!
-! END OF TEST !!
-!
           dlambda=(xlsegmax(i)+xlsegmin(i))*0.5/resolution
           xlambda(j)=xlsegmin(i)
           jj=0

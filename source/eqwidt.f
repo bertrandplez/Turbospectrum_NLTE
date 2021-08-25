@@ -139,7 +139,8 @@
      &          contmaskfile,linemaskfile,segmentsfile,
      &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &          datnlteinfofile,nlteinfofile
-      doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff
+      doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff,
+     &                  datresolution,resolution
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
      &                 datnoffil,datlinefil,
      &                 datspherical,datmihal,dattaum,datncore,
@@ -153,7 +154,9 @@
      &                 datxifix,datxic,datmrxf,datinpmod,datcontinopac,
      &                 datfilwavel,dathydrovelo,
      &                 datxl1,datxl2,datdel,datxlmarg,datxlboff,
-     &                 datiint,datxmyc,datscattfrac,datpureLTE,datnlte,
+     &                 datresolution,
+     &                 datiint,datxmyc,datscattfrac,
+     &                 datpureLTE,datnlte,
      &                 datmodelatomfile,datdeparturefile,
      &                 datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &                 datnlteinfofile
@@ -254,6 +257,7 @@ ccc      external commn_handler
       departurefile=datdeparturefile
       modelatomfile=datmodelatomfile
       segmentsfile=datsegmentsfile
+      resolution=datresolution
       linemaskfile=datlinemaskfile
       contlinefile=datcontlinefile
       nlteinfofile=datnlteinfofile

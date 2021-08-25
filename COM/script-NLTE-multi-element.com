@@ -25,6 +25,9 @@ set TURBVEL = 1.0
 
 time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 ###########
+# wavelength range for the continuous opacity calculations. Should encompass the full 
+# range asked for in the following spectrum calculation (bsyn_lu)
+# the step is set to 1A in babsma if smaller than 1A here.
 'LAMBDA_MIN:'  '${lam_min}'
 'LAMBDA_MAX:'  '${lam_max}'
 'LAMBDA_STEP:' '${deltalam}'
@@ -87,10 +90,14 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 #
 'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
 #
-## Not implemented yet: spectral resolution  to be used in these windows
-#'RESOLUTION:'     '300000.'
+# spectral resolution  to be used in these windows. 
+# If not specified, a default value of 500000 is used
+#
+'RESOLUTION:'     '300000.'
 ###########
-# spectral interval
+# spectral interval in the case of a single wavelength interval, i.e. no 
+# segmentsfile.
+# min and max lambda for the calculations and constant wavelength step
 #
 'LAMBDA_MIN:'     '${lam_min}'
 'LAMBDA_MAX:'     '${lam_max}'
