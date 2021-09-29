@@ -126,6 +126,7 @@ cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       common/refabundances/ abund,amass,aname,isotopfrac
 
       logical hydrovelo
+      logical massscale
       real velocity
       common/velo/velocity(ndp),hydrovelo
 
@@ -147,6 +148,7 @@ cc* air edges from continuous opacity file.
       print*,'***********************'
       print*
 
+      massscale = .false.
       gravl=4.44
       intryc=0
       scale=0.
@@ -544,6 +546,20 @@ cccc          print*,'reading ntau again ',ntau
         backspace(imod)
         do while (.true.)
           read(imod,'(a)',err=761) mocode
+          if (mocode(1:4).eq.'MASS') then
+* MULTI model with MASS scale
+            massscale=.true.
+            print*,'MULTI formatted model with mass-scale'
+            exit
+          else if (mocode(1:3).eq.'TAU') then
+* MULTI model with TAU scale (Assume tau_500)
+            massscale=.false.
+            print*,'MULTI formatted model with tau-scale'
+            exit
+          endif
+        enddo
+        do while (.true.)
+          read(imod,'(a)',err=761) mocode
           mocode=mocode(2:40)
           mocode=adjustl(mocode)
           if (mocode(1:4).eq.'NDEP') exit
@@ -551,6 +567,7 @@ cccc          print*,'reading ntau again ',ntau
         read(imod,*) ntau
         read(imod,*)
         mocode='MULTI'
+        print*,'Multi model ',ntau,' layers'
 ! assume lambda std = 5000A
         xls=5000.
         gravl=0.0
@@ -755,7 +772,7 @@ cc1963        format(i3,2x,6(e12.0))
 * 
           do k=1,ntau
             read (imod,*) rhox(k),t(k),pgl(k),pe(k),kaprefmass(k)
-            pe(k)=pe(k)*T(k)*1.38054e-16
+            pe(k)=pe(k)*T(k)*kboltz
             print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
      &              kaprefmass(k)
           enddo
@@ -769,9 +786,14 @@ cc1963        format(i3,2x,6(e12.0))
           do k=1,ntau
             read(imod,*) tau(k),t(k),pe(k),velocity(k),xi(k)
             tau(k)=10.**tau(k)
+! pe read from model is ne
             pe(k)=pe(k)*T(k)*kboltz
             velocity(k)=velocity(k)*1.e5        ! cm/s
             xi(k)=xi(k)                         ! km/s
+            if (massscale) then
+! tau contains rhox  (column mass)
+              rhox(k)=tau(k)
+            endif
           enddo
 ***********************************************
         else
@@ -859,7 +881,11 @@ ccc      IF(NLQ.GT.NDP) STOP
 * tau-scale for the reference wavelength xls, we store the reference
 * opacity in the kaprefmass array, that originally contained the 
 * Kurucz model rosseland opacity.
-      if (mocode(1:6).eq.'KURUCZ') then
+*
+* Adopted for MULTI models with mass-scale
+*  BPz 29/09-2021
+      if (mocode(1:6).eq.'KURUCZ'.or.
+     &      (mocode(1:5).eq.'MULTI'.and.massscale)) then
         CALL ABSKO(NEWT,ntau,T,PE,1,1,ABSKK,SPRIDD)
         do k=1,ntau
           kaprefmass(k)=ABSKk(k)+SPRIDd(k)
@@ -868,7 +894,8 @@ ccc      IF(NLQ.GT.NDP) STOP
         first = rhox(1)*kaprefmass(1)
         tottau = rinteg(rhox,kaprefmass,tau,ntau,first)
         tau(1) = first
-        print*,'Kurucz model. Computed tau-scale at lambda= ',xls,'A'
+        print*,'Model with mass-scale. Computed tau-scale at lambda= ',
+     &     xls,'A'
         print*,'tau(1)=',tau(1)
         do k=2,ntau
           tau(k) = tau(k-1) + tau(k)
@@ -878,7 +905,7 @@ ccc      IF(NLQ.GT.NDP) STOP
 cc          kapref(k) = kaprefmass(k)*rho(k)
           print 222, k,log10(tau(k)),tau(k),T(k), log10(pgl(k)),
      &                pgl(k),log10(pe(k))
-222       format(i2,x,f5.2,x,1pe11.4,2x,0pf7.1,2x,f6.3,x,1pe11.4,
+222       format(i3,x,f5.2,x,1pe11.4,2x,0pf7.1,2x,f6.3,x,1pe11.4,
      &             2x,0pf6.3)
         enddo
       endif
