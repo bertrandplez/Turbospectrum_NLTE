@@ -18,41 +18,39 @@
 # model8: Teffup loggup zup
 ######################################################################################################
 
-set model_path = /Users/gerber/iwg7_pipeline/fromBengt/marcs_my_search/plane_and_sphere  #needs updated by the user, points to where MARCS models are
+set model_path = ../../input_files/model_atmospheres/3D  #needs updated by the user, points to where MARCS models are
 
 #MARCS binary format (.true.) or MARCS ASCII web format (.false.)?
 set marcs_binary = '.false.'
-#set marcs_binary = '.true.'
 
 #enter here the values requested for the interpolated model 
-foreach Tref   ( 4600 )
-foreach loggref ( +4.75 )
-foreach zref ( -2.20 )
-set modele_out = Testout/${Tref}g${loggref}z${zref}.interpol
-set modele_out2 = Testout/${Tref}g${loggref}z${zref}.alt
+foreach Tref   ( 6000 )
+foreach loggref ( +4.50 )
+foreach zref ( +0.00 )
+set modele_out = Testout/${Tref}g${loggref}z${zref}abu${aburef}.interpol
+set modele_out2 = Testout/${Tref}g${loggref}z${zref}abu${aburef}.alt
 #set modele_out = scratch
 
 # grid values bracketting the interpolation point (should be automatised!)
-set Tefflow = 4750
-set Teffup  = 4500
+set Tefflow = 6000
+set Teffup  = 6000
 set logglow = +4.5
-set loggup  = +5.0
-set zlow    = -3.00
-set zup     = -2.00
-set alflow  = +0.40
-set alfup   = +0.40
-set xit     = 01
-
+set loggup  = +4.5
+set zlow    = +0.00
+set zup     = +0.00
+set alflow  = +0.00
+set alfup   = +0.00
+set xit     = 02
 
 #spherical models
-#set model1 = s${Tefflow}_g${logglow}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
-#set model2 = s${Tefflow}_g${logglow}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
-#set model3 = s${Tefflow}_g${loggup}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
-#set model4 = s${Tefflow}_g${loggup}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
-#set model5 = s${Teffup}_g${logglow}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
-#set model6 = s${Teffup}_g${logglow}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
-#set model7 = s${Teffup}_g${loggup}_m1.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
-#set model8 = s${Teffup}_g${loggup}_m1.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model1 = s${Tefflow}_g${logglow}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model2 = s${Tefflow}_g${logglow}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model3 = s${Tefflow}_g${loggup}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model4 = s${Tefflow}_g${loggup}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model5 = s${Teffup}_g${logglow}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model6 = s${Teffup}_g${logglow}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
+#set model7 = s${Teffup}_g${loggup}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
+#set model8 = s${Teffup}_g${loggup}_m0.0_t${xit}_st_z${zup}_a${alfup}_c+0.00_n+0.00_o${alfup}_r+0.00_s+0.00.mod
 
 #plane-parallel models
 set model1 = p${Tefflow}_g${logglow}_m0.0_t${xit}_st_z${zlow}_a${alflow}_c+0.00_n+0.00_o${alflow}_r+0.00_s+0.00.mod
@@ -70,7 +68,7 @@ set test = '.false.'
 set model_test = 'Testwebformat/p5750_g+4.5_m0.0_t01_ap_z-0.25_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00.mod'
 
 # interpolation program (for further details see interpol_modeles.f)
-./interpol_modeles <<EOF
+./interpol_multi <<EOF
 '${model_path}/${model1}'
 '${model_path}/${model2}'
 '${model_path}/${model3}'
