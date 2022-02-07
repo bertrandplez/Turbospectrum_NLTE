@@ -23,7 +23,7 @@ Testout/ - a folder containing some sample output
 
 How to run the interpolator:
 
-1. compile using either an Intel or GNU fortran compiler using the following command:
+1. compile using either an Intel or GNU fortran compiler using the following command (note that the nlte versions will be compiler dependent):
 		>gfortran -o interpol_modeles interpol_modeles.f
    (where gfortran can be replaced with ifort, and the -o command names the compiled output to    "interpol modeles")
 2. run the interpol.script after changing the necessary lines (such as what parameters are needed and what values bracket those parameters) using the following command:

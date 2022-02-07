@@ -136,6 +136,10 @@ c      character*65, dimension (nlte_file) :: n_pos
       character*65, dimension (:), allocatable :: n_pos
       integer*8 :: int1, stat1, pos1
 
+******JMG
+      real :: abu_min, abu_max
+      real, dimension(nfile) :: abu_temp
+
       real y000
       real y001
       real y010
@@ -274,6 +278,44 @@ c        do cnt=1, nlte_file
 c          id_model(cnt) = id_model(cnt)(2:73)
 c        enddo
 c      endif
+
+*********JMG: find limits of n_abu for the given model atmosphere, if abu_ref is outside of those limits, temporarily switch it to the min or max value while finding models
+      do cnt = 1, 8
+        do letter = 1,256
+          if (FILE_IN(cnt)(letter:letter+2) .eq. 'mod') then
+              model_name = FILE_IN(cnt)(letter-73:letter-2)
+          endif
+        enddo
+        abu_min = 99999999999.
+        abu_max = 0.
+        do cnt1 = 1, nlte_file
+           if  (nlte_file.le.20000.and.
+     &         abu_ref.le.11.99999) then
+               abu_ref = metal(cnt)+7.50
+           endif
+           if  (teff(cnt).eq.n_teff(cnt1).and.
+     &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
+     &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
+     &         metal(cnt).eq.n_metal(cnt1).and.
+     &         trim(model_name).eq.trim(id_model(cnt1))) then
+               if (n_abu(cnt1).lt.abu_min) then
+                  abu_min = n_abu(cnt1)
+               endif
+               if (n_abu(cnt1).gt.abu_max) then
+                  abu_max = n_abu(cnt1)
+               endif
+           endif
+         enddo
+c         print*, abu_min
+c         print*, abu_max
+         if  (abu_ref.lt.abu_min) then
+             abu_temp(cnt) = abu_min
+         else if (abu_ref.gt.abu_max) then
+             abu_temp(cnt) = abu_max
+         else
+             abu_temp(cnt) = abu_ref
+         endif
+      enddo 
       
 *********MB: cross-correlate the parameters with those in the input file
 
@@ -292,8 +334,8 @@ c      endif
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
      &         metal(cnt).eq.n_metal(cnt1).and.
-     &         abu_ref.le.(n_abu(cnt1)+0.099).and.
-     &         abu_ref.ge.(n_abu(cnt1)-0.099).and.
+     &         abu_temp(cnt).le.(n_abu(cnt1)+0.099).and.
+     &         abu_temp(cnt).ge.(n_abu(cnt1)-0.099).and.
      &         trim(model_name).eq.trim(id_model(cnt1))) then
                index(cnt) = cnt1
              write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1), 
@@ -683,7 +725,8 @@ c      stop
          write(27,1969) coefval(k), power(k,:)
        enddo  
  1969  format('# ', a15,3(1x,f10.6))
-       if  (nlte_file.le.20000) then
+       if  (nlte_file.le.20000.and.
+     &       abu_ref.le.11.99999) then
           write(27,1971) z_ref+7.50
        else
           write(27,1971) abu_ref
