@@ -310,8 +310,14 @@ c         print*, abu_min
 c         print*, abu_max
          if  (abu_ref.lt.abu_min) then
              abu_temp(cnt) = abu_min
+             write(*,*) 'WARNING: ref. abund below min value in grid'
+             write(*,83) abu_ref, abu_min
+ 83   format('Ref. abund is ',f8.0, 'Min abund is ',f8.0)
          else if (abu_ref.gt.abu_max) then
              abu_temp(cnt) = abu_max
+             write(*,*) 'WARNING: ref. abund above max value in grid'
+             write(*,84) abu_ref, abu_max
+ 84   format('Ref. abund is ',f8.0, 'Max abund is ',f8.0)
          else
              abu_temp(cnt) = abu_ref
          endif
