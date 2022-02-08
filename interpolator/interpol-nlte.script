@@ -18,30 +18,38 @@
 # model8: Teffup loggup zup
 ######################################################################################################
 
-set model_path = /Users/gerber/iwg7_pipeline/fromBengt/marcs_my_search/plane_and_sphere  #needs updated by the user, points to where MARCS models are
+set model_path = ../../input_files/model_atmospheres/1D  #needs updated by the user, points to where MARCS models are
+set nlte_path = ../../input_files/nlte_data  #needs updated by the user, points to where NLTE data is (binary file of departure coefficients and auxiliary data file used to navigate it)
+set aux_file_length = 9 #needs update by the user, lets interpolator know how large to make array for reading aux file
 
 #MARCS binary format (.true.) or MARCS ASCII web format (.false.)?
 set marcs_binary = '.false.'
-#set marcs_binary = '.true.'
 
-#enter here the values requested for the interpolated model 
-foreach Tref   ( 4600 )
-foreach loggref ( +4.75 )
-foreach zref ( -2.20 )
-set modele_out = Testout/${Tref}g${loggref}z${zref}.interpol
-set modele_out2 = Testout/${Tref}g${loggref}z${zref}.alt
+#enter here the values requested for the interpolated model, aburef is the target abundance value of the element for departure coefficients
+foreach Tref   ( 5777 )
+foreach loggref ( +4.40 )
+foreach zref ( +0.00 )
+foreach aburef ( 12.00 )
+set modele_out = Testout/${Tref}g${loggref}z${zref}abu${aburef}.interpol
+set modele_out2 = Testout/${Tref}g${loggref}z${zref}abu${aburef}.alt
+set modele_out3 = Testout/${Tref}g${loggref}z${zref}abu${aburef}_coef.dat
 #set modele_out = scratch
 
 # grid values bracketting the interpolation point (should be automatised!)
-set Tefflow = 4750
-set Teffup  = 4500
-set logglow = +4.5
-set loggup  = +5.0
-set zlow    = -3.00
-set zup     = -2.00
-set alflow  = +0.40
-set alfup   = +0.40
+set Tefflow = 5777
+set Teffup  = 5777
+set logglow = +4.4
+set loggup  = +4.4
+set zlow    = +0.00
+set zup     = +0.00
+set alflow  = +0.00
+set alfup   = +0.00
 set xit     = 01
+
+
+#set the file name of the NLTE binary file
+set nlte_binary = ${nlte_path}/H/output_NLTEgrid4TS_May-21-2021.bin
+set nlte_model_list = ${nlte_path}/H/auxData_NLTEgrid4TS_May-21-2021_solar_1D.dat
 
 
 #spherical models
@@ -70,7 +78,7 @@ set test = '.false.'
 set model_test = 'Testwebformat/p5750_g+4.5_m0.0_t01_ap_z-0.25_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00.mod'
 
 # interpolation program (for further details see interpol_modeles.f)
-./interpol_modeles <<EOF
+./interpol_modeles_nlte <<EOF
 '${model_path}/${model1}'
 '${model_path}/${model2}'
 '${model_path}/${model3}'
@@ -81,9 +89,14 @@ set model_test = 'Testwebformat/p5750_g+4.5_m0.0_t01_ap_z-0.25_a+0.00_c+0.00_n+0
 '${model_path}/${model8}'
 '${modele_out}'
 '${modele_out2}'
+'${modele_out3}'
+'${nlte_binary}'
+'${nlte_model_list}'
+${aux_file_length}
 ${Tref}
 ${loggref}
 ${zref}
+${aburef}
 ${test}
 ${marcs_binary}
 '${model_test}'

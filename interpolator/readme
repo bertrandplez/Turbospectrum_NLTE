@@ -1,8 +1,21 @@
+
 The contents of this folder are as follows:
 
-interpol_modeles.f - fortran code to interpolate MARCS model atmospheres for a given set of parameters and generate an interpolated model and a file containing departure coefficients interpolated for the given paraemeters (*_coef.dat)
+interpol_modeles.f - original fortran code to interpolate MARCS model atmospheres for a given set of parameters distributed by MARCS and generate an interpolated model
 
 interpol.script - a bash script to run interpol_modeles.f
+
+interpol_modeles_nlte.f - adjusted interpol_modeles_nlte.f code to interpolate MARCS model atmospheres for a given set of parameters and generate an interpolated model and a file containing departure coefficients interpolated for the given paraemeters (*_coef.dat). the code to read the binary files is compiler dependent and designed for an intel compiler. interpol_modeles_nlte_gfort.f is for use with a GNU compiler.
+
+interpol-nlte.script - a bash script to run interpol_modeles_nlte.f
+
+interpol_multi.f - adjusted interpol_modeles.f fortran code to interpolate model atmospheres in MULTI format for a given set of parameters and generate an interpolated model. used to interpolate average 3D atmospheres
+
+interpol-3d.script - a bash script to run interpol_multi.f
+
+interpol_multi_nlte.f - same as interpol_modeles_nlte.f, but works with MULTI formatted atmospheres. interpol_multi_nlte_gfort.f is for use with a GNU compiler.
+
+interpol-3d-nlte.script - a bash script to run interpol_multi_nlte.f
 
 NLTEdata/ - a folder containing binary files of grids of departure doefficients computed by MULTI for the entire MARCS grid or a given subset, and auxiliary data files that interpol_modeles uses to search and extract the needed information from the binary grid. You likely don't need all of the binary files (they are large and take a while to download). Just choose the ones for the elements you want to use/test. 
 
@@ -10,7 +23,7 @@ Testout/ - a folder containing some sample output
 
 How to run the interpolator:
 
-1. compile using either an Intel or GNU fortran compiler using the following command:
+1. compile using either an Intel or GNU fortran compiler using the following command (note that the nlte versions will be compiler dependent):
 		>gfortran -o interpol_modeles interpol_modeles.f
    (where gfortran can be replaced with ifort, and the -o command names the compiled output to    "interpol modeles")
 2. run the interpol.script after changing the necessary lines (such as what parameters are needed and what values bracket those parameters) using the following command:

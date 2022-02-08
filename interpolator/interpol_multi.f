@@ -1,8 +1,9 @@
-      program interpol_modeles
+      program interpol_multi
 
  
 ****************************************************************************
-* interpolation of model atmosphere  
+*     interpolation of model atmosphere in MULTI format + NLTE departure coefficients
+*       
 * parameter space of interpolation {Teff,logg,z}                  
 * 8 MARCS binary models as input required: 
 * ! the order of input models matters !
@@ -77,10 +78,11 @@ c             -dimension of taubas was not matching tauR (emo@astro.indiana.edu)
 c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopefully fixed) /BE
 ****************************************************************************
 !  compile with Fortran 90 or 95  
-
+c
+c    JMG: 2020 converted format to interpolate models in MULTI format as opposed to ascii files from MARCS
 
       implicit none
-      integer :: file,nfile,k,ndp,ndepth_ref,out,nlinemod
+      integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,nlinemod,imod
       parameter (ndp=200)
       parameter (nfile=11)
       logical :: verif,check,test,extrapol,binary,optimize
@@ -89,8 +91,9 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
       character*256, dimension (nfile) :: FILE_IN
       character*256 :: FILE_ALT
       real, dimension (:,:), allocatable:: taus,tauR,T,Pe,Pg,xit,rr,
-     &xkapref,rhox,taus_aux,tauR_aux,T_aux,Pe_aux,Pg_aux,xit_aux,rr_aux,
-     &        xkapref_aux 
+     &        xkapref,rhox,taus_aux,tauR_aux,T_aux,Pe_aux,Pg_aux,
+     &        xit_aux,rr_aux,xkapref_aux,NE_aux,V_aux,Vturb_aux,
+     &        NE,V,Vturb 
       integer, dimension (nfile) :: ndepth
       real, dimension (nfile) :: xlr,teff,logg,metal
       logical, dimension (nfile) :: sph
@@ -119,7 +122,7 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
       write(*,*) 'Interpolation between :'
       do file=1,10
          read(*,*) FILE_IN(file)
-      end do 
+      end do   
        read(*,*) temp_ref
        read(*,*) logg_ref
        read(*,*) z_ref
@@ -129,58 +132,84 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
       check=.true.
       nlinemod=ndp
       
-      allocate(taus_aux(nlinemod,nfile),tauR_aux(nlinemod,nfile),
-     & T_aux(nlinemod,nfile),Pe_aux(nlinemod,nfile),
-     & Pg_aux(nlinemod,nfile),xit_aux(nlinemod,nfile),
-     & rr_aux(nlinemod,nfile),xkapref_aux(nlinemod,nfile))
+c      allocate(taus_aux(nlinemod,nfile),tauR_aux(nlinemod,nfile),
+c     & T_aux(nlinemod,nfile),Pe_aux(nlinemod,nfile),
+c     & Pg_aux(nlinemod,nfile),xit_aux(nlinemod,nfile),
+c     & rr_aux(nlinemod,nfile),xkapref_aux(nlinemod,nfile))
 
-      read(*,*) binary
-      if (binary) then
+      allocate(taus_aux(nlinemod,nfile),T_aux(nlinemod,nfile),
+     & NE_aux(nlinemod,nfile),V_aux(nlinemod,nfile),
+     & Vturb_aux(nlinemod,nfile))
+
+******MB: read model atmopsheres (only 8 models allowed!)
+c      read(*,*) binary
+c      if (binary) then
+c      do file=1,8
+c       call extract_bin(FILE_IN(file),teff(file),logg(file),metal(file),
+c     &  ndepth(file),xlr(file),taus_aux(:,file),tauR_aux(:,file),
+c     &  T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),xit_aux(:,file),
+c     &  rr_aux(:,file),sph(file),xkapref_aux(:,file))
+c        verif=verif.and.(ndepth(file).eq.ndepth(1))
+c        check=check.and.(xlr(file).eq.xlr(1))
+c        if (.not.(((sph(1).and.sph(file))).or.
+c     &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
+c         write(*,*) 'geometry compatibility problem with'
+c         write(*,78) file,teff(file),logg(file),metal(file)     
+c         stop
+c        endif  
+c        write(*,78) file,teff(file),logg(file),metal(file)
+c      end do
+c      else
+c      do file=1,8
+c        call extract_ascii(FILE_IN(file),teff(file),logg(file),
+c     &  metal(file),ndepth(file),xlr(file),taus_aux(:,file),
+c     &  tauR_aux(:,file),T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),
+c     &  xit_aux(:,file),rr_aux(:,file),sph(file),xkapref_aux(:,file))
+c        verif=verif.and.(ndepth(file).eq.ndepth(1))
+c        check=check.and.(xlr(file).eq.xlr(1))
+c        if (.not.(((sph(1).and.sph(file))).or.
+c     &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
+c        write(*,*) 'geometry compatibility problem with'
+c        write(*,78) file,teff(file),logg(file),metal(file)     
+c        stop
+c       end if   
+c       write(*,78) file,teff(file),logg(file),metal(file)
+c      end do
+c      endif
+c 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
+
       do file=1,8
-      call extract_bin(FILE_IN(file),teff(file),logg(file),metal(file),
-     & ndepth(file),xlr(file),taus_aux(:,file),tauR_aux(:,file),
-     & T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),xit_aux(:,file),
-     & rr_aux(:,file),sph(file),xkapref_aux(:,file))
-      verif=verif.and.(ndepth(file).eq.ndepth(1))
-      check=check.and.(xlr(file).eq.xlr(1))
-      if (.not.(((sph(1).and.sph(file))).or.
-     &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
-      write(*,*) 'geometry compatibility problem with'
-       write(*,78) file,teff(file),logg(file),metal(file)     
-      stop
-      endif  
-      write(*,78) file,teff(file),logg(file),metal(file)
-      end do
-      else
-          do file=1,8
-      call extract_ascii(FILE_IN(file),teff(file),logg(file),
-     & metal(file),ndepth(file),xlr(file),taus_aux(:,file),
-     & tauR_aux(:,file),T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),
-     & xit_aux(:,file),rr_aux(:,file),sph(file),xkapref_aux(:,file))
-      verif=verif.and.(ndepth(file).eq.ndepth(1))
-      check=check.and.(xlr(file).eq.xlr(1))
-      if (.not.(((sph(1).and.sph(file))).or.
-     &    ((.not.(sph(1))).and.(.not.(sph(file)))))) then
-      write(*,*) 'geometry compatibility problem with'
-       write(*,78) file,teff(file),logg(file),metal(file)     
-      stop
-      end if   
-      write(*,78) file,teff(file),logg(file),metal(file)
-      end do
-      endif
- 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
-
-
-      write(*,79) temp_ref,logg_ref,z_ref
- 79   format('Interpolation point : Teff=',f8.0,'  logg=',f5.2,
-     &                            '  z=',f6.2)
-************** check if files are length and depth ref compatible *******
+        imod =10
+        OPEN(UNIT=imod,FILE=FILE_IN(file),STATUS='OLD')
+        read(imod,*) teff(file)
+        read(imod,*) logg(file)
+        read(imod,*) metal(file)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*)
+        read(imod,*) logg(file)
+        read(imod,*)
+        read(imod,*) ndepth(file)
+        do k=1, ndepth(file)
+          read(imod,*) taus_aux(k,file), T_aux(k,file), NE_aux(k,file),
+     &                 V_aux(k,file), Vturb_aux(k,file)
+        enddo
+        verif=verif.and.(ndepth(file).eq.ndepth(1))
+        xlr(file) = 5000.
+        close(imod)
+      enddo
+      
+**************check if files are length and depth ref compatible *******
+      
       if (.not.(check)) then
          write(*,*) 'All the models do not have the same' 
           write(*,*) 'lambda ref'
           write(*,*) 'no interpolation done'
           stop
-
        else    
       if (.not.(verif)) then
          write(*,*) 'WARNING : All the models do not have the same' 
@@ -189,20 +218,33 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
       end if
       ndepth_ref=ndepth(1)
       lambda_ref=xlr(1)
+
+      
 ********* calculation of the interpolation point(x,y,z) in {Teff,logg,z} space******************
       
-       allocate(taus(ndepth_ref,nfile),tauR(ndepth_ref,nfile),
-     & T(ndepth_ref,nfile),Pe(ndepth_ref,nfile),Pg(ndepth_ref,nfile),
-     & xit(ndepth_ref,nfile),rr(ndepth_ref,nfile),
-     &  xkapref(ndepth_ref,nfile))
+c       allocate(taus(ndepth_ref,nfile),tauR(ndepth_ref,nfile),
+c     & T(ndepth_ref,nfile),Pe(ndepth_ref,nfile),Pg(ndepth_ref,nfile),
+c     & xit(ndepth_ref,nfile),rr(ndepth_ref,nfile),
+c     &     xkapref(ndepth_ref,nfile))
+
+       allocate(taus(ndepth_ref,nfile),T(ndepth_ref,nfile),
+     & NE(ndepth_ref,nfile), V(ndepth_ref,nfile),
+     & Vturb(ndepth_ref,nfile))
+       
+c       taus=taus_aux(1:ndepth_ref,:)
+c       tauR=tauR_aux(1:ndepth_ref,:)
+c       T=T_aux(1:ndepth_ref,:)
+c       Pe=Pe_aux(1:ndepth_ref,:)
+c       Pg=Pg_aux(1:ndepth_ref,:)
+c       xit=xit_aux(1:ndepth_ref,:)
+c       rr=rr_aux(1:ndepth_ref,:)
+c       xkapref=xkapref_aux(1:ndepth_ref,:)
+
        taus=taus_aux(1:ndepth_ref,:)
-       tauR=tauR_aux(1:ndepth_ref,:)
        T=T_aux(1:ndepth_ref,:)
-       Pe=Pe_aux(1:ndepth_ref,:)
-       Pg=Pg_aux(1:ndepth_ref,:)
-       xit=xit_aux(1:ndepth_ref,:)
-       rr=rr_aux(1:ndepth_ref,:)
-       xkapref=xkapref_aux(1:ndepth_ref,:)
+       NE=NE_aux(1:ndepth_ref,:)
+       V=V_aux(1:ndepth_ref,:)
+       Vturb=Vturb_aux(1:ndepth_ref,:)
 
          xinf=inf(teff)
          yinf=inf(logg)
@@ -235,7 +277,7 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
 *     
 *******resample each layer of each input model on a common depth basis(tau5000 or tauRoss, see resample routine)*****************
 !if you don't want to resample all the model to the same depth scale, just comment the following line  
-!         call resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
+c         call resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
 
 
 ****** initialisation of empirical constants for optimized interpolation (see TM thesis)*************
@@ -273,12 +315,81 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
              write(*,*) 'linear interpolation applied'
          end if   
 !these constants are calibrated on a broad range of stellar parameters; scale them now to the present one.
-            power(:,1)= 1-(lin_dif(:,1)*(abs(xsup-xinf)/(7000-3800)))
-            power(:,2)= 1-(lin_dif(:,2)*(abs(ysup-yinf)/(5-0.0)))
-            power(:,3)= 1-(lin_dif(:,3)*(abs(zsup-zinf)/(0-(-4))))
+!JMG: readjusted for STAGGER Ranges
+c            power(:,1)= 1-(lin_dif(:,1)*(abs(xsup-xinf)/(7000-3800)))
+c            power(:,2)= 1-(lin_dif(:,2)*(abs(ysup-yinf)/(5-0.0)))
+c            power(:,3)= 1-(lin_dif(:,3)*(abs(zsup-zinf)/(0-(-4))))
+
+            power(:,1)= 1-(lin_dif(:,1)*(abs(xsup-xinf)/(7000-4000)))
+            power(:,2)= 1-(lin_dif(:,2)*(abs(ysup-yinf)/(5-1.5)))
+            power(:,3)= 1-(lin_dif(:,3)*(abs(zsup-zinf)/(0.5-(-4))))
                   
 ****** interpolation of each component of the atmosphere (taus,teff,Pe,Pg,microt,rr) and at each layer *****************
-       
+c JMG: for MULTI these components are LGTAU, TEMP, NE, V, VTURB  
+
+
+c        do k=1,ndepth_ref
+c          x=(teffpoint)**power(1,1)
+c          y=(loggpoint)**power(1,2)
+c          z=(metpoint)**power(1,3)
+c          call blend_103(x,y,z,taus(k,1),taus(k,2),
+c     &     taus(k,3),taus(k,4),taus(k,5),taus(k,6),taus(k,7),taus(k,8)
+c     &     ,taus(k,out))
+c
+c          x=(teffpoint)**power(2,1)
+c          y=(loggpoint)**power(2,2)
+c          z=(metpoint)**power(2,3)
+c          call blend_103(x,y,z,tauR(k,1),tauR(k,2),
+c     &     tauR(k,3),tauR(k,4),tauR(k,5),tauR(k,6),tauR(k,7),tauR(k,8)
+c     &     ,tauR(k,out))
+c          
+c          x=(teffpoint)**power(3,1)
+c          y=(loggpoint)**power(3,2)
+c          z=(metpoint)**power(3,3)
+c          call blend_103(x,y,z,T(k,1),T(k,2),T(k,3),T(k,4)
+c     &     ,T(k,5),T(k,6),T(k,7),T(k,8),T(k,out))
+c          
+c          x=(teffpoint)**power(4,1)
+c          y=(loggpoint)**power(4,2)
+c          z=(metpoint)**power(4,3)
+c          call blend_103(x,y,z,Pe(k,1),Pe(k,2),Pe(k,3),Pe(k,4)
+c     &     ,Pe(k,5),Pe(k,6),Pe(k,7),Pe(k,8),Pe(k,out))
+c          
+c          x=(teffpoint)**power(5,1)
+c          y=(loggpoint)**power(5,2)
+c          z=(metpoint)**power(5,3)
+c          call blend_103(x,y,z,Pg(k,1),Pg(k,2),Pg(k,3),Pg(k,4)
+c     &     ,Pg(k,5),Pg(k,6),Pg(k,7),Pg(k,8),Pg(k,out))
+c          
+c          x=(teffpoint)**power(6,1)
+c          y=(loggpoint)**power(6,2)
+c          z=(metpoint)**power(6,3)
+c          call blend_103(x,y,z,xit(k,1),xit(k,2),
+c     &     xit(k,3),xit(k,4),xit(k,5),xit(k,6),xit(k,7),xit(k,8)
+c     &     ,xit(k,out))       
+c 
+c          x=(teffpoint)**power(7,1)
+c          y=(loggpoint)**power(7,2)
+c          z=(metpoint)**power(7,3)
+c          call blend_103(x,y,z,rr(k,1),rr(k,2),
+c     &     rr(k,3),rr(k,4),rr(k,5),rr(k,6),rr(k,7),rr(k,8)
+c     &     ,rr(k,out))        
+c
+c          x=(teffpoint)**power(8,1)
+c          y=(loggpoint)**power(8,2)
+c          z=(metpoint)**power(8,3)
+c          call blend_103(x,y,z,xkapref(k,1),xkapref(k,2),
+c     &     xkapref(k,3),xkapref(k,4),xkapref(k,5),xkapref(k,6),
+c     &         xkapref(k,7),xkapref(k,8),xkapref(k,out))
+c
+cc          write(*,fmt="(i2, 9(f10.5,2x))") k,
+cc     &     xkapref(k,1),xkapref(k,2),
+cc     &     xkapref(k,3),xkapref(k,4),xkapref(k,5),xkapref(k,6),
+cc     &     xkapref(k,7),xkapref(k,8),xkapref(k,out)
+c       end do
+c       ndepth(out)=ndepth_ref
+c       xlr(out)=lambda_ref
+
         do k=1,ndepth_ref
           x=(teffpoint)**power(1,1)
           y=(loggpoint)**power(1,2)
@@ -286,13 +397,6 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
           call blend_103(x,y,z,taus(k,1),taus(k,2),
      &     taus(k,3),taus(k,4),taus(k,5),taus(k,6),taus(k,7),taus(k,8)
      &     ,taus(k,out))
-
-          x=(teffpoint)**power(2,1)
-          y=(loggpoint)**power(2,2)
-          z=(metpoint)**power(2,3)
-          call blend_103(x,y,z,tauR(k,1),tauR(k,2),
-     &     tauR(k,3),tauR(k,4),tauR(k,5),tauR(k,6),tauR(k,7),tauR(k,8)
-     &     ,tauR(k,out))
           
           x=(teffpoint)**power(3,1)
           y=(loggpoint)**power(3,2)
@@ -300,50 +404,41 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
           call blend_103(x,y,z,T(k,1),T(k,2),T(k,3),T(k,4)
      &     ,T(k,5),T(k,6),T(k,7),T(k,8),T(k,out))
           
-          x=(teffpoint)**power(4,1)
-          y=(loggpoint)**power(4,2)
-          z=(metpoint)**power(4,3)
-          call blend_103(x,y,z,Pe(k,1),Pe(k,2),Pe(k,3),Pe(k,4)
-     &     ,Pe(k,5),Pe(k,6),Pe(k,7),Pe(k,8),Pe(k,out))
+          x=(teffpoint)**power(7,1)
+          y=(loggpoint)**power(7,2)
+          z=(metpoint)**power(7,3)
+          call blend_103(x,y,z,NE(k,1),NE(k,2),NE(k,3),NE(k,4)
+     &     ,NE(k,5),NE(k,6),NE(k,7),NE(k,8),NE(k,out))
           
-          x=(teffpoint)**power(5,1)
-          y=(loggpoint)**power(5,2)
-          z=(metpoint)**power(5,3)
-          call blend_103(x,y,z,Pg(k,1),Pg(k,2),Pg(k,3),Pg(k,4)
-     &     ,Pg(k,5),Pg(k,6),Pg(k,7),Pg(k,8),Pg(k,out))
-          
-          x=(teffpoint)**power(6,1)
-          y=(loggpoint)**power(6,2)
-          z=(metpoint)**power(6,3)
-          call blend_103(x,y,z,xit(k,1),xit(k,2),
-     &     xit(k,3),xit(k,4),xit(k,5),xit(k,6),xit(k,7),xit(k,8)
-     &     ,xit(k,out))       
+          x=(teffpoint)**power(7,1)
+          y=(loggpoint)**power(7,2)
+          z=(metpoint)**power(7,3)
+          call blend_103(x,y,z,V(k,1),V(k,2),V(k,3),V(k,4)
+     &     ,V(k,5),V(k,6),V(k,7),V(k,8),V(k,out))      
  
           x=(teffpoint)**power(7,1)
           y=(loggpoint)**power(7,2)
           z=(metpoint)**power(7,3)
-          call blend_103(x,y,z,rr(k,1),rr(k,2),
-     &     rr(k,3),rr(k,4),rr(k,5),rr(k,6),rr(k,7),rr(k,8)
-     &     ,rr(k,out))        
+          call blend_103(x,y,z,Vturb(k,1),Vturb(k,2),Vturb(k,3),
+     &     Vturb(k,4),Vturb(k,5),Vturb(k,6),Vturb(k,7),Vturb(k,8)
+     &     ,Vturb(k,out))        
 
-          x=(teffpoint)**power(8,1)
-          y=(loggpoint)**power(8,2)
-          z=(metpoint)**power(8,3)
-          call blend_103(x,y,z,xkapref(k,1),xkapref(k,2),
-     &     xkapref(k,3),xkapref(k,4),xkapref(k,5),xkapref(k,6),
-     &     xkapref(k,7),xkapref(k,8),xkapref(k,out))        
-       end do
-       ndepth(out)=ndepth_ref
-       xlr(out)=lambda_ref
-
+c          write(*,fmt="(i2, 9(f10.5,2x))") k,
+c     &     xkapref(k,1),xkapref(k,2),
+c     &     xkapref(k,3),xkapref(k,4),xkapref(k,5),xkapref(k,6),
+c     &     xkapref(k,7),xkapref(k,8),xkapref(k,out)
+        end do
+        ndepth(out)=ndepth_ref
+        xlr(out)=lambda_ref
 
 **********now calculate rhox*****************
-      write(*,*) 'now calculate rhox'
-      allocate(rhox(ndepth_ref,nfile))
-      do file=1,9
-      call calcrhox(tauR(:,file),xkapref(:,file),ndepth_ref,
-     &                                                 rhox(:,file))
-      enddo
+!JMG: Don't need this for MULTI
+c      write(*,*) 'now calculate rhox'
+c      allocate(rhox(ndepth_ref,nfile))
+c      do file=1,9
+c      call calcrhox(tauR(:,file),xkapref(:,file),ndepth_ref,
+c     &                                                 rhox(:,file))
+c      enddo
 
 **********calculate estimated error********
       if (optimize) then
@@ -352,65 +447,60 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
      & logg_ref,z_ref)
       endif
 
-******** write interpolated model in file nber out (basma compatible format)***********
       write(*,*) 'now write result'
        open(unit=23,file=FILE_IN(out))
        open(unit=25,file=FILE_IN(out+1))
 
-       if (sph(1)) then
-        write(*,*) 'spherical models'
-        write(23,1967) ndepth_ref,xlr(out),logg_ref
- 1967   format('''sphINTERPOL''',1x,i3,f8.0,2x,f4.2,1x,'0 0.00')
-         do k=1,ndepth_ref
-           write(23,1968) taus(k,out),T(k,out),Pe(k,out),
-     &                    Pg(k,out),xit(k,out),rr(k,out),taur(k,out)
-         enddo  
- 1968   format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
-        write(25,19671) ndepth_ref,xlr(out)
-19671   format('sphINTERPOL',1x,i3,f8.0)
-        write(25,19672)
-19672   format('    k    log(tau)  T    log(Pe)   log(Pg)    rhox')
-         do k=1,ndepth_ref
-           write(25,19681) k,taus(k,out),T(k,out),Pe(k,out),Pg(k,out),
-     &     rhox(k,out)
-19681      format(i5,1x,f8.4,1x,f8.2,2(1x,f8.4),1x,e15.6)
-          enddo
-
-
-
-        else
-        write(*,*) 'plane parallel models'
-        write(23,1966) ndepth_ref,xlr(out),logg_ref
-1966     format('''ppINTERPOL''',1x,i3,f8.0,2x,f4.2,1x,'0 0.00')
-         do k=1,ndepth_ref
-           write(23,1965) taus(k,out),T(k,out),Pe(k,out),
-     &                    Pg(k,out),xit(k,out),rr(k,out),taur(k,out)
-1965       format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
-          enddo
-        write(25,19661) xlr(out)
-19661   format('ppINTERPOL',f8.0) 
-        write(25,19672)
-         do k=1,ndepth_ref
-           write(25,19681) k,taus(k,out),T(k,out),Pe(k,out),Pg(k,out),
-     &                   rhox(k,out)
-         enddo  
-       end if  
-
+c       write(*,*) 'spherical models'
+       write(23,*) 'interpolated_model'
+       write(23,*) 'TAU5000 SCALE'
+       write(23,"(a)") '*'
+       write(23,"(a)") '*LOG G'
+       write(23,*) logg_ref
+       write(23,"(a)") '*'
+       write(23,"(a)") '* NDEP'
+       write(23,*) ndepth_ref
+       write(23,"(a)") 
+     &     '*  LG TAU    TEMPERATURE  NE      V       VTURB  '
+       do k=1,ndepth_ref
+        write(23,1968) taus(k,out),T(k,out),NE(k,out),
+     &                   V(k,out),Vturb(k,out)
+        enddo  
+ 1968  format(f8.4,1x,e15.6,2x,e15.6,1x,f8.4,1x,e15.6)
+c       write(25,19671) ndepth_ref,xlr(out)
+c 19671  format('sphINTERPOL',1x,i3,f8.0)
+c       write(25,19672)
+c 19672  format('    k    log(tau)  T    log(Pe)   log(Pg)    rhox')
+c        do k=1,ndepth_ref
+c          write(25,19681) k,taus(k,out),T(k,out),Pe(k,out),Pg(k,out),
+c     &    rhox(k,out)
+c 19681     format(i5,1x,f8.4,1x,f8.2,2(1x,f8.4),1x,e15.6)
+c       enddo
+c
+c
 
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
-2021    format(a250) 
+       write(27,2021) (FILE_IN(file),file=1,8)
+2021    format(a250)
+
        close(23)
        close(25)
+       close(27)
+       
+       
 
 ********** write a file compatible for sm (used for a control plot) ************
-      open (unit=24,file='modele.sm')
-      do file=1,8
-       do k=1,ndepth_ref
-        write(24,*) taus(k,file),T(k,file),Pe(k,file),
-     &   Pg(k,file),taur(k,file)   
-       end do
-      end do
+c      open (unit=24,file='modele.sm')
+c      print*,'spud'
+c      do file=1,8
+c       do k=1,ndepth_ref
+c        write(24,*) taus(k,file),T(k,file),Pe(k,file),
+c     &   Pg(k,file),taur(k,file)   
+c       end do
+c      end do
+c      print*,'spud'
+      
 !case of a 10th comparison model
       read(*,*) FILE_IN(11)
       if (test) then 
@@ -440,8 +530,10 @@ c  04/2012 unformatted reading of ascii models reinstated (troublemakers hopeful
       end if
       end if
 
-      deallocate(taus,tauR,T,Pe,Pg,xit,taus_aux,tauR_aux,T_aux,Pe_aux,
-     & Pg_aux,xit_aux,rr_aux,rr,rhox)
+c      deallocate(taus,tauR,T,Pe,Pg,xit,taus_aux,tauR_aux,T_aux,Pe_aux,
+c     & Pg_aux,xit_aux,rr_aux,rr,rhox)
+      deallocate(taus,T,NE,V,Vturb,taus_aux,T_aux,NE_aux,
+     & V_aux,Vturb_aux)
 
       end
 
@@ -593,6 +685,7 @@ c-------------------------------------------------------------------------------
 !
 !  Interpolate the interior point.
 !
+      
       x = 
      & 1.0E+00     * ( + x000 ) 
      & + r         * ( - x000 + x100 ) 
@@ -834,13 +927,13 @@ c     adapted from P. DeLaverny
           OPEN(UNIT=imod,FILE=FILE,STATUS='OLD')
           read(imod,'(a)') mocode
 c          print*,mocode,' = mocode'
-          if (mocode(1:1).eq.'p' .or. mocode(1:3).eq.'sun') then
-            print*,' this model is PLANE PARALLEL'
-          else if (mocode(1:1).eq.'s') then
-            print*,' this model is SPHERICALLY SYMMETRIC'
-          else
-            print*,' This model may not be a NewMARCS model!'
-          endif
+c          if (mocode(1:1).eq.'p' .or. mocode(1:3).eq.'sun') then
+c            print*,' this model is PLANE PARALLEL'
+c          else if (mocode(1:1).eq.'s') then
+c            print*,' this model is SPHERICALLY SYMMETRIC'
+c          else
+c            print*,' This model may not be a NewMARCS model!'
+c          endif
           sph=(mocode(1:1).eq.'s')
           xlr_ref=5000
           read(imod,*)TEFF
@@ -1452,3 +1545,13 @@ c******************************************************************************
             
  1409 format(a30,f5.1,a2)
       end
+***********************************************************************************
+      subroutine str2int(str,int,stat)
+      implicit none
+      ! Arguments
+      character(len=*),intent(in)   :: str
+      integer*8,intent(out)         :: int
+      integer*8,intent(out)         :: stat
+  
+      read(str,*,iostat=stat)  int
+      end 
