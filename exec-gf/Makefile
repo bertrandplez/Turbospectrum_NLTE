@@ -176,10 +176,10 @@ cubint_module.mod : ../$(SOURCE)/cubint_module.f90 cubint_module.o
 	$(F)  -c ../$(SOURCE)/cubint_module.f90
 
 strings_module.o : ../${SOURCE}/strings_module.f90
-        $(F)  -c ../${SOURCE}/strings_module.f90
+	 $(F)  -c ../${SOURCE}/strings_module.f90
 
 strings_module.mod : ../$(SOURCE)/strings_module.f90 strings_module.o
-        $(F)  -c ../$(SOURCE)/strings_module.f90
+	 $(F)  -c ../$(SOURCE)/strings_module.f90
 
 babsma_lu : $(babsma_luobj)
 	$(F) $(LINKOPT) -o babsma_lu $(babsma_luobj)

@@ -683,9 +683,10 @@ c We should have surface flux here!
 1967        format(f11.3,1x,f10.5,1x,1pe12.5,1x,1pe12.5,2x,
      &             10(1x,1pe12.5,1x,0pf10.5))
           else
-* We store additional columns for the intensity at mu=1.0 to 0.1, step 0.1.
-* So we have: lambda, normalized flux, flux, normalized intensity at mu=1.0, intensity at mu=1.0,
-* and then Inorm, I for mu=0.9, 0.8, ..., 0.1.
+* We store additional columns for the intensity at 10 values of mu
+* So we have: lambda, normalized flux, flux, and then intensity and normalised intensity
+* for all mu's
+
             write(46,1965) xlambda(j),prf,fluxme,
      &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),k=1,10)
 1965        format(f11.3,1x,f10.5,1x,1pe12.5,2x,

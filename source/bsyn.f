@@ -1713,6 +1713,7 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
      &                                                  j=1,maxlam)
         write(46) ((absos(k,j)*ross(k),k=1,ntau),j=1,maxlam)
       endif
+      close(46)
 *
 *
   100 FORMAT(4X,I1,6X,I3)

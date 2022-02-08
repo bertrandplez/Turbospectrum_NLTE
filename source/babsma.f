@@ -892,6 +892,8 @@ ccc      IF(NLQ.GT.NDP) STOP
         enddo
         newt=1
         first = rhox(1)*kaprefmass(1)
+*        first = (kaprefmass(1)-rhox(1)/2.*
+*     &         (kaprefmass(2)-kaprefmass(1))/(rhox(2)-rhox(1)))*rhox(1)
         tottau = rinteg(rhox,kaprefmass,tau,ntau,first)
         tau(1) = first
         print*,'Model with mass-scale. Computed tau-scale at lambda= ',
@@ -1216,6 +1218,11 @@ cc     &      log10(sngl(xiontryck(k,1))),
 cc     &      log10(sngl(partryck(k,6))),log10(sngl(partryck(k,8)))
 cc      enddo
 *
+
+      close(imodut2)
+      close(imodut)
+      close(iwrit)
+
   100 FORMAT(A4,I3,F6.0,F5.2,I2,F6.3)
   101 FORMAT(5F10.0)
   102 FORMAT(I5,I10,10I5)
