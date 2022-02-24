@@ -50,7 +50,6 @@
       real sx(5000),slambda(5000),xshifted(2*ndp)
 *
       COMMON/CSURF/ HSURF,Y1(NRAYS)
-CCC      COMMON/CANGLE/ NMY,XMY(6),XMY2(6),WMY(6)
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
 *
 * extension for large number of wavelengths and lines (monster II)
@@ -676,8 +675,8 @@ c We should have surface flux here!
 * We store additional columns for the intensity at mu=1.0 to 0.1, step 0.1.
 * So we have: lambda, normalized and absolute flux for summed source function,
 * absolute Feautrier flux, and intensities for summed source function:
-* , normalized intensity at mu=1.0, intensity at mu=1.0,
-* and then Inorm, I for mu=0.9, 0.8, ..., 0.1.
+* , intensity at mu=1.0,  normalized intensity at mu=1.0,
+* and then I, Inorm for mu=0.9, 0.8, ..., 0.1.
             write(46,1967) xlambda(j),prf,fluxme,hflux1tr,
      &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),k=1,10)
 1967        format(f11.3,1x,f10.5,1x,1pe12.5,1x,1pe12.5,2x,

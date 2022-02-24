@@ -40,7 +40,6 @@
      & jlcont(lpoint)
 *
       COMMON/CSURF/ HSURF,Y1(NRAYS)
-CCC      COMMON/CANGLE/ NMY,XMY(6),XMY2(6),WMY(6)
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
 *
 * extension for large number of wavelengths and lines (monster II)

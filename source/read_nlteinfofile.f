@@ -27,7 +27,7 @@
       enddo
       read(iunit,10) pathdepart
       do while (oneline(1:1).eq.'#')
-        read(iunit,10) oneline
+        read(iunit,10,end=99) oneline
       enddo
       backspace(iunit)
       do while (.true.)

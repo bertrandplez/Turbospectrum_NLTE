@@ -507,12 +507,16 @@ cc     &     RECL=412)
 *
 * IP>=1 gives lots of printout, IP=0 less, IP=2 gives some on term.
 *
-cccc      call cstrip(alunit,27)
-cccc      READ(27,101) IP,EPS
       IP=0
+
 ! kappa_line/kappa_cont > 10^-4 is good enough for all lines but hydrogen
       EPS=0.0001
-      NMY=6
+! set number of quadrature points to 10 for the Gauss-Legendre quadrature of intensities.
+! This in order to ease interpolation to Gauss-Radau quadrature points wanted by interferometrists,
+! while keeping the original quadrature method in the radiative transfer part of the code.
+
+      NMY=10
+
       iweak=0
 *
 * limbdarkening?
