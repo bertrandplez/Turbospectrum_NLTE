@@ -546,6 +546,7 @@ cccc          print*,'reading ntau again ',ntau
         backspace(imod)
         do while (.true.)
           read(imod,'(a)',err=761) mocode
+          mocode=adjustl(mocode)
           if (mocode(1:4).eq.'MASS') then
 * MULTI model with MASS scale
             massscale=.true.
