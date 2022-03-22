@@ -1,5 +1,9 @@
 #!/bin/csh -f
 
+#
+# This script is a demo script for NLTE TS.
+#
+
 date
 set mpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
 set dpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
@@ -11,7 +15,7 @@ set Feabu = 7.50
 
 #set Cabu = 8.656
 #set Nabu = 7.78
-set Oabu = 8.66
+#set Oabu = 8.66
  
 set lam_min    = '4800.'
 set lam_max    = '6800.'
@@ -28,6 +32,7 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 # wavelength range for the continuous opacity calculations. Should encompass the full 
 # range asked for in the following spectrum calculation (bsyn_lu)
 # the step is set to 1A in babsma if smaller than 1A here.
+#
 'LAMBDA_MIN:'  '${lam_min}'
 'LAMBDA_MAX:'  '${lam_max}'
 'LAMBDA_STEP:' '${deltalam}'
@@ -75,7 +80,7 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 ###########
 # Use NLTE if true. Source function is computed with departure coefficients 
 # from departure coefficient file for the atom in model atom file, if they 
-# are provided. Line list must include the same species with a 'NLTE' flag.
+# are provided. 
 #
 'NLTE :'          '.true.'
 ###########
@@ -109,7 +114,7 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'COS(THETA)    :' '1.00'
 ###########
 # for eqwidt only: if true, iterate abundance until observed eqwivalent 
-# widths are matched. 
+# widths are matched. NOT IMPLEMENTED IN THIS VERSION
 #
 'ABFIND        :' '.false.'
 ###########
@@ -133,17 +138,14 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 26  $Feabu
 'ISOTOPES : ' '0'
 ###########
-# line lists. First how many there are, and then the list
+# line lists. First how many there are, and then the list of lists
 #
 'NFILES   :' '2'
 ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data/nlte_linelist_test.txt
 DATA/Hlinedata
-#
-#/Users/gerber/gitprojects/TurboSpectrum2020/Turbospectrum2020/COM/TEST-data/nlte_ges_linelist_feh_only.txt
-#'NFILES   :' '1'
-#~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data/CaI_lte_linelist.dat
 ###########
 # spherical or plane-parallel radiative transfer. If spherical, a few more parameters are read
+# DO NOT CHANGE THESE PARAMETERS UNLESS YOU REALLY KNOW WHAT YOU ARE DOING.
 #
 'SPHERICAL:'  'F'
   30

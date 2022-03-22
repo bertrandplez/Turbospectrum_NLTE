@@ -511,12 +511,6 @@ cc     &     RECL=412)
 
 ! kappa_line/kappa_cont > 10^-4 is good enough for all lines but hydrogen
       EPS=0.0001
-! set number of quadrature points to 10 for the Gauss-Legendre quadrature of intensities.
-! This in order to ease interpolation to Gauss-Radau quadrature points wanted by interferometrists,
-! while keeping the original quadrature method in the radiative transfer part of the code.
-
-      NMY=10
-
       iweak=0
 *
 * limbdarkening?
@@ -525,9 +519,18 @@ cc        xl1=filtlam(1)
 cc        xl2=filtlam(ifilt)
         iint=1
       endif
-!      if (iint.gt.0) then
-!      OPEN(UNIT=66,FILE='sphlimb',STATUS='UNKNOWN',FORM='UNFORMATTED')
-!      endif
+      if (iint.gt.0) then
+! set number of quadrature points to 10 for the Gauss-Legendre quadrature of intensities.
+! This in order to ease interpolation to Gauss-Radau quadrature points wanted by interferometrists,
+! while keeping the original quadrature method in the radiative transfer part of the code.
+
+        NMY=10
+
+!        OPEN(UNIT=66,FILE='sphlimb',STATUS='UNKNOWN',FORM='UNFORMATTED')
+      else
+! only flux wanted ! could use e.g. NMY=6 to make it slightly faster.
+        NMY=10
+      endif
       if (hydrovelo) then
 * this allows line shifts from the first lambda to the last of the list 
 * (at least for v/c*lambda <5A.

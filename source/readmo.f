@@ -67,6 +67,11 @@ ccc      READ(12,100) MCODE,NTAU,XLS
          CALL LINT(NLQ,XLP,XS,xxll,X(K))
          CALL LINT(NLQ,XLP,SS,xxll,S(K))
 * interpolate to all wavelengths
+        if (xlambda(1).lt.xlp(1).or.xlambda(maxlam).gt.xlp(nlq)) then
+          print*,' ERROR !! continuous opacity file wavelength range ',
+     &          'does not encompass spectral window'
+          stop 'STOP in readmo.f'
+        endif
         do j=1,maxlam
          xxll=xlambda(j)
          CALL LINT(NLQ,XLP,XS,xxll,absocont(K,j))
