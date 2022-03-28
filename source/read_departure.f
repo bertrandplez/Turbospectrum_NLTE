@@ -38,10 +38,6 @@
 
       if (departbin) then
 
-! DUMMY, for test
-!        goto 1
-!
-
         open(iunit,file=departurefile,form='unformatted',status='old',
      &     convert='little_endian')
         read(iunit) header_dep1
@@ -78,20 +74,6 @@
           enddo
         enddo
 
-!
-!   DUMMY  for testing with B=1.0 that LTE is recovered. It works. BPz 20/11-2020
-!
-!  1     abundance_nlte = 12.
-!        ndepth_read=80
-!        modnlevel_read = 20
-!
-!        do j=0,modnlevel
-!          do i=1,ndepth_read
-!            b_departure(i,j)=1.0
-!          enddo
-!        enddo
-!
-! END OF DUMMY
 ! formatted file case:
 
       else

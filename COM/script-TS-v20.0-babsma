@@ -1,0 +1,61 @@
+#!/bin/csh -f
+
+#
+# This script is a demo script for NLTE TS.
+#
+
+date
+set mpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
+set dpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
+
+set MODEL = atmos.sun_marcs_t5777_4.44_0.00_vmic1_new
+
+set Feabu = 7.50
+
+set lam_min    = '4800.'
+set lam_max    = '6800.'
+
+set deltalam   = '0.006'
+set METALLIC   = '     0.000'
+set TURBVEL = 1.0
+
+time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
+###########
+# wavelength range for the continuous opacity calculations. Should encompass the full 
+# range asked for in the following spectrum calculation (bsyn_lu)
+# the step is set to 1A in babsma if smaller than 1A here.
+#
+'LAMBDA_MIN:'  '${lam_min}'
+'LAMBDA_MAX:'  '${lam_max}'
+'LAMBDA_STEP:' '${deltalam}'
+###########
+# model atmosphere. Various formats allowed. Only MARCS can be binary or ascii. Others are ascii
+#
+'MODELINPUT:' '$mpath/${MODEL}'
+'MARCS-FILE:' '.false.'
+###########
+# output continuous opacity file providing continuous abs and scatt at all atmospheric depths
+# for a set of wavelengths defined by lambda_min/max/step. If the step is < 1A, it is set to 
+# 1A by default 
+#
+'MODELOPAC:' 'contopac/${MODEL}opac'
+###########
+# Chemical composition. First overall metallicity, then alpha/Fe, Helium/H, and r- and s-process
+# The latter are scaled according to their solar-system fraction (see makeabund.f)
+# finally individual abundances can be provided by first giving how many of them are changed and then
+# for each of them their atomic number followed by the absolute abundance on the same line.
+#
+'METALLICITY:'    '${METALLIC}'
+'ALPHA/Fe   :'    '0.00'
+'HELIUM     :'    '0.00'
+'R-PROCESS  :'    '0.00'
+'S-PROCESS  :'    '0.00'
+'INDIVIDUAL ABUNDANCES:'   '1'
+26  $Feabu
+###########
+# if xifix true, fixed microturbulence is read from next line (km/s)
+# otherwise the value(s) are read from the model atmosphere.
+#
+'XIFIX:' 'F'
+$TURBVEL
+EOF

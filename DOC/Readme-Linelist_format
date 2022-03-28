@@ -16,7 +16,7 @@ col 9: same for lower level
 col 10: equivalent width, when needed (abundance determination in eqwidt run)
 col 11: error in eqw
 col 12: (in quotes) some text describing levels or whatever you like to include
-following  columns only used in NLTE run
+The following columns are only used in NLTE run:
 col 13: lower level number in NLTE model atom
 col 14: same for upper level
 col 15: lower level id
@@ -49,9 +49,9 @@ case 3:
 case 4:
   8858.071  3.879 -4.036    2.500    4.0  6.76E+07 'x' 'x'   0.0    1.0 'Li I LS:1s2.3d 2D LS:1s2.11p 2P*'
 
-For that line there is in the list I got from you:
+One example:
   5349.465  2.709 -0.428   -7.652    7.0  2.69E+06 's' 'p'   0.0    1.0 'Ca I LS:3p6.3d.4s 1D LS:3p6.3d.4p 1F*'    8   26  '13D1D'       '14P1FP'
-i.e.: -7.652, and the calculation will be made according to the generic  ABO recipe for s-p transition (case (2)). 
+fdamp = -7.652, and the calculation will be made according to the generic  ABO recipe for s-p transition (case (2)). 
 If I replace 's' 'p' by 'x' 'x' in the line list, broadening will be computed using -7.652 and the gam_6 recipe from Kurucz (case 3), 
 if in addition I replace -7.652 by 1.0, The Unsoeld recipe with a fudge factor = 1 will be used.
 
