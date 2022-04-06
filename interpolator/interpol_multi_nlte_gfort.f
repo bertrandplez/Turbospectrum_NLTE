@@ -843,7 +843,7 @@ c       enddo
          write(27,1969) coefval(k), power(k,:)
        enddo  
  1969  format('# ', a15,3(1x,f10.6))
-       write(27,1971) abu_ref
+c       write(27,1971) abu_ref
        if  (nlte_file.le.190.and.
      &         abu_ref.le.11.99999) then
          write(27,1971) z_ref+7.50
