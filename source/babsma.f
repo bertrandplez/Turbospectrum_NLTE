@@ -774,7 +774,7 @@ cc1963        format(i3,2x,6(e12.0))
           do k=1,ntau
             read (imod,*) rhox(k),t(k),pgl(k),pe(k),kaprefmass(k)
             pe(k)=pe(k)*T(k)*kboltz
-            print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
+            print*,'reading: ', k, rhox(k),t(k),pgl(k),ne(k),
      &              kaprefmass(k)
           enddo
 ***********************************************

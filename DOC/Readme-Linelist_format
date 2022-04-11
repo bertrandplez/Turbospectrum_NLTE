@@ -1,9 +1,18 @@
 Atomic case:
 
+'  26.000            '    1       2342
 'Fe I    NLTE'
   4200.087  3.884 -1.130   -7.420    7.0  5.01E+07  0.000  'p' 'd'   0.0    1.0 'Fe I LS:3p6.3d6.(5D).4s.4p.(3P*) z3D* LS:3p6.3d7.(4F).4d f3F'  82 0  'z3D3*' 'none'  'c' 'x'
   4200.463  4.154 -3.374   -7.290    9.0  2.45E+08  0.000  'p' 'd'   0.0    1.0 'Fe I LS:3p6.3d7.(4F).4p y5D* LS:3p6.3d6.(5D).4s.\ (6D).5d 7F'  90 484  'y5D3*' '6s5F'  'c' 'a'
   
+Header: 
+26.000 is element.isotope (000 means no specific isotope). For Iron we could have, e.g., 26.056 for 56Fe.
+1 is for neutral (2 for first ion, etc)
+2342 is number of lines for that element in the file.
+Fe I is the element, NLTE is a flag that is not necessary.
+
+For each line that follows:
+
 col 1: lambda(A)  
 col 2: Elow(eV) 
 col 3: loggf 

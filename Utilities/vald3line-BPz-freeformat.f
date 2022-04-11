@@ -8,7 +8,7 @@
 *    BPz 5/02-2019
 *
       implicit none
-      integer       imax,maxatom
+      integer       imax,maxatom,j,jj,k
       parameter     (imax=300000)
       parameter     (maxatom=92)
       integer       i,ii,n,nread,nlines,length,ionic,nswap,nskip
@@ -187,12 +187,76 @@ cc              stop 'Wrong length of the third record'
 * e.g. '_          Kurucz Fe I 2014Fe               1 wl:K14   1 gf:K14   1 K14   1 K14   1 K14   1 K14   1 K14   1 K14   1 K14'
 * e.g. '_                          (12)CH          13 wl:JLIY  13 gf:JLIY  13 JLIY  13 JLIY  13 JLIY  13 JLIY  13 JLIY  13 JLIY  13 JLIY'
 * e.g. '_                          (12)C(12)C      23 wl:BBSB  23 gf:BBSB  23 BBSB  23 BBSB  23 BBSB  23 BBSB  23 BBSB  23 BBSB  23 BBSB'
-            if (len_trim(string4).gt.300) then
-              full=string4(345:358)
-            else
-              full=string4(29:42)
+
+* read species identification from string1
+            read(string1,*) cdum
+*
+* find out species
+* 
+            j=index(cdum,' ')
+            if (j.le.1) then
+              print*,'trying to identify, problem with species: ',cdum
+              stop
             endif
+            ielem=0
+            do i=1,92
+              if (cdum(1:j-1).eq.lele(i)) then
+                ielem=i
+                exit
+              endif
+            enddo
+
+* check if isotope present (molecule or atom)
+* molecule
+            j=0
+            j=index(string4,'(')
+            do jj=j,len_trim(string4)
+              if (string4(jj:jj).eq.' '.or.
+     &            string4(jj:jj).eq.'''') then
+                k=jj-1
+                exit
+              endif
+            enddo
+            if (j.ne.0) then
+              write(full,'(a)') string4(j:k)
+            else
+* no isotope 
+              if (ielem.eq.0) then
+                j=index(string4,cdum(1:(index(cdum,' ')-1)),back=.true.)
+                print*,'j no iso',j,string4(j:len_trim(string4))
+                k=index(string4,'''',back=.true.)-1
+                write(full,'(a)') string4(j:k)
+              else
+* atom but no isotope
+                j=0
+                j=index(string4,trim(lele(ielem)),back=.true.)
+                if (j.ne.0) then
+                  do jj=j,len_trim(string4)
+                    if (string4(jj:jj).eq.' '.or.
+     &                  string4(jj:jj).eq.'''') then
+                      k=jj-1
+                      exit
+                    endif
+                  enddo
+                  write(full,'(a)') string4(j:k)
+                else
+                  print*,'we have a problem with this species:',
+     &             lele(ielem)
+                  print*,string1
+                  print*,string4
+                  stop
+                endif
+              endif
+            endif
+
+*            if (len_trim(string4).gt.300) then
+*              full=string4(345:358)
+*            else
+*              full=string4(29:42)
+*            endif
+
             call identify(full,lele,species,ionic,elem1,elem2)
+
             read(species,'(f11.6)') sss
             ielem=int(sss)
             if(sss.lt.93.) then
@@ -371,7 +435,7 @@ cc              stop 'Wrong length of the third record'
         do i=1,nu(ii)
           gam6=0.0
           read(s1(n),*) cdum,w,gflog,chil,dum,chiu,rjupper,
-     &         dum,dum,dum,gamrad,gamstark,gam6                ! lande factors (3 dummies); gamstark not used yet
+     &         dum,dum,dum,gamrad,gamstark,gam6                ! lande factors (3 dummies); 
           if(.not.molecule) then
 * Atomic species
 * get orbital types for atomic lines
@@ -427,6 +491,9 @@ cc              stop 'Wrong length of the third record'
 * place holder:
             gamrad=1.e5
           endif
+*          if (gamstark.ne.0.0) then
+*            gamstark=10.0**gamstark
+*          endif
           call shrinkdesignation(s2(n),lowcoupling,lowdesig)
           call shrinkdesignation(s3(n),highcoupling,highdesig)
           if(n.gt.imax-1) then
@@ -435,22 +502,26 @@ cc              stop 'Wrong length of the third record'
           endif
           if(gflog.gt.-10.0 .and. gflog.lt.100.0) then
             write(11,1130) w,chil,gflog,fdamp,
-     &      2.*rjupper+1.,gamrad,lower,upper,eqw,eqwerr,
+     &      2.*rjupper+1.,gamrad,gamstark,lower,upper,eqw,eqwerr,
      &      element(1:len_trim(element)),
      &      lowcoupling,':',lowdesig(1:len_trim(lowdesig)),
      &      highcoupling,':',highdesig(1:len_trim(highdesig))
 * BPz format changed to accomodate extended VdW information
- 1130       format(f10.3,x,f6.3,x,f6.3,x,f8.3,x,f6.1,x,1p,e9.2,0p,
+* BPz format changed to accomodate gamstark (Actually log10(gamstark))
+ 1130       format(f10.3,x,f6.3,x,f6.3,x,f8.3,x,f6.1,x,1p,e9.2,0p,x,
+     &             f7.3,
      &             x,'''',a1,'''',x,'''',a1,'''',x,f5.1,x,f6.1,x,'''',
      &             a,x,3a,x,3a,'''')
           else
             write(11,1131) w,chil,gflog,fdamp,
-     &      2.*rjupper+1.,gamrad,lower,upper,eqw,eqwerr,
+     &      2.*rjupper+1.,gamrad,gamstark,lower,upper,eqw,eqwerr,
      &      element(1:len_trim(element)),
      &      lowcoupling,':',lowdesig(1:len_trim(lowdesig)),
      &      highcoupling,':',highdesig(1:len_trim(highdesig))
 * BPz format changed to accomodate extended VdW information
- 1131       format(f10.3,x,f6.3,x,f6.2,x,f8.3,x,f6.1,x,1p,e9.2,0p,
+* BPz format changed to accomodate gamstark
+ 1131       format(f10.3,x,f6.3,x,f6.2,x,f8.3,x,f6.1,x,1p,e9.2,0p,x,
+     &             f7.3,
      &             x,'''',a1,'''',x,'''',a1,'''',x,f5.1,x,f6.1,x,'''',
      &             a,x,3a,x,3a,'''')
           endif
@@ -473,6 +544,7 @@ cc              stop 'Wrong length of the third record'
 *
 *
       subroutine identify(fullspec,lele,species,ion,lek,lel)
+*
 * identify atomic or molecular lines, ionization, and isotopes
 *
       implicit none
@@ -483,8 +555,9 @@ cc              stop 'Wrong length of the third record'
       character*6  isostring
       character*2  lele(92),lek,lel
       character*1  char(14)
+      character*8 specin
       equivalence (fff,char)
-*
+
       fff=fullspec
       iel(1)=0
       iel(2)=0
