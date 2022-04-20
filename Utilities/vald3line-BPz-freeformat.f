@@ -8,7 +8,7 @@
 *    BPz 5/02-2019
 *
       implicit none
-      integer       imax,maxatom,j,jj,k
+      integer       imax,maxatom,j,jj,jjj,jjjj,k,kk
       parameter     (imax=300000)
       parameter     (maxatom=92)
       integer       i,ii,n,nread,nlines,length,ionic,nswap,nskip
@@ -206,46 +206,74 @@ cc              stop 'Wrong length of the third record'
               endif
             enddo
 
-* check if isotope present (molecule or atom)
+            if (ielem.eq.0) then
 * molecule
-            j=0
-            j=index(string4,'(')
-            do jj=j,len_trim(string4)
-              if (string4(jj:jj).eq.' '.or.
-     &            string4(jj:jj).eq.'''') then
-                k=jj-1
-                exit
-              endif
-            enddo
-            if (j.ne.0) then
-              write(full,'(a)') string4(j:k)
-            else
-* no isotope 
-              if (ielem.eq.0) then
-                j=index(string4,cdum(1:(index(cdum,' ')-1)),back=.true.)
-                print*,'j no iso',j,string4(j:len_trim(string4))
-                k=index(string4,'''',back=.true.)-1
+* check if isotope present
+              j=0
+              j=index(string4,'(')
+              do jj=j,len_trim(string4)
+                if (string4(jj:jj).eq.' '.or.
+     &              string4(jj:jj).eq.'''') then
+                  k=jj-1
+                  exit
+                endif
+              enddo
+              if (j.ne.0) then
                 write(full,'(a)') string4(j:k)
               else
-* atom but no isotope
-                j=0
-                j=index(string4,trim(lele(ielem)),back=.true.)
-                if (j.ne.0) then
-                  do jj=j,len_trim(string4)
-                    if (string4(jj:jj).eq.' '.or.
-     &                  string4(jj:jj).eq.'''') then
-                      k=jj-1
-                      exit
+* no isotope 
+                j=index(string4,cdum(1:(index(cdum,' ')-1)),back=.true.)
+c                print*,'j no iso',j,string4(j:len_trim(string4))
+                k=index(string4,'''',back=.true.)-1
+                write(full,'(a)') string4(j:k)
+              endif
+            else
+* atom
+              j=0
+              j=index(string4,cdum(1:(index(cdum,' ')-1)),back=.true.)
+              if (j.ne.0) then
+                do jj=j,len_trim(string4)
+                  if (string4(jj:jj).eq.' '.or.
+     &                string4(jj:jj).eq.'''') then
+                    k=jj-1
+                    exit
+                  endif
+                enddo
+                do jj=j,1,-1
+                  if (string4(jj:jj).eq.' ') then
+! add something like : if not cdum and not ( => take only cdum
+! to avoid BellZr
+                    kk=jj+1
+                    if (kk.ne.j.and.string4(kk:kk).ne.'(') then
+* this is something else than an isotopic indication and should be discarded
+* e.g. BellZr
+                      print*,'throwing away ',string4(kk:k)
+* But there may be an isotope anyway. Look for it.
+                      jjjj=kk
+                      do jjj=kk,j
+                        if (string4(jjj:jjj).eq.'(') then
+                          jjjj=jjj
+                          exit
+                        endif
+                      enddo
+                      if (jjjj.ne.kk) then
+                        kk=jjjj
+                      else
+                        kk=j
+                      endif
+                      print*,'keeping only ',string4(kk:k)
                     endif
-                  enddo
-                  write(full,'(a)') string4(j:k)
-                else
-                  print*,'we have a problem with this species:',
-     &             lele(ielem)
-                  print*,string1
-                  print*,string4
-                  stop
-                endif
+                    exit
+                  endif
+                enddo
+c                print*,'full',string4(kk:k)
+                write(full,'(a)') string4(kk:k)
+              else
+                print*,'we have a problem with this species:',
+     &           lele(ielem)
+                print*,string1
+                print*,string4
+                stop
               endif
             endif
 
