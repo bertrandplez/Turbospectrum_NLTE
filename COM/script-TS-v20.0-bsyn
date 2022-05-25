@@ -40,11 +40,13 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 # windows specified in SEGMENTSFILE. 
 # Comment out if not needed, and the spectrum will be computed from 
 # LAMBDA_MIN to LAMBDA_MAX
+# Segments must NOT overlap
 #
 'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
 #
 # spectral resolution  to be used in these windows. 
 # If not specified, a default value of 500000 is used
+# Note that a constant step is set for each window, using this resolution
 # if no windows, LAMBDA_STEP is used.
 #
 'RESOLUTION:'     '300000.'
@@ -57,12 +59,11 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'LAMBDA_MAX:'     '${lam_max}'
 'LAMBDA_STEP:'    '${deltalam}'
 ###########
-# Intensity / Flux followed by angle at which intensity should be computed.
+# Intensity / Flux 
 # in the Intensity case, 12 angles are hardcoded, and spectra are computed 
 # for all of them, in addition to the flux.
 #
 'INTENSITY/FLUX:' 'Flux'
-'COS(THETA)    :' '1.00'
 ###########
 # file containing continuous opacity at all model points. Can be computed with babsma.f
 # or be a .opa file from the MARCS web site.

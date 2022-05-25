@@ -138,7 +138,7 @@ cc      data edge /912., 3647., 8207., 14588., 22794., 32915./
 cc* air edges from continuous opacity file.
       integer version
       data version /201/
-      data kboltz / 1.3806e-16 /
+      data kboltz / 1.38065e-16 /
       data mh / 1.660e-24 /
 
       print*
@@ -773,8 +773,9 @@ cc1963        format(i3,2x,6(e12.0))
 * 
           do k=1,ntau
             read (imod,*) rhox(k),t(k),pgl(k),pe(k),kaprefmass(k)
+! pe read from model is ne
             pe(k)=pe(k)*T(k)*kboltz
-            print*,'reading: ', k, rhox(k),t(k),pgl(k),ne(k),
+            print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
      &              kaprefmass(k)
           enddo
 ***********************************************
@@ -979,9 +980,9 @@ ccccc	      if (mocode.ne.'bowe'.or.mocode.ne.'BOWE') then
 C
 * guess input pg to help eqmol_pe.
             pg=pgl(k)
-            print*,'babsma, alva, call jon'
+c            print*,'babsma, call jon'
             call jon(T(K),pe(k),-1,PG,RO,DUM,IO,k)
-            print*,'return from jon, pg=',pg
+c            print*,'return from jon, pg=',pg
 ccc unecessary ?
 C try to improve convergence
             pefirst=pe(k)
@@ -995,7 +996,7 @@ c not converged in jon
             do while (pg.lt.0..and.pe(k).lt.1000.)
 c not converged in jon
               pe(k)=pe(k)*10.
-              print*,'babsma, trying with lower Pe:',pe
+              print*,'babsma, trying with higher Pe:',pe
               call jon(T(K),pe(k),-1,PG,RO,DUM,IO,k)
             enddo
             if (pg.lt.0.) then

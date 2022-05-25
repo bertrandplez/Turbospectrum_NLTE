@@ -2,6 +2,7 @@
 F = ifort
 Loader  = ifort
 
+SOURCE = source
 
 include1 = ../$(SOURCE)/spectrum.inc
 include2 = ../$(SOURCE)/tsuji.par
@@ -11,7 +12,6 @@ LINKOPT        = -convert big_endian -fp-model precise   -O3 -fpe3 -ftz -traceba
 #OPT1     = -convert big_endian -O0 -g -C  -traceback -save 
 #LINKOPT     = -convert big_endian -O0 -g -C  -traceback -save 
 
-SOURCE = source
 
 babsma_luobj =  \
       ../$(SOURCE)/absko.f \
@@ -169,7 +169,8 @@ bsyn_luobj = \
 #clean : 
 #	rm *.f bsyn_lu babsma_lu eqwidt_lu 
 
-all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu eqwidt_lu 
+all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu
+# eqwidt_lu 
 
 cubint_module.o : ../${SOURCE}/cubint_module.f90
 	$(F)  -c ../${SOURCE}/cubint_module.f90
@@ -183,12 +184,12 @@ strings_module.o : ../${SOURCE}/strings_module.f90
 strings_module.mod : ../$(SOURCE)/strings_module.f90 strings_module.o
 	$(F)  -c ../$(SOURCE)/strings_module.f90
 
-babsma_lu : $(babsma_luobj)
+babsma_lu : $(babsma_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o babsma_lu $(babsma_luobj)
 
-bsyn_lu: $(bsyn_luobj)
+bsyn_lu: $(bsyn_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o bsyn_lu  $(bsyn_luobj)
  
-eqwidt_lu: $(eqwidt_luobj)
+ eqwidt_lu: $(eqwidt_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o eqwidt_lu  $(eqwidt_luobj)
  

@@ -43,7 +43,7 @@
      &                XMU(NRAYS,NDP)
       COMMON /TRDBUG/IDEBUG
       common /limbdk/ pos,intens,totintens,tottrans
-      logical debug,extrap,write_radius
+      logical debug,write_radius
       real fluxme
       dimension y1c(nrays),xmuc(nrays)
       dimension fcfc(lpoint),xlm(lpoint),jlcont(lpoint)
@@ -78,9 +78,10 @@
       real bigsource(2*ndp)
       logical computeIplus,optthin
 *
-      real muout(10),isurf(10,lpoint),icsurf(10,lpoint),yout(10)
-      real costheta(nrays),uin(nrays)
-      integer iout(10)
+cc      real muout(10),isurf(10,lpoint),icsurf(10,lpoint),yout(10)
+      real costheta(nrays)
+cc,uin(nrays)
+cc      integer iout(10)
 * muout are mu-point for output intensities, icsurf is for continuum intensity 
 *  and isurf for absolute intensity
       character*4 iblnk
@@ -90,20 +91,37 @@
 !
 !      data muout /-1.0, -0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1/
 ! use log(mu) instead ot better cover the limb
-      data muout /0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.25, -1.50,
-     &            -1.75, -2.0/
+cc     data muout /0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.25, -1.50,
+cc     &            -1.75, -2.0/
+cc
+cc      do i=1,10
+cc        muout(i)=-(10.**muout(i))
+cc      enddo
 
-      do i=1,10
-        muout(i)=-(10.**muout(i))
+* mu-points for intensity output.
+* Use 12 Gauss-Radau points
+      logical extrap
+      integer nangles
+      parameter (nangles=12)
+      integer iout(nangles)
+      real muout(nangles),yout(nangles),isurf(nangles,lpoint),
+     &     icsurf(nangles,lpoint),uin(nrays),muoutp(nangles)
+      data muoutp /0.010018, 0.052035, 0.124619, 0.222841, 0.340008,
+     &            0.468138, 0.598497, 0.722203, 0.830825, 0.916958,
+     &            0.974726, 1.000000/
+
+! in spherical case, cos(theta) must be <0. muoutp are the cos(theta for the PP case.
+
+      do i=1,nangles
+        muout(i)=-muoutp(nangles+1-i)
       enddo
 
-      PI=3.141593
+      PI=4.*atan(1.)
+! 3.141593
 *
 * Initiate mode of calculation
 * IINT =1  : intensity at all mu-points / output spectrum is flux spectrum!
 *             intensities at all angles are stored in a separate file !
-*       Version 7/02-2019 BPz: for intensity, we save intensities at 10 mu angles
-*                              in the flux file. Mu=0.1 to 1.0 with step 0.1
 * IINT =0  : flux
 * XL1      : wavelength where synthetic spectrum starts
 * XL2      : wavelength where synthetic spectrum stops
@@ -280,11 +298,11 @@ cc                print*,'bsynb, taul',dtaulambda(k),dtaulambda(index)
 *
 * PRINT OUT lambda number 10
 *
-          if (j.eq.10) then
-            do k=1,mmu(1)
-             write(97,*) xmu(k,1),y1(k),'Ipluscalc'
-            enddo
-          endif
+!          if (j.eq.10) then
+!            do k=1,mmu(1)
+!             write(97,*) xmu(k,1),y1(k),'Ipluscalc'
+!            enddo
+!          endif
 
         endif
 ************************************************************************
@@ -298,19 +316,19 @@ cc                print*,'bsynb, taul',dtaulambda(k),dtaulambda(index)
           costheta(k)=xmu(k,1)
         enddo
         call cubintp14(y1,costheta,uin,muout,yout,iout,mmu(1),
-     &                 10,3,0,0,0,
+     &                 nangles,3,0,0,0,
      &                     extrap)
-        do k=1,10
+        do k=1,nangles
           icsurf(k,j)=yout(k)
         enddo
-*
-* PRINT OUT lambda number 10
-*
-        if (j.eq.10) then
-          do k=1,10
-            write(97,*) muout(k),icsurf(k,j)
-          enddo
-        endif
+!*
+!* PRINT OUT lambda number 10
+!*
+!        if (j.eq.10) then
+!          do k=1,10
+!            write(97,*) muout(k),icsurf(k,j)
+!          enddo
+!        endif
 
 *
 * Spherical continuum fluxes (from Ipluscalc if computeIplus = .true., else from traneq)
@@ -343,6 +361,14 @@ C
         write(99,998)
 998     format('lambda, k, taulambda, tauross, T, r/radius')
       endif
+!
+! write header in spectrum file, for the intensity case.
+!
+      if (iint.gt.0) then
+        write(46,1111) (-muout(j),j=nangles,1,-1)
+1111    format ('# mu-points ',12(1x,1pe13.6))
+      endif
+ 
       do j=1,maxlam
         xlsingle=xlambda(j)
         do k=1,ntau
@@ -555,36 +581,40 @@ cccc          if (hydrovelo) then
             ENDDO
             HSURF=0.5*TRQUA2(NMU,XMU,FUN,DMU,DER)
 cccc          endif
-!*
-!* PRINT OUT lambda number 10
-!*
-!          if (j.eq.10) then
-!            do k=1,mmu(1)
-!             write(111,*) xmu(k,1),y1(k),'Ipluscalc'
-!            enddo
-!          endif
-
         endif
 ************************************************************************
 *
 * calculate emergent line intensity at prescribed mu-points
 *
+!*
+!* PRINT OUT lambda number 10
+!*
+!        if (j.eq.10) then
+!          write(111,'(a)') 'original'
+!          do k=1,mmu(1)
+!           write(111,*) xmu(k,1),y1(k)
+!          enddo
+!        endif
+
         do k=1,mmu(1)
           costheta(k)=xmu(k,1)
         enddo
         call cubintp14(y1,costheta,uin,muout,yout,iout,mmu(1),
-     &                     10,3,0,0,0,
+     &                     nangles,3,0,0,0,
      &                     extrap)
-        do k=1,10
+        do k=1,nangles
           isurf(k,j)=yout(k)
         enddo
 !*
 !* PRINT OUT lambda number 10
 !*
 !        if (j.eq.10) then
-!          do k=1,10
+!          write(111,'(a)') 'interpolated'
+!          do k=1,nangles
 !            write(111,*) muout(k),isurf(k,j)
 !          enddo
+!          write(111,'(a)') 'FLUX at outermost layer'
+!          write(111,*) hsurf*4.*pi
 !        endif
 !
 *
@@ -605,7 +635,7 @@ cccc          endif
         if (fcfc(j).gt.0.) then
           prf=fluxme/fcfc(j)
         else
-! flag wavelngth that did not converge in traneq ! BPz 6-Apr-2021
+! flag wavelength that did not converge in traneq ! BPz 6-Apr-2021
           prf=-1.
         endif
 
@@ -676,20 +706,22 @@ c We should have surface flux here!
 * So we have: lambda, normalized and absolute flux for summed source function,
 * absolute Feautrier flux, and intensities for summed source function:
 * , intensity at mu=1.0,  normalized intensity at mu=1.0,
-* and then I, Inorm for mu=0.9, 0.8, ..., 0.1.
+* and then I, Inorm for the 12 Gauss-Radau distributed angles
             write(46,1967) xlambda(j),prf,fluxme,hflux1tr,
-     &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),k=1,10)
+     &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),
+     &                     k=nangles,1,-1)
 1967        format(f11.3,1x,f10.5,1x,1pe12.5,1x,1pe12.5,2x,
-     &             10(1x,1pe12.5,1x,0pf10.5))
+     &             12(1x,1pe12.5,1x,0pf10.5))
           else
-* We store additional columns for the intensity at 10 values of mu
+* We store additional columns for the intensity at 12 values of mu
 * So we have: lambda, normalized flux, flux, and then intensity and normalised intensity
 * for all mu's
 
             write(46,1965) xlambda(j),prf,fluxme,
-     &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),k=1,10)
+     &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),
+     &                     k=nangles,1,-1)
 1965        format(f11.3,1x,f10.5,1x,1pe12.5,2x,
-     &             10(1x,1pe12.5,1x,0pf10.5))
+     &             12(1x,1pe12.5,1x,0pf10.5))
 cc            write(46,1965) xlambda(j),prf,fluxme,y1(1)
 2018        format(f11.3,1x,f10.5,1x,1pe12.5,1x,e12.5,1x,e12.5)
           endif

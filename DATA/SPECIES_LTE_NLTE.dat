@@ -13,6 +13,6 @@
 ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data/test_sun/
 #
 # atomic (N)LTE setup
-1	'H'	'nlte'	'atom.h20'	'nlte_dep_h_12000_t5777g44m00_staggerAv3d_job0.dat' 'ascii'
+1	'H'	'lte'	'atom.h20'	'nlte_dep_h_12000_t5777g44m00_staggerAv3d_job0.dat' 'ascii'
 20      'Ca'	'lte'	'atom.ca105b'   'NLTEgrid_Ca_Sun.ascii' 'ascii'
 26	'Fe'	'lte'	'atom.fe607a'	'NLTEgrid_Fe_Sun.ascii'	'ascii'

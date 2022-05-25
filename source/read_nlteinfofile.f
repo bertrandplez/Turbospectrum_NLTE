@@ -19,9 +19,9 @@
       read(iunit,10) oneline
       backspace(iunit)
       do while (oneline(1:27).ne.'# path for model atom files') 
-        read(iunit,10) oneline
+        read(iunit,10,end=98) oneline
       enddo
-      read(iunit,10) pathmodel
+      read(iunit,10,end=98) pathmodel
       do while (oneline(1:26).ne.'# path for departure files') 
         read(iunit,10) oneline
       enddo
@@ -67,7 +67,7 @@
       enddo
 99    continue
 !
-! species not found in file. LTE by default
+! this species was not found in file. LTE by default
       nlte_species=.false.
       departbin=.false.
       departurefile=''
@@ -75,6 +75,10 @@
 
       close(iunit)
       return
+
+98    print*,'The NLTE info file seems totally empty!'
+      close(iunit)
+      stop 'stop in read_nlteinfofile.f'
 
 10    format(a)
       end

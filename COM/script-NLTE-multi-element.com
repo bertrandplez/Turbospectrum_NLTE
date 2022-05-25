@@ -97,10 +97,9 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'LAMBDA_MAX:'     '${lam_max}'
 'LAMBDA_STEP:'    '${deltalam}'
 ###########
-# Intensity / Flux followed by angle at which intensity should be computed.
+# Intensity / Flux 
 #
 'INTENSITY/FLUX:' 'Flux'
-'COS(THETA)    :' '1.00'
 ###########
 # for eqwidt only: if true, iterate abundance until observed eqwivalent 
 # widths are matched. NOT IMPLEMENTED IN THIS VERSION
