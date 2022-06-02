@@ -753,7 +753,7 @@ c      stop
        do n=1,ndepth_ref
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(f10.5,2x))
+ 1975  format(1000(1pe11.5,1x))
          
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
