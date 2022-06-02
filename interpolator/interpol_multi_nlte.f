@@ -283,13 +283,17 @@ c 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
 *********
 
       open(unit=199, file=nlte_model_list,  form='formatted')
-      read(199,*) n_comment
+      read(199,'(A)') n_comment
 
       do cnt=1, nlte_file
-         read(199, *)
+         read(199, '(A)') n_comment
+c         print*, n_comment(0:1)
+         if (n_comment(1:1) .ne. '#') then
+            read(n_comment, *)
      &        id_model(cnt), n_teff(cnt), n_logg(cnt), n_metal(cnt),
      &        n_alpha(cnt), n_mass(cnt), n_vturb(cnt), n_abu(cnt),
      &        n_pos(cnt)
+         endif
          call str2int(n_pos(cnt),int1,stat1)
          n_pos1(cnt) = int1
 c         print*, n_metal(cnt), metal(1)
@@ -309,7 +313,7 @@ c         print*, n_pos(cnt), n_pos1(cnt)
         abu_min = 99999999999.
         abu_max = 0.
         do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
+           if  (nlte_file.le.190.and.
      &         abu_ref.le.11.99999) then
                abu_ref = metal(cnt)+7.50
            endif
