@@ -112,7 +112,7 @@ c      parameter (nlte_file=248533) !updated by the user. is the length of the n
 ******MB      
       character*15, dimension (8) :: coefval
       character*256 :: nlte_binary, nlte_model_list
-      integer :: n_dep, n_lev, cnt, cnt1
+      integer :: n_dep, n_lev, cnt, cnt1, flag
 c      character*500, dimension (nlte_file) :: id_model
       character*500, dimension (:), allocatable :: id_model
       character*1000 :: n_comment, NLTEgrid_header
@@ -256,13 +256,17 @@ c      character*65, dimension (nlte_file) :: n_pos
 *********MB:read list of model atmospheres for which NLTE departures are available
 *********
       open(unit=199, file=nlte_model_list,  form='formatted')
-      read(199,*) n_comment
+      read(199,'(A)') n_comment
 
       do cnt=1, nlte_file
-         read(199, *)
+         read(199, '(A)') n_comment
+c         print*, n_comment(0:1)
+         if (n_comment(1:1) .ne. '#') then
+            read(n_comment, *)
      &        id_model(cnt), n_teff(cnt), n_logg(cnt), n_metal(cnt),
      &        n_alpha(cnt), n_mass(cnt), n_vturb(cnt), n_abu(cnt),
      &        n_pos(cnt)
+         endif
          call str2int(n_pos(cnt),int1,stat1)
          n_pos1(cnt) = int1
 c         print*, n_metal(cnt), metal(1)
@@ -311,12 +315,12 @@ c         print*, abu_max
              abu_temp(cnt) = abu_min
              write(*,*) 'WARNING: ref. abund below min value in grid'
              write(*,83) abu_ref, abu_min
- 83   format('Ref. abund is ',f8.0, 'Min abund is ',f8.0)
+ 83   format('Ref. abund is ',f8.2, 'Min abund is ',f8.2)
          else if (abu_ref.gt.abu_max) then
              abu_temp(cnt) = abu_max
              write(*,*) 'WARNING: ref. abund above max value in grid'
              write(*,84) abu_ref, abu_max
- 84   format('Ref. abund is ',f8.0, 'Max abund is ',f8.0)
+ 84   format('Ref. abund is ',f8.2, 'Max abund is ',f8.2)
          else
              abu_temp(cnt) = abu_ref
          endif
@@ -331,6 +335,7 @@ c         print*, abu_max
               model_name = FILE_IN(cnt)(letter-73:letter-2)
           endif
         enddo
+        flag = 0
         do cnt1 = 1, nlte_file
            if  (nlte_file.le.20000.and.
      &         abu_ref.le.11.99999) then
@@ -344,11 +349,33 @@ c         print*, abu_max
      &         abu_temp(cnt).ge.(n_abu(cnt1)-0.099).and.
      &         trim(model_name).eq.trim(id_model(cnt1))) then
                index(cnt) = cnt1
+               flag = 1
              write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1), 
      &          index(cnt)
             exit
            endif
          enddo
+        if (flag.eq.0) then
+          do cnt1 = 1, nlte_file
+           if  (nlte_file.le.20000.and.
+     &         abu_ref.le.11.99999) then
+               abu_ref = metal(cnt)+7.50
+           endif
+           if  (teff(cnt).eq.n_teff(cnt1).and.
+     &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
+     &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
+     &         metal(cnt).eq.n_metal(cnt1).and.
+     &         abu_temp(cnt).le.(n_abu(cnt1)+0.199).and.
+     &         abu_temp(cnt).ge.(n_abu(cnt1)-0.199).and.
+     &         trim(model_name).eq.trim(id_model(cnt1))) then
+               index(cnt) = cnt1
+               flag = 1
+             write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1), 
+     &          index(cnt)
+            exit
+           endif
+          enddo
+        endif
       enddo   
 
       write(*,*)
@@ -749,7 +776,7 @@ c      stop
        do n=1,ndepth_ref
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(f10.5,2x))
+ 1975  format(1000(1pe11.5,1x))
          
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)

@@ -283,13 +283,17 @@ c 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
 *********
 
       open(unit=199, file=nlte_model_list,  form='formatted')
-      read(199,*) n_comment
+      read(199,'(A)') n_comment
 
       do cnt=1, nlte_file
-         read(199, *)
+         read(199, '(A)') n_comment
+c         print*, n_comment(0:1)
+         if (n_comment(1:1) .ne. '#') then
+            read(n_comment, *)
      &        id_model(cnt), n_teff(cnt), n_logg(cnt), n_metal(cnt),
      &        n_alpha(cnt), n_mass(cnt), n_vturb(cnt), n_abu(cnt),
      &        n_pos(cnt)
+         endif
          call str2int(n_pos(cnt),int1,stat1)
          n_pos1(cnt) = int1
 c         print*, n_metal(cnt), metal(1)
@@ -862,7 +866,7 @@ c       write(27,1971) abu_ref
        do n=1,ndepth_ref
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(f10.5,2x))
+ 1975  format(1000(1pe11.5,1x))
          
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
