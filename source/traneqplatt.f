@@ -109,6 +109,7 @@
 *
         DO 130 K=1,JTAU
           A(IT)=AMAX1(A(IT),ABS(ERROR(K)/SOURCE(K)))
+!          print*,'error traneqplatt ',xlsingle,it, a(it)
   130   CONTINUE
         IF(A(IT).LT.0.0001) GOTO 141
 *

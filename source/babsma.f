@@ -543,7 +543,7 @@ cccc          print*,'reading ntau again ',ntau
 !
 ! Try the Multi2.3 format. BPz 17/04-2020
 !
-        backspace(imod)
+        rewind(imod)
         do while (.true.)
           read(imod,'(a)',err=761) mocode
           mocode=adjustl(mocode)
@@ -557,6 +557,14 @@ cccc          print*,'reading ntau again ',ntau
             massscale=.false.
             print*,'MULTI formatted model with tau-scale'
             exit
+          else
+            print*,'This seems to be a Multi model but '
+            print*,'it has some extra stuff at the beginning.'
+            print*,'Multi models should start with either ',
+     &             'MASS or TAU.'
+            print*,'Other stuff may be added afterwards preceded by a',
+     &             ' *'
+            stop 'error in  babsma.f'
           endif
         enddo
         do while (.true.)

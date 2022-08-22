@@ -126,8 +126,9 @@
         do k=1,ntau
           x(k)=absocont(k,j)
           s(k)=absoscont(k,j)
+!          s(k)=0.     !test
 *
-* NLTE case implemented for continuum
+* NLTE case not implemented for continuum
 *
           if (nlte) then
 ! test            bplan(k)=source_function(k,j)
@@ -146,7 +147,7 @@
 
 !        do k=1,ntau
 !          if (abs(source_function(k,j)/sourceplatt(k)-1.0).gt.
-!     &         0.001) then
+!     &         0.01) then
 !            print*,'source differ',xlsingle,k,source_function(k,j),
 !     &          sourceplatt(k)
 !          endif
@@ -186,6 +187,7 @@
 ! test            x(k)=abso(k,j)
 ! test 
           s(k)=absos(k,j)+absoscont(k,j)
+!          s(k)=0. !test
 *
 * NLTE case implemented for lines
 *
@@ -209,16 +211,29 @@ cc          print*,'bsynbplatt final check', xlsingle,
 cc     &       source_function(10,j),abso(10,j),bpl(T(10),xlsingle),
 cc     &       absocont(10,j),x(10),s(10)
 cc        endif
+!          do k=1,ntau
+!            if (xlsingle.gt.5889.7.and.xlsingle.lt.5889.93) then
+!              print555,xlsingle,k,
+!     &          source_function(k,j),abso(k,j),
+!     &          x(k),
+!     &          bpl(T(k),xlsingle)
+!555           format(f9.3,1x,i3,4(1x,1pe9.3))
+!            endif
+!          enddo
 
         call traneqplatt(idebug)
 
+!        if (xlsingle.gt.5889.7.and.xlsingle.lt.5889.93) then
 !        do k=1,ntau
 !          if (abs(source_function(k,j)/sourceplatt(k)-1.0).gt.
-!     &         0.001) then
-!            print*,'source differ',xlsingle,k,source_function(k,j),
+!     &         0.01) then
+!            print556,xlsingle,k,source_function(k,j),
 !     &          sourceplatt(k)
+!556         format('source differ',f9.3,1x,i3,1x,2(1x,1pe9.3))
 !          endif
 !        enddo
+!        endif
+
         if (iint.gt.0) then
 *
 * calculate emergent line intensity at prescribed mu-points
