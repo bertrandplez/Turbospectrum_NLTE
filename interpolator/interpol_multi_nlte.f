@@ -84,7 +84,8 @@ c    JMG: 2020 converted format to interpolate models in MULTI format as opposed
 c      
 c     use IFPORT
       implicit none
-      integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,nlinemod,letter
+      integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,
+     &        nlinemod,letter,ndepth_final
       parameter (ndp=200)
       parameter (nfile=11)
 
@@ -809,6 +810,12 @@ c     &                   rhox(k,out)
 c         enddo  
 c      end if
 
+       do k=1,ndepth_ref
+        if (taus(k,out).lt.5) then
+          ndepth_final = k
+        endif
+       enddo
+
       write(*,*) 'now write result'
 c      write(*,*) FILE_IN(out)
 c      stop
@@ -817,17 +824,17 @@ c      stop
        open(unit=27,file=FILE_IN(out+2))
 
 c       write(*,*) 'spherical models'
-       write(23,*) 'interpolated_model'
+c       write(23,*) 'interpolated_model'
        write(23,*) 'TAU5000 SCALE'
-       write(23,"(a)") '*'
+       write(23,"(a)") '* interpolated model'
        write(23,"(a)") '*LOG G'
        write(23,*) logg_ref
        write(23,"(a)") '*'
        write(23,"(a)") '* NDEP'
-       write(23,*) ndepth_ref
+       write(23,*) ndepth_final
        write(23,"(a)") 
      &     '*  LG TAU    TEMPERATURE  NE      V       VTURB  '
-       do k=1,ndepth_ref
+       do k=1,ndepth_final
         write(23,1968) taus(k,out),T(k,out),NE(k,out),
      &                   V(k,out),Vturb(k,out)
         enddo  
@@ -855,15 +862,15 @@ c       write(27,1971) abu_ref
          write(27,1971) abu_ref
        endif
  1971  format(f6.2,1x)
-       write(27,1972) ndepth_ref
+       write(27,1972) ndepth_final
  1972  format(i3,1x)
        write(27,1973) n_lev
  1973  format(i4,1x)
-       do k=1,ndepth_ref
+       do k=1,ndepth_final
          write(27,1974) taus(k,out)
         enddo
  1974  format(f8.4,1x)
-       do n=1,ndepth_ref
+       do n=1,ndepth_final
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
  1975  format(1000(1pe11.5,1x))

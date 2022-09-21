@@ -82,7 +82,8 @@ c
 c    JMG: 2020 converted format to interpolate models in MULTI format as opposed to ascii files from MARCS
 
       implicit none
-      integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,nlinemod,imod
+      integer :: file,nfile,k,n,m,ndp,ndepth_ref,out,
+     &        nlinemod,imod,ndepth_final
       parameter (ndp=200)
       parameter (nfile=11)
       logical :: verif,check,test,extrapol,binary,optimize
@@ -219,7 +220,6 @@ c 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
       ndepth_ref=ndepth(1)
       lambda_ref=xlr(1)
 
-      
 ********* calculation of the interpolation point(x,y,z) in {Teff,logg,z} space******************
       
 c       allocate(taus(ndepth_ref,nfile),tauR(ndepth_ref,nfile),
@@ -427,7 +427,7 @@ c          write(*,fmt="(i2, 9(f10.5,2x))") k,
 c     &     xkapref(k,1),xkapref(k,2),
 c     &     xkapref(k,3),xkapref(k,4),xkapref(k,5),xkapref(k,6),
 c     &     xkapref(k,7),xkapref(k,8),xkapref(k,out)
-        end do
+        enddo
         ndepth(out)=ndepth_ref
         xlr(out)=lambda_ref
 
@@ -447,22 +447,28 @@ c      enddo
      & logg_ref,z_ref)
       endif
 
+      do k=1,ndepth_ref
+        if (taus(k,out).lt.5) then
+          ndepth_final = k
+        endif
+       enddo
+
       write(*,*) 'now write result'
        open(unit=23,file=FILE_IN(out))
        open(unit=25,file=FILE_IN(out+1))
 
 c       write(*,*) 'spherical models'
-       write(23,*) 'interpolated_model'
+c       write(23,*) 'interpolated_model'
        write(23,*) 'TAU5000 SCALE'
-       write(23,"(a)") '*'
+       write(23,"(a)") '* interpolated model'
        write(23,"(a)") '*LOG G'
        write(23,*) logg_ref
        write(23,"(a)") '*'
        write(23,"(a)") '* NDEP'
-       write(23,*) ndepth_ref
+       write(23,*) ndepth_final
        write(23,"(a)") 
      &     '*  LG TAU    TEMPERATURE  NE      V       VTURB  '
-       do k=1,ndepth_ref
+       do k=1,ndepth_final
         write(23,1968) taus(k,out),T(k,out),NE(k,out),
      &                   V(k,out),Vturb(k,out)
         enddo  
