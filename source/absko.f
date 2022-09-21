@@ -45,9 +45,9 @@ C
       real pg,dum,delsum
 
       logical first
-      real TSKAL(NDP),PESKAL(NDP),ABSK(NDP),SPRID(NDP)
+      real TSKAL(NT),PESKAL(NT),ABSK(NT),SPRID(NT)
       real FAKTP(ifadim)
-      real SUMW(NDP)
+      real SUMW(NT)
       real tioabs(ndp),h2oabs(ndp)
       integer iread, iwrit
       COMMON/UTPUT/IREAD,IWRIT

@@ -9,7 +9,7 @@ MODULE strings_module
     
 CONTAINS
 
-  PURE CHARACTER FUNCTION to_upper_ch(ch)
+  CHARACTER FUNCTION to_upper_ch(ch)
     CHARACTER, INTENT(in) :: ch
     INTEGER :: ix
     to_upper_ch = ch
@@ -17,7 +17,7 @@ CONTAINS
     IF (ix /= 0) to_upper_ch = uca(ix:ix)
   END FUNCTION to_upper_ch
 
-  PURE FUNCTION to_upper(str) RESULT(rslt)
+  FUNCTION to_upper(str) RESULT(rslt)
     CHARACTER(len=*), INTENT(in) :: str
     CHARACTER(len=len(str)) :: rslt
     INTEGER :: ix
@@ -26,7 +26,7 @@ CONTAINS
     END DO    
   END FUNCTION to_upper
 
-  PURE CHARACTER FUNCTION to_lower_ch(ch)
+  CHARACTER FUNCTION to_lower_ch(ch)
     CHARACTER, INTENT(in) :: ch
     INTEGER :: ix
     to_lower_ch = ch
@@ -34,7 +34,7 @@ CONTAINS
     IF (ix /= 0) to_lower_ch = lca(ix:ix)
   END FUNCTION to_lower_ch
 
-  PURE FUNCTION to_lower(str) RESULT(rslt)
+  FUNCTION to_lower(str) RESULT(rslt)
     CHARACTER(len=*), INTENT(in) :: str
     CHARACTER(len=len(str)) :: rslt
     INTEGER :: ix

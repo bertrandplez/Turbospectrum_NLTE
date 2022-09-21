@@ -25,7 +25,7 @@
       real Teff,metallicity,kboltz,mh
       dimension rhobow(ndp),coldens(ndp),xe(ndp),ghoefner(ndp)
       dimension comparison(30),iidum(16),xlr(20)
-      real abskk(ndp),spridd(ndp),pgk(ndp)
+      real abskk(ndp),spridd(ndp),pgk(ndp),absk(1),sprid(1)
       character*8 abname,source
       character*9 key
       character*1 bla
@@ -1085,7 +1085,7 @@ ccc      write(34,'(i3,15e10.3,/,3x,15e10.3)') k,presmo
 *
 
         CALL ABSKO(NEWT,1,T(K),PE(K),1,1,ABSK,SPRID)
-        STNDOP=ABSK+SPRID
+        STNDOP=ABSK(1)+SPRID(1)
         if (mocode(1:7).eq.'Hoefner') then
 *
 * we place tau points at T, P, rho points.
@@ -1189,8 +1189,8 @@ c        print*,'check ro'
           NLP=NL(I)
           DO 23 J=1,NLP
             CALL ABSKO(NEWT,1,T(K),PE(K),I,J,ABSK,SPRID)
-            X(J0)=ABSK/STNDOP
-            S(J0)=SPRID/STNDOP
+            X(J0)=ABSK(1)/STNDOP
+            S(J0)=SPRID(1)/STNDOP
             if (pureLTE) then
               x(j0)=x(j0)+s(j0)
               s(j0)=0.
