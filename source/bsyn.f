@@ -1710,14 +1710,18 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
           filprint=linefil(i)
           write(46) '''* ',filprint(1:index(filprint,' ')),''''
         enddo
-        write(46) (ieliel,log10(absave(ieliel))+12.,ieliel=1,60),
-     &              (ieliel,log10(absave(ieliel))+12.,ieliel=62,83)
+! BPz 2022-09-27 : why not all abundances?
+!
+!        write(46) (ieliel,log10(absave(ieliel))+12.,ieliel=1,60),
+!     &              (ieliel,log10(absave(ieliel))+12.,ieliel=62,83)
+
+        write(46) (ieliel,log10(abund(ieliel))+12.,ieliel=1,92)
+
         write(46) ntau,maxlam,xl1,xl2,del
         write(46) xls
         write(46) (tau(k),k=1,ntau),(xi(k),k=1,ntau)
         write(46) ((absocont(k,j)*ross(k),k=1,ntau),j=1,maxlam)
-        write(46) (((abso(k,j)-absocont(k,j))*ross(k),k=1,ntau),
-     &                                                  j=1,maxlam)
+        write(46) ((abso(k,j)*ross(k),k=1,ntau),j=1,maxlam)
         write(46) ((absos(k,j)*ross(k),k=1,ntau),j=1,maxlam)
       endif
       close(46)
