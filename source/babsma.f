@@ -34,7 +34,7 @@
       LOGICAL MRXF,XIFIX
       character*50 blabla
       CHARACTER*1024 DETOUT,OUTMOD,outmod2
-      CHARACTER*50 MOCODE,marcsformat
+      CHARACTER*50 MOCODE,marcsformat, atmosLabel
 *
 * from bsyn; this ensures that continuum opacities are computed for all
 * wavelengths of the bsyn calculation. Babsma must be called before each 
@@ -545,6 +545,7 @@ cccc          print*,'reading ntau again ',ntau
 !
         rewind(imod)
         do while (.true.)
+          read(imod,'(a)',err=761) atmosLabel
           read(imod,'(a)',err=761) mocode
           mocode=adjustl(mocode)
           if (mocode(1:4).eq.'MASS') then
