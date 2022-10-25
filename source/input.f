@@ -107,6 +107,8 @@ ccc      inatom='DATA/atomdata-v12.1'
 1     read(iread,'(a)',end=99) oneline
       if (oneline(1:1).eq.'#') then
         goto 1       ! this is a comment. Skip
+      else if (trim(oneline).eq.'') then
+        goto 1       ! this is an empty line. Skip
       endif
       
       read(oneline,*,end=99) keyword,charvalue

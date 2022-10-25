@@ -40,6 +40,10 @@
 *
 ccc      READ(12,100) MCODE,NTAU,XLS
       READ(12,*) MCODE,NTAU,XLS
+      if (ntau.gt.ndp) then
+        print*,'model has more layers than allowed by array dimensions'
+        stop 'Increase NDP in spectrum.inc parameter file and recompile'
+      endif
       READ(12,103) NLQ
       if (nlq.gt.20*numbset) then
          print*,'readmo: nlq= ',nlq,' larger than numbset*20= ',
