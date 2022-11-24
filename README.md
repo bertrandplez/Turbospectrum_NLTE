@@ -1,4 +1,4 @@
-# Turbospectrum2020
+# TurbospectrumNLTE (aka Turbosepctrum2020)
 Public
 
 Synthetic stellar spectra calculator LTE / NLTE
