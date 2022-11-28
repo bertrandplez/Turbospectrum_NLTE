@@ -545,7 +545,7 @@ cccc          print*,'reading ntau again ',ntau
 !
         rewind(imod)
         do while (.true.)
-          read(imod,'(a)',err=761) atmosLabel
+!          read(imod,'(a)',err=761) atmosLabel
           read(imod,'(a)',err=761) mocode
           mocode=adjustl(mocode)
           if (mocode(1:4).eq.'MASS') then
@@ -559,13 +559,15 @@ cccc          print*,'reading ntau again ',ntau
             print*,'MULTI formatted model with tau-scale'
             exit
           else
-            print*,'This seems to be a Multi model but '
-            print*,'it has some extra stuff at the beginning.'
-            print*,'Multi models should start with either ',
-     &             'MASS or TAU.'
-            print*,'Other stuff may be added afterwards preceded by a',
-     &             ' *'
-            stop 'error in  babsma.f'
+!            print*,'This seems to be a Multi model but '
+!            print*,'it has some extra stuff at the beginning.'
+!            print*,'Multi models should start with either ',
+!     &             'MASS or TAU.'
+!            print*,'Other stuff may be added afterwards preceded by a',
+!     &             ' *'
+!            stop 'error in  babsma.f'
+            print*,'trying multi format'
+            print*,mocode
           endif
         enddo
         do while (.true.)
