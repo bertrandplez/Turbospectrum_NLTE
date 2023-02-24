@@ -16,7 +16,7 @@
       character modid(maxn)*40,bla*2
       integer iunit,modnlevel,modion(maxn),i
       real modenergy(maxn),abundance,mass,modg(maxn)
-      logical header
+      logical header,header2,header3
 
       open(iunit,file=modelatomfile,status='old')
       header=.true.
@@ -30,8 +30,22 @@
             write(bla,20) species(2:2)
             species=bla
           endif
-          read(iunit,*) abundance,mass
-          read(iunit,*) modnlevel
+          header2=.true.
+          do while (header2)
+            read(iunit,10,end=99) oneline
+            if (oneline(1:1).ne.'*') then
+              read(oneline,*) abundance,mass
+              header2=.false.
+            endif
+          enddo
+          header3=.true.
+          do while (header3)
+            read(iunit,10,end=99) oneline
+            if (oneline(1:1).ne.'*') then
+              read(oneline,*) modnlevel
+              header3=.false.
+            endif
+          enddo
           header=.false.
         endif
       enddo
