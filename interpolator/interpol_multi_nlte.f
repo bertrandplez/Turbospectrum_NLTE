@@ -861,7 +861,7 @@ c       write(27,1971) abu_ref
        else
          write(27,1971) abu_ref
        endif
- 1971  format(f6.2,1x)
+ 1971  format(f10.6,1x)
        write(27,1972) ndepth_final
  1972  format(i3,1x)
        write(27,1973) n_lev
