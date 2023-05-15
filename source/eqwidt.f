@@ -124,7 +124,7 @@
 
       logical dattsuji,datspherical,datlimbdark,databfind,abfind,
      &        datmultidump,datxifix,datmrxf,dathydrovelo,datpureLTE,
-     &        datnlte,nlte,purelte
+     &        datnlte,nlte,purelte,datdepartbin
       integer datnoffil,datncore,datmaxfil,datmihal,datiint
       real    isoch(1000),isochfact(1000),datisoch(1000),
      &        datisochfact(1000)
@@ -139,6 +139,7 @@
      &          contmaskfile,linemaskfile,segmentsfile,
      &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &          datnlteinfofile,nlteinfofile
+      character*12  databund_source
       doubleprecision   datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                  datresolution,resolution
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
@@ -157,9 +158,9 @@
      &                 datresolution,
      &                 datiint,datxmyc,datscattfrac,
      &                 datpureLTE,datnlte,
-     &                 datmodelatomfile,datdeparturefile,
+     &                 datmodelatomfile,datdeparturefile,,datdepartbin,
      &                 datcontmaskfile,datlinemaskfile,datsegmentsfile,
-     &                 datnlteinfofile
+     &                 datnlteinfofile,databund_source
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -366,7 +367,8 @@ cc     &     RECL=412)
 * if appropriate replace by fixabund.
 * for molecular equilibrium calculation and damping
 *
-      call makeabund(overall,alpha,helium,rabund,sabund,fixabund,
+      call makeabund(databund_source,
+     &               overall,alpha,helium,rabund,sabund,fixabund,
      &                  abund,amass,aname,isotopfrac)
 
 ccc      OPEN(UNIT=11,FILE=INATOM,STATUS='OLD')

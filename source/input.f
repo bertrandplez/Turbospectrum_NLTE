@@ -14,6 +14,7 @@
      &              outfil,mongofil,filterfil,continopac,inpmod,
      &              modelatomfile,departurefile,nlteinfofile,
      &              contmaskfile,linemaskfile,segmentsfile
+      character*12 abund_source,haha
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
      &        hydrovelo,pureLTE,departbin,nlte
       integer iint,k
@@ -32,7 +33,7 @@
      &                 iint,xmyc,scattfrac,
      &                 pureLTE,nlte,modelatomfile,departurefile,
      &                 departbin,contmaskfile,linemaskfile,
-     &                 segmentsfile,nlteinfofile
+     &                 segmentsfile,nlteinfofile,abund_source
 
       common/species/atominclude
       data atominclude 
@@ -47,6 +48,7 @@
      &    'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
      &    'Pa','U ','  ','  ','  ','  ','  ','  ','  ','  ' /
 *
+      abund_source='magg'
       linemaskfile=' '
       contmaskfile=' '
       segmentsfile=' '
@@ -130,6 +132,9 @@ ccc      inatom='DATA/atomdata-v12.1'
           print*,'nlines = ',nlines,' too large. Limit = 100'
           stop 
         endif
+      else if (keyword(1:12).eq.'ABUND_SOURCE') then
+        read(charvalue,*) haha
+        abund_source=adjustl(haha)
       else if (keyword(1:11).eq.'METALLICITY') then
         read(charvalue,*) overall
       else if (keyword(1:8).eq.'ALPHA/Fe') then
