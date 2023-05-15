@@ -55,7 +55,7 @@
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB
       doubleprecision xlb_vshifted(ndp),lshift(ndp)
       real xlsingle
-      CHARACTER*20 LELE
+      CHARACTER*20 lele
       real newvoigt
 
 * special version NLTE
@@ -64,7 +64,7 @@
       integer ndepth
       character header_dep1*500,header_dep2*1000
       character*20 idlevlo,idlevup
-      character nlte_specname*2
+      character nlte_specname*20
       parameter (maxlevel=10000)
       real abundance_nlte,gamst
       real b_departure(ndp,0:maxlevel),taumod(ndp)
@@ -967,7 +967,8 @@ cc          call Hlineadd(lunit,nline,xlboff)
           lele=aname(iel)
 ! NLTE: check model atom id:
           if (nlte_species) then
-            if (to_lower(aname(iel)).ne.to_lower(nlte_specname)) then
+            if (to_lower(aname(iel)).ne.
+     &                    to_lower(trim(nlte_specname))) then
               print*,' Bsyn: NLTE species is ',aname(iel),
      &               ' but model atom is for ',nlte_specname
               stop 'ERROR'
@@ -986,8 +987,9 @@ cc          call Hlineadd(lunit,nline,xlboff)
         else
 ! Molecular species
           call getlele(iel,ion,lele)
+! NLTE: check model molecule id:
           if (nlte_species) then
-            if (lele.ne.nlte_specname) then
+            if (trim(lele).ne.trim(nlte_specname)) then
               print*,' Bsyn: NLTE species is ',lele,
      &               ' but model atom is for ',nlte_specname
               stop 'ERROR'
