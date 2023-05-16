@@ -55,7 +55,7 @@
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB
       doubleprecision xlb_vshifted(ndp),lshift(ndp)
       real xlsingle
-      CHARACTER*20 lele
+      CHARACTER*20 lele,lel
       real newvoigt
 
 * special version NLTE
@@ -989,8 +989,14 @@ cc          call Hlineadd(lunit,nline,xlboff)
           call getlele(iel,ion,lele)
 ! NLTE: check model molecule id:
           if (nlte_species) then
-            if (trim(lele).ne.trim(nlte_specname)) then
-              print*,' Bsyn: NLTE species is ',lele,
+! quick and dirty fix to comply with MULTI convention of 2 characters length for species.
+! This must eventually be solved in MULTI as CO is then identical to Co, and HCN is not allowed. 
+! In TS it is 'C O' and 'Co'(or 'co').
+            if (lele(2:2).eq.' ') then
+              lel=lele(1:1)//lele(3:3)
+            endif
+            if (trim(lel).ne.trim(nlte_specname)) then
+              print*,' Bsyn: NLTE species is ',lel,
      &               ' but model atom is for ',nlte_specname
               stop 'ERROR'
             endif
