@@ -55,7 +55,7 @@
       doubleprecision XL1,XL2,DEL,XLMARG,XL1L,XL2R,XLBOFF,XLB
       doubleprecision xlb_vshifted(ndp),lshift(ndp)
       real xlsingle
-      CHARACTER*20 LELE
+      CHARACTER*20 lele,lel
       real newvoigt
 
 * special version NLTE
@@ -64,7 +64,7 @@
       integer ndepth
       character header_dep1*500,header_dep2*1000
       character*20 idlevlo,idlevup
-      character nlte_specname*2
+      character nlte_specname*20
       parameter (maxlevel=10000)
       real abundance_nlte,gamst
       real b_departure(ndp,0:maxlevel),taumod(ndp)
@@ -176,6 +176,7 @@
      &          contmaskfile,linemaskfile,segmentsfile,
      &          datcontmaskfile,datlinemaskfile,datsegmentsfile,
      &          datnlteinfofile,nlteinfofile
+      character*12 databund_source
       doubleprecision  datxl1,datxl2,datdel,datxlmarg,datxlboff,
      &                 datresolution
       common/inputdata/datmaxfil,dattsuji,datfilmet,datfilmol,
@@ -196,7 +197,8 @@
      &                 datpureLTE,
      &                 datnlte,datmodelatomfile,datdeparturefile,
      &                 datdepartbin,datcontmaskfile,datlinemaskfile,
-     &                 datsegmentsfile,datnlteinfofile
+     &                 datsegmentsfile,datnlteinfofile,
+     &                 databund_source
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -440,7 +442,8 @@ cc     &     RECL=412)
 * if appropriate replace by fixabund.
 * for molecular equilibrium calculation and damping
 *
-      call makeabund(overall,alpha,helium,rabund,sabund,fixabund,
+      call makeabund(databund_source,
+     &               overall,alpha,helium,rabund,sabund,fixabund,
      &                  abund,amass,aname,isotopfrac)
 
       print*,'metallicity changed by ',overall,' dex'
@@ -959,28 +962,45 @@ cc          call Hlineadd(lunit,nline,xlboff)
 * Finally the mass is computed here.
 *
 
+        if (iel.le.92) then
+! Atomic species
+          lele=aname(iel)
 ! NLTE: check model atom id:
-        if (nlte_species) then
-          if (to_lower(aname(iel)).ne.to_lower(nlte_specname)) then
-            print*,' Bsyn: NLTE species is ',aname(iel),
-     &             ' but model atom is for ',nlte_specname
-            stop 'ERROR'
-          else
+          if (nlte_species) then
+            if (to_lower(aname(iel)).ne.
+     &                    to_lower(trim(nlte_specname))) then
+              print*,' Bsyn: NLTE species is ',aname(iel),
+     &               ' but model atom is for ',nlte_specname
+              stop 'ERROR'
+            else
 ! check abundance
-            if (abs(log10(abund(iel))+12.-abundance_nlte)
-     &          .gt.0.0001) then
-              print*,' Bsyn: NLTE departure coeff calculated for',
-     &               'abundance =',abundance_nlte,' while it is ',
-     &                log10(abund(iel))+12.,' here'
-              stop 'Change abundance in script! '
+              if (abs(log10(abund(iel))+12.-abundance_nlte)
+     &            .gt.0.0001) then
+                print*,' Bsyn: NLTE departure coeff calculated for',
+     &                 'abundance =',abundance_nlte,' while it is ',
+     &                  log10(abund(iel))+12.,' here'
+                stop 'Change abundance in script! '
+              endif
             endif
           endif
-        endif
 !
-        if (iel.le.92) then
-          lele=aname(iel)
         else
+! Molecular species
           call getlele(iel,ion,lele)
+! NLTE: check model molecule id:
+          if (nlte_species) then
+! quick and dirty fix to comply with MULTI convention of 2 characters length for species.
+! This must eventually be solved in MULTI as CO is then identical to Co, and HCN is not allowed. 
+! In TS it is 'C O' and 'Co'(or 'co').
+            if (lele(2:2).eq.' ') then
+              lel=lele(1:1)//lele(3:3)
+            endif
+            if (trim(lel).ne.trim(nlte_specname)) then
+              print*,' Bsyn: NLTE species is ',lel,
+     &               ' but model atom is for ',nlte_specname
+              stop 'ERROR'
+            endif
+          endif
         endif
         print*,'after getlele: ',iel,lele
         mam=0.
@@ -1009,12 +1029,19 @@ cc          call Hlineadd(lunit,nline,xlboff)
         nlteformat=.false.
         if (iel.gt.92) then
           starkformat=.false.
+          read(oneline,*,err=16,end=16) xlb,chie,gfelog,fdamp,gu,raddmp,
+     &                      levlo,levup,eqw,eqwerr,comment_line,
+     &                      ilevlo,ilevup,idlevlo,idlevup
+          nlteformat=.true.    ! compatible with newformat line list without Stark
+          newformat=.true.
+          goto 12
+16        continue
           read(oneline,*,err=11,end=11) xlb,chie,gfelog,fdamp,gu,raddmp,
      &                levlo,levup
           newformat=.true.
           goto 12
 11        newformat=.false.
-12        continue 
+12        continue
         else
 !
 ! Test for atomic line list format, with or without Stark broadening parameter

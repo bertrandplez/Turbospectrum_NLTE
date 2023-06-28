@@ -46,6 +46,7 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 # finally individual abundances can be provided by first giving how many of them are changed and then
 # for each of them their atomic number followed by the absolute abundance on the same line
 #
+'ABUND_SOURCE:'   'magg'
 'METALLICITY:'    '${METALLIC}'
 'ALPHA/Fe   :'    '0.00'
 'HELIUM     :'    '0.00'

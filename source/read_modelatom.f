@@ -12,8 +12,8 @@
 !
       implicit none
       integer maxn
-      character modelatomfile*256,oneline*256,species*2
-      character modid(maxn)*40,bla*2
+      character modelatomfile*256,oneline*256,species*20
+      character modid(maxn)*40,bla*20
       integer iunit,modnlevel,modion(maxn),i
       real modenergy(maxn),abundance,mass,modg(maxn)
       logical header,header2,header3
@@ -27,7 +27,7 @@
           if (species(1:1).eq.' ') then
 ! move leading blank, if any, to end, in order to conform 
 ! to aname standard (see makeabund.f)
-            write(bla,20) species(2:2)
+            write(bla,20) species(2:20)
             species=bla
           endif
           header2=.true.
@@ -63,7 +63,7 @@
         print*,i,modion(i),modid(i),modenergy(i),modg(i)
       enddo
 10    format(a)
-20    format(a1,' ')
+20    format(a19,' ')
 
       close(iunit)
 

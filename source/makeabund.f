@@ -3,8 +3,9 @@
 * To: Plez@Ferrum.fysik.lu.se
 ************************************************************************
 *
-      subroutine makeabund(overall,alpha,helium,rabund,sabund,fixabund,
-     &                  abund,amass,aname,isotopfrac)
+      subroutine makeabund(abund_source,
+     &                     overall,alpha,helium,rabund,sabund,fixabund,
+     &                     abund,amass,aname,isotopfrac)
 *
 * Create a formatted abundance file
 * The programme scales groups of elements automatically
@@ -27,11 +28,12 @@
       real amass(natom,0:250),abund(natom),sunabund(natom),
      &     rfract(31:92),tempmass,
      &     fixabund(natom),damass(natom),isotopfrac(natom,0:250),
-     &     sunabund_1998(natom),sunabund_2007(natom),checkiso
+     &     sunabund_1998(natom),sunabund_2007(natom),checkiso,
+     &     sunabundmagg(natom)
       real overall,alpha,helium,rabund,sabund,abundr,abunds,hfactor
       integer iel,ialpha,ielalpha(nelalpha)
       character*2 aname(natom),daname(natom)
-      logical abund_2007
+      character*12 abund_source
 *
 * isotopfrac(22,48) is isotopic fraction of 48Ti 
 * sum_over_i>0{ isotopfrac(x,i) } = 1.000 
@@ -104,6 +106,21 @@ CCCC     & -99.0, -0.47 /                                                   | 91
      &  7.84,  6.17,  7.53,  6.37,  7.51,  5.36,  7.14,  5.50,  6.18,   | 10 - 18
      &  5.08,  6.31,  3.17,  4.90,  4.00,  5.64,  5.39,  7.45,  4.92,   | 19 - 27
      &  6.23,  4.21,  4.60,  2.88,  3.58,  2.29,  3.33,  2.56,  3.25,   | 28 - 36
+     &  2.60,  2.92,  2.21,  2.58,  1.42,  1.92, -99.0,  1.84,  1.12,   | 37 - 45
+     &  1.66,  0.94,  1.77,  1.60,  2.00,  1.00,  2.19,  1.51,  2.24,   | 46 - 54
+     &  1.07,  2.17,  1.13,  1.70,  0.58,  1.45, -99.0,  1.00,  0.52,   | 55 - 63
+     &  1.11,  0.28,  1.14,  0.51,  0.93,  0.00,  1.08,  0.06,  0.88,   | 64 - 72
+     & -0.17,  1.11,  0.23,  1.25,  1.38,  1.64,  1.01,  1.13,  0.90,   | 73 - 81
+     &  2.00,  0.65, -99.0, -99.0, -99.0, -99.0, -99.0, -99.0,  0.06,   | 82 - 90
+     & -99.0, -0.52 /                                                   | 91 - 92
+*
+* Solar abundances ref: Magg et al. 2022,
+* arXiv:2203.02255 A&A in press   (He=10.93) 
+      data sunabundmagg /
+     & 12.00, 10.93,  1.05,  1.38,  2.70,  8.56,  7.98,  8.77,  4.67,   |  1 -  9
+     &  8.15,  6.33,  7.58,  6.48, 7.567,  5.48,  7.21,  5.29,  6.50,   | 10 - 18
+     &  5.12,  6.32,  3.09,  4.96,  4.01,  5.69,  5.53,  7.51,  4.92,   | 19 - 27
+     &  6.25,  4.21,  4.60,  2.88,  3.58,  2.29,  3.33,  2.56,  3.25,   | 28 - 36
      &  2.60,  2.92,  2.21,  2.58,  1.42,  1.92, -99.0,  1.84,  1.12,   | 37 - 45
      &  1.66,  0.94,  1.77,  1.60,  2.00,  1.00,  2.19,  1.51,  2.24,   | 46 - 54
      &  1.07,  2.17,  1.13,  1.70,  0.58,  1.45, -99.0,  1.00,  0.52,   | 55 - 63
@@ -201,15 +218,19 @@ cc      print *,'s-element abundance [s/Fe]? (0.0 = Solar)'
 cc      read(*,*) sabund
 *
 * chose set of abundances
-      abund_2007=.true.
-      if (abund_2007) then
-        do iel=1,natom
-          sunabund(iel)=sunabund_2007(iel)
-        enddo
+      if (abund_source(1:4).eq.'magg') then
+        sunabund=sunabundmagg
+        print*,'Abundance is scaled from Magg et al. 2022'
+      else if (abund_source(1:7).eq.'asp2007') then 
+        sunabund=sunabund_2007
+        print*,'Abundance is scaled from Asplund et al. 2007'
+      else if (abund_source(1:6).eq.'gs1998') then 
+        sunabund=sunabund_1998
+        print*,'Abundance is scaled from Grevesse & Sauval 1998'
       else
-        do iel=1,natom
-          sunabund(iel)=sunabund_1998(iel)
-        enddo
+        print*,'Error in makeabund. abund_source is ',abund_source
+        print*,' but should be one of : magg, asp2007, gs1998'
+        stop
       endif
 *
       do iel=1,92
