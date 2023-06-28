@@ -448,7 +448,7 @@ c      enddo
       endif
 
       do k=1,ndepth_ref
-        if (taus(k,out).lt.5) then
+        if (taus(k,out).le.5) then
           ndepth_final = k
         endif
        enddo
