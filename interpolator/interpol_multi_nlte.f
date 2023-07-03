@@ -137,6 +137,9 @@ c      parameter (nlte_file=3)
       real :: abu_min, abu_max
       real, dimension(nfile) :: abu_temp
 
+******NS
+      character line*256   ! a string variable to hold each line of the file
+
       real y000
       real y001
       real y010
@@ -272,7 +275,11 @@ c 78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
         read(imod,*)
         read(imod,*) ndepth(file)
         do k=1, ndepth(file)
-          read(imod,*) taus_aux(k,file), T_aux(k,file), NE_aux(k,file),
+          read(imod,'(A)') line    ! read a line
+          if (line(1:1) .eq. "*") then
+            read(imod,'(A)') line  ! if the line starts with "*", it's a comment, so read the next line
+          endif
+          read(line,*) taus_aux(k,file), T_aux(k,file), NE_aux(k,file),
      &                 V_aux(k,file), Vturb_aux(k,file)
         enddo
         verif=verif.and.(ndepth(file).eq.ndepth(1))
