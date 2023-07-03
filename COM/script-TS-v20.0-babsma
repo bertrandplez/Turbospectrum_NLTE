@@ -44,7 +44,10 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 # The latter are scaled according to their solar-system fraction (see makeabund.f)
 # finally individual abundances can be provided by first giving how many of them are changed and then
 # for each of them their atomic number followed by the absolute abundance on the same line.
+# abund_source can be Magg et al. 2022 (magg), Asplund et al. 2007 (asp2007) or Grevesse & Sauval 1998 (gs1998)
+# See makeabund.f
 #
+'ABUND_SOURCE:' 'magg'
 'METALLICITY:'    '${METALLIC}'
 'ALPHA/Fe   :'    '0.00'
 'HELIUM     :'    '0.00'

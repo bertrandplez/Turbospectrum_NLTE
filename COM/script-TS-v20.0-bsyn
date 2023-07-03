@@ -82,7 +82,10 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 # 12.012 0.9
 # 12.013 0.1
 # to set 90% of 12C and 10% of 13C.
+# abund_source can be Magg et al. 2022 (magg), Asplund et al. 2007 (asp2007) or Grevesse & Sauval 1998 (gs1998)
+# See makeabund.f
 #
+'ABUND_SOURCE:'   'magg'
 'METALLICITY:'    '${METALLIC}'
 'ALPHA/Fe   :'    '0.00'
 'HELIUM     :'    '0.00'
