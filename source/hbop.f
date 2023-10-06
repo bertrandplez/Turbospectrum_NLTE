@@ -1583,43 +1583,42 @@ C
       RETURN
       END
 
-
 C***********************************************************************
       SUBROUTINE LOGINT(X, Y, N, XI, YI)
 C
-C  Does log interpolation and extrapolation of arrays X and Y
+C  Does log interpolation and extrapolation of array Y
 C  of length N.  Returns value YI at XI.
+C  Assumes monotonically increasing X.
+C  Bug fix 20230711 thanks to Richard Hoppe
+C  Changed to log-linear 20230712
 C
       IMPLICIT NONE
       INTEGER N, I, J
       REAL X(*), Y(*), XI, YI
-      REAL XL(N), YL(N), XIL, YIL, XLS(3), YLS(3), DY        
+      REAL XL(N), YL(N), XIL, YIL, XS(3), YLS(3), DY        
 C
       J = 0
-      XIL =  LOG10(XI)
       DO 10 I = 1, N
-      XL(I) = LOG10(X(I))
       YL(I) = LOG10(Y(I))
-      IF ((XL(I).LT.XIL) .AND. J.EQ.0) J = I
+      IF (X(I).LT.XI) J = I
  10   CONTINUE
       IF (J.EQ.0) J = 1
-      IF (J.GT.N-3) J = N-3
+      IF (J.GT.N-3) J = N-2
 C
 C  polynomial 3 point interpolation or extrapolation
 C     
-      XLS(1) = XL(J)
-      XLS(2) = XL(J+1)
-      XLS(3) = XL(J+2)
+      XS(1) = X(J)
+      XS(2) = X(J+1)
+      XS(3) = X(J+2)
       YLS(1) = YL(J)
       YLS(2) = YL(J+1)
       YLS(3) = YL(J+2)
-      CALL POLINT(XLS, YLS, 3, XIL, YIL, DY)
+      CALL POLINT(XS, YLS, 3, XI, YIL, DY)
       YI = 10.**YIL
 C
       RETURN
       END
    
-
 C***********************************************************************
 C  polynomial interpolation routine
 
