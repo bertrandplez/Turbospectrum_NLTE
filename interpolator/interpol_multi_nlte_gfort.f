@@ -319,7 +319,7 @@ c         print*, n_pos(cnt), n_pos1(cnt)
           endif
         enddo
         abu_min = 99999999999.
-        abu_max = 0.
+        abu_max = -1000.
         do cnt1 = 1, nlte_file
            if  (nlte_file.le.20000.and.
      &         abu_ref.le.11.99999) then
