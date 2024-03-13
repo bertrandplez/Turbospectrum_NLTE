@@ -100,7 +100,7 @@ C
       real nh1,ne,nhe1,nhop,opnh
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
-      real xlo(150),xup(150),gf(150),npop(150)
+      real xlo(150),xup(150),gf(150),npop(150),b_departure(150)
       real cont,total,dopple
       integer nlo(150),nup(150)
       character*9 lname(150)
@@ -116,6 +116,10 @@ C
       if (first) then
         newt=2
         first=.false.
+
+! LTE for hydrogen. Can be changed later.
+        b_departure=1.0
+
       endif
       ISET=ISETA
       IF(NEWT.GT.1)ISETP=-1
@@ -309,8 +313,9 @@ c
 ! COMPUTE in LTE. CAN BE CHANGED LATER.
 
       call hbop(xlambda,nline,nlo,nup,hlambda,
-     &         nh1,nhe1,ne,t(ntp),dopple,npop,1.,0,total,cont,
-     &         contonly,lineonly)
+     &         nh1,nhe1,ne,t(ntp),dopple,npop,
+     &         b_departure,0,1.,1.,1.,1.,
+     &         total,cont,contonly,lineonly,.false.,.false.)
 
       sumabs=sumabs+cont/rosav(ntp)
 !

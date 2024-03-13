@@ -25,7 +25,10 @@ C
 C  Table of Contents:
 C  ------------------
 C 
-C  REAL HBOP(WAVE,N,NLO,NUP,WAVEH,NH,NHE,NE,T,DOP,NPOP,NL,TOTAL,CONTIN)
+C  REAL HBOP(WAVE,N,NLO,NUP,WAVEH,NH,NHE,NE,T,DOP,NPOP,NL,TOTAL,CONTIN) !!!! modified by B. Plez for NLTE
+C  REAL HBOP(WAVE,N,NLO,NUP,WAVEH,NH,NHE,NE,T,DOP,NPOP,
+C            b_departure,NL,expcorr,fact,source_f,planckfct,TOTAL,CONTIN,
+C            contonly,lineonly,nlte_flag,nlte_species)
 C  REAL FUNCTION HLINOP(WAVE,NBLO,NBUP,WAVEH,T,XNE,H1FRC,HE1FRC,DOPPLE)
 C  REAL FUNCTION HPROFL(N,M,WAVE,WAVEH,T,XNE,H1FRC,HE1FRC,DOPPH)
 C  REAL FUNCTION STARK1(N,M,WAVE,WAVEH,T,XNE)
@@ -49,8 +52,9 @@ C
 C***********************************************************************
 
       SUBROUTINE HBOP(WAVE, N, NLO, NUP, WAVEH, NH, NHE, NE, T, DOP,
-     *                  NPOP, b_departure, NL, TOTAL, CONTIN, contonly,
-     *                lineonly)
+     *                  NPOP, b_departure, NL, expcorr, fact, source_f,
+     *                  planckfct, TOTAL, CONTIN, contonly,
+     *                  lineonly, nlte_flag, nlte_species)
 C
 C  Returns the total absorption coefficient due to H bound levels at WAVE, 
 C  for a given line list employing the occupation probability formalism 
@@ -117,16 +121,16 @@ C
       INTEGER N, NLO(*), NUP(*), NLEVELS, I, J, NBF, NL, FF,FN
       PARAMETER (NLEVELS = 100)  
       PARAMETER (NBF = 6)  
-      REAL NH, NHE, NE, T, CONTIN, DOP, TOTAL
-      REAL NHL, NHEL, NEL, TL
+      REAL NH, NHE, NE, T, CONTIN, DOP, TOTAL, fact
+      REAL NHL, NHEL, NEL, TL, expcorr, planckfct, corr
       REAL*8 W(NLEVELS), G(NLEVELS), WGE(NLEVELS)
       REAL NLTE(NLEVELS), NPOP(*), NP(NLEVELS), b_departure(*)
       REAL Z, H, C, HC, K, KT, LINE, SIGMA, CHI, SF, PROF
       REAL IONH, X, HFNM, FNM(NLEVELS,NLEVELS), HLINOP, HBF
       REAL TS, TF
-      REAL*8 WAVE, WAVEH(*), REDCUT
+      REAL*8 WAVE, WAVEH(*), REDCUT, source_f
       REAL*8 EHYD(NLEVELS), CONTH(NLEVELS), WCALC, D, WSTAR, TAPER
-      LOGICAL FIRST,contonly,lineonly
+      LOGICAL FIRST,contonly,lineonly,nlte_flag,nlte_species
       SAVE 
       DATA FIRST/.TRUE./
       PARAMETER (H=6.62607E-27, C=2.9979E10, K=1.38065E-16)
@@ -231,7 +235,24 @@ C
      -                 NP(NUP(I))*G(NLO(I))/G(NUP(I)) )  !stim em term
         endif
 
- 30    LINE = LINE + CHI
+        LINE = LINE + CHI
+
+! correct source function for NLTE case
+        if (nlte_flag) then
+          if (nlte_species) then
+            corr = (expcorr - 1.)/
+     &         ( b_departure(nlo(i)) / b_departure(nup(i)) * 
+     &              expcorr - 1. )
+!                print*,'check H NLTE correction',i,
+!     &             expcorr,bd(nlo(i)),bd(nup(i)),corr
+          else
+            corr=1.0
+          endif
+          source_f = source_f +
+     &                chi * fact * planckfct * corr
+        endif
+!
+ 30   continue
 !
       endif
 

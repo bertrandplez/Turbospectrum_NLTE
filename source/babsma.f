@@ -1152,8 +1152,10 @@ ccc            tau(k)=tau(k-1)+(rr(k-1)-rr(k))*stndop*ro
 ************
    22   NEWT=0
 c        print*,'check ro'
-        write(6,66) k,tau(k),t(k),pe(k),pg,ro
-66      format('tau,T,Pe,Pg,ro ',i3,1x,1pe10.3,1x,0pf8.1,3(1x,1pe10.3))
+        write(6,66) k,tau(k),t(k),pe(k),pg,ro,xmettryck(k,1)+
+     &              xmettryck(k,2)*0.42+partryck(k,2)*0.85
+66      format('tau,T,Pe,Pg,ro,P6 ',i3,1x,1pe10.3,1x,0pf8.1,
+     &         4(1x,1pe10.3))
 *******************************************************************
         if (mocode(1:7).eq.'Hoefner'.or.mocode(1:4).eq.'alva'.or.
      &      mocode(1:4).eq.'bowe'.or.mocode(1:7).eq.'Stagger') then

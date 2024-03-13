@@ -7,8 +7,8 @@ SOURCE = source
 include1 = ../$(SOURCE)/spectrum.inc
 include2 = ../$(SOURCE)/tsuji.par
 
-OPT1 = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy
-LINKOPT = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy
+OPT1 = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy -Wall -Wsurprising
+LINKOPT = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy -Wall -Wsurprising
 
 
 babsma_luobj =  \
@@ -165,7 +165,7 @@ bsyn_luobj = \
 
 
 #clean : 
-#	rm *.f bsyn_lu babsma_lu eqwidt_lu 
+#	rm *.o bsyn_lu babsma_lu eqwidt_lu 
 
 all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu
 #  eqwidt_lu 

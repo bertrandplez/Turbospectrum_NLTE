@@ -1082,21 +1082,25 @@ C     DIMENSION ALPHA(40),PRALPH(40)
       DIMENSION PRALPH(40)                                   
       DIMENSION SVCS(6,17,40,4),ALPHA0(4)  
       CHARACTER*80 HVCSFILE                                
-      DATA SVCS(1,1,1,1)/0./,ALPHA0/-3.,-3.,-3.,-3./   
-      SAVE SVCS
+      logical first
+      DATA SVCS(1,1,1,1)/0./,ALPHA0/-3.,-3.,-3.,-3./,first/.true./
+      SAVE SVCS,first
 C
       EXP10(X)=EXP(2.30258509299405E0*X)                       
       IF(SVCS(1,1,1,1).NE.0.)GO TO 3
 C
 C     READ IN VCS ARRAYS                                          
-      OPEN(1,FILE=HVCSFILE,FORM='FORMATTED',STATUS='OLD')
-      READ(1,10)
-      DO 20 LINE=1,4
+      if (first) then
+        OPEN(1,FILE=HVCSFILE,FORM='FORMATTED',STATUS='OLD')
         READ(1,10)
-        READ(1,10)(((SVCS(I,J,K,LINE),J=1,17),I=1,6),K=1,40)
-   10   FORMAT (10F8.4)
-   20 CONTINUE
-      CLOSE(1)
+        DO 20 LINE=1,4
+          READ(1,10)
+          READ(1,10)(((SVCS(I,J,K,LINE),J=1,17),I=1,6),K=1,40)
+   10     FORMAT (10F8.4)
+   20   CONTINUE
+        CLOSE(1)
+        first=.false.
+      endif
 C
     3 LINE=M-N                                  
 C     TEMPERATURE AND ELECTRON DENSITY INTERPOLATION        

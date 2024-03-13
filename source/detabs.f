@@ -325,6 +325,15 @@ C                using Peach G. 1970, Mem RAS 73,1 hydrogenic approx.
 **
 C        ELECTRON SCATTERING
       ELS(NTP)=4.8206E-9*PE(NTP)/(T(NTP)*RO)
+
+!      if (ntp.eq.36) then
+!        print*,'el scattering : ',ntp,T(ntp),els(ntp)
+!       write(100,*) t(ntp),xmettryck(ntp,1)+
+!     &              xmettryck(ntp,2)*0.42+partryck(ntp,2)*0.85,els(ntp)
+!      endif
+
+
+
 **
 * added for cool stars -> collision induced absorption (CIA)
 cc      ph2=f5*hn*ro

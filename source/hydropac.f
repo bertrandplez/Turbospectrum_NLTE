@@ -18,23 +18,23 @@
      &        nmy,nlbldu,iint,iweak,lunit,maxlam,ll,
      ,        jlcont, nlcont,nf,nfo,nb,nbo,nl,lpos
       doubleprecision ionpot,wave,xl1,xl2,del,xlboff,xlambda
-      doubleprecision source_function
+      doubleprecision source_function,source_f
 
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
       real xlo(150),xup(150),gf(150),npop(150)
-      real cont,total,contrib
+      real cont,total,contrib,planckfct
       integer nlo(150),nup(150)
       character*9 lname(150)
 !
       real fpart(ndp),pe,t,pg,xi,mum,ro,eps,xmyc,
-     &     ne(ndp),
+     &     ne(ndp),fact,
      &     nh1(ndp),nhe1(ndp),hnorm,hnormnostim(ndp),stim,
      &     diff,diffp,theta(ndp),hckt(ndp),abso,absos,absocont,
      &     dopple(ndp),xkapr,cross,hlinop,h1bfg,alpha,
      ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
       logical  lymanalpha, usedam,notfound,contonly,kskip(ndp),lskip
-      logical  ldone(lpoint),lineonly
+      logical  lineonly
 ! NLTE
       logical nlte,nlte_species
       real xlsingle,bpl,corr,expcorr,bdl,bdu,ediff
@@ -84,8 +84,7 @@
       endif
       modnlev=max(modnlevel-1,0)   ! modnlev=0 if LTE, or =number of HI levels if NLTE
 
-      ldone=.false.
-! set populations to 0. (computed as LTE pop in hbop)
+! set populations to 0. (computed in hbop)
       npop=0.0
 ! compute lines only 
       contonly=.false.
@@ -145,158 +144,36 @@ c
      &                 sngl(clight*1.d2)
       enddo
 ! add opacity
-      do nl=1,nline
-! find out where we have contributing lines
-! search if line lies within the interval 
-        print*,'H line ',hlambda(nl)
-        if (hlambda(nl)-xlambda(1).le.0.) then
-! line lies blueward
-          lpos=1
-        else if (hlambda(nl)-xlambda(maxlam).ge.0.) then
-          lpos=maxlam
-        else
-! locate it by successive splitting in halves
-          nb=1
-          nbo=nb
-          nf=maxlam
-          nfo=nf
-          do while (nf-nb.gt.1)
-            if (hlambda(nl)-xlambda(nb).gt.0.) then
-              nbo=nb
-              nb=(nb+nf)/2
-            else
-              nb=nbo
-              nf=(nb+nf)/2
-            endif
-            lpos=nb
+      do k=1,ntau
+        fact = 1.0 / ro(k) / xkapr(k)
+! departure coefficients for that depth
+        if (nlte_species) then
+          do i=1,modnlev
+            bd(i)=b_departure(k,i)
           enddo
+          do i=max(modnlev+1,1),nlevlist
+            bd(i)=1.0
+          enddo
+        else
+          bd=1.0
         endif
-!check
-        print*,'Hline ',hlambda(nl),lpos,xlambda(lpos),xlambda(lpos+1)
-! now compute line profile
-        lskip=.false.
-        kskip=.false.
-        do l=lpos,maxlam
-          if (.not.ldone(l).and..not.lskip) then
-!  	    print*,' l,xlam ',l,sngl(xlambda(l))
-            lskip=.true.
-            do k=1,ntau
-! departure coefficients for that depth
-              if (nlte_species) then
-                do i=1,modnlev
-                  bd(i)=b_departure(k,i)
-                enddo
-                do i=max(modnlev+1,1),nlevlist
-                  bd(i)=1.0
-                enddo
-              endif
-              if (.not. kskip(k)) then
-! include selected H line at that wavelength
-!!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
-                call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
-     &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,
-     &           bd,modnlev,
-     &           total,cont,contonly,lineonly)
-                contrib = (total - cont)/xkapr(k)/ro(k)
-                abso(k,l) = abso(k,l) + contrib
-
-! correct source function for the NLTE case. BPz 17/11-2020
-! source_function at this stage is the emissivity. It must be divided
-! by the opacity to yield the source function.
-
-                if (nlte) then
-                  xlsingle=sngl(xlambda(l))
-                  if (nlte_species) then
-                    expcorr = exp(hckt(k)/xlsingle)
-                    corr = (expcorr - 1.)/
-     &               ( bd(nlo(nl)) / bd(nup(nl)) * expcorr - 1. )
-                    if (k.eq.10) then
-                      print*,'check H NLTE correction',l,
-     &                   expcorr,bd(nlo(nl)),bd(nup(nl)),corr
-                    endif
-                  else
-                    corr=1.0
-                  endif
-                  source_function(k,l) = source_function(k,l) + 
-     &                                 contrib*bpl(T(k),xlsingle)*corr
-                endif
-
+! loop over wavelengths
+        do l=1,maxlam
+          xlsingle=sngl(xlambda(l))
+          expcorr = exp(hckt(k)/xlsingle)
+          planckfct=bpl(T(k),xlsingle)
+          if (nlte) source_f = source_function(k,l)
+          call hbop(xlambda(l),nline,nlo,nup,hlambda,
+     &     nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,
+     &     bd,modnlev,expcorr,fact,source_f,
+     &     planckfct,
+     &     total,cont,contonly,lineonly,nlte,nlte_species)
 ! HI bf is already included in babsma.f
-!!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-!                print*,xlambda(l),k,contrib,absocont(k,l)
-                if(contrib/absocont(k,l) .le. eps) then
-                  kskip(k)=.true.
-                endif
-              endif
-! if kskip is .true. at all depths, then lskip becomes .true., and next 
-! wavelength is skipped
-              lskip=lskip.and.kskip(k)
-            enddo
-! mark this wavelength as done
-!            ldone(l)=.true.
-          endif
+          contrib = (total - cont) * fact
+          abso(k,l) = abso(k,l) + contrib
+! save modified source function
+          if (nlte) source_function(k,l) = source_f
         enddo
-! other side of the profile
-        lskip=.false.
-        kskip=.false.
-        do l=lpos-1,1,-1
-          if (.not.ldone(l).and..not.lskip) then
-*           print*,' l,xlam ',l,xlambda(l)
-            lskip=.true.
-            do k=1,ntau
-! departure coefficients for that depth
-              if (nlte_species) then
-                do i=1,modnlev
-                  bd(i)=b_departure(k,i)
-                enddo
-                do i=max(modnlev+1,1),nlevlist
-                  bd(i)=1.0
-                enddo
-              endif
-              if (.not. kskip(k)) then
-! include selected H line at that wavelength
-!!                call hbop(xlambda(l),nline,nlo,nup,hlambda,
-                call hbop(xlambda(l),1,nlo(nl),nup(nl),hlambda(nl),
-     &           nh1(k),nhe1(k),ne(k),t(k),dopple(k),npop,
-     &           bd,modnlev,
-     &           total,cont,contonly,lineonly)
-                contrib = (total - cont)/xkapr(k)/ro(k)
-                abso(k,l) = abso(k,l) + contrib
-
-! correct source function for the NLTE case. BPz 17/11-2020
-! source_function at this stage is the emissivity. It must be divided
-! by the opacity to yield the source function.
-
-                if (nlte) then
-                  xlsingle=sngl(xlambda(l))
-                  if (nlte_species) then
-                    expcorr = exp(hckt(k)/xlsingle)
-                    corr = (expcorr - 1.)/
-     &               ( bd(nlo(nl)) / bd(nup(nl)) * expcorr - 1. )
-                    if (k.eq.10) then
-                      print*,'check',l,
-     &                   expcorr,bd(nlo(nl)),bd(nup(nl)),corr
-                    endif
-                  else
-                    corr=1.0
-                  endif
-                  source_function(k,l) = source_function(k,l) + 
-     &                                 contrib*bpl(T(k),xlsingle)*corr
-                endif
-
-! HI bf is already included in babsma.f
-!!!!             absocont(k,l) = absocont(k,l) + cont/xkapr(k)/ro(k)
-                if(contrib/absocont(k,l) .le. eps) then
-                  kskip(k)=.true.
-                endif
-              endif
-              lskip=lskip.and.kskip(k)
-            enddo
-! mark this wavelength as done
-!            ldone(l)=.true.
-          endif
-        enddo
-! end of loop on H lines
       enddo
 
       return

@@ -167,7 +167,7 @@ bsyn_luobj = \
 
 
 #clean : 
-#	rm *.f bsyn_lu babsma_lu eqwidt_lu 
+#	rm *.o bsyn_lu babsma_lu eqwidt_lu 
 
 all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu
 # eqwidt_lu 
