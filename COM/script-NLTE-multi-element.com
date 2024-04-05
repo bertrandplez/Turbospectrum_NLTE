@@ -120,8 +120,8 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 #
 # in bsyn.f, in addition to what is explained above for babsma.f,
 # isotopic fractions can be set, e.g. 
-# 12.012 0.9
-# 12.013 0.1
+# 6.012 0.9
+# 6.013 0.1
 # to set 90% of 12C and 10% of 13C.
 'METALLICITY:'    '${METALLIC}'
 'ALPHA/Fe   :'    '0.00'
@@ -131,8 +131,8 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'INDIVIDUAL ABUNDANCES:'   '1'
 26  $Feabu
 'ISOTOPES : ' '2'
-12.012 0.9
-12.013 0.1
+6.012 0.9
+6.013 0.1
 ###########
 # line lists. First how many there are, and then the list of lists
 #

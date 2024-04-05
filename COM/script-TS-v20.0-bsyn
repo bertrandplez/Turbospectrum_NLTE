@@ -79,8 +79,8 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 # finally individual abundances can be provided by first giving how many of them are changed and then
 # for each of them their atomic number followed by the absolute abundance
 # in bsyn.f isotopic fractions can be set, e.g. 
-# 12.012 0.9
-# 12.013 0.1
+# 6.012 0.9
+# 6.013 0.1
 # to set 90% of 12C and 10% of 13C.
 # abund_source can be Magg et al. 2022 (magg), Asplund et al. 2007 (asp2007) or Grevesse & Sauval 1998 (gs1998)
 # See makeabund.f
@@ -94,8 +94,8 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'INDIVIDUAL ABUNDANCES:'   '1'
 26  $Feabu
 'ISOTOPES : ' '2'
-12.012  0.9
-12.013  0.1
+6.012  0.9
+6.013  0.1
 ###########
 # line lists. First how many there are, and then the list of lists
 #
