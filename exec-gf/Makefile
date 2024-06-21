@@ -53,6 +53,7 @@ babsma_luobj =  \
       ../$(SOURCE)/molecpartf.f \
       ../$(SOURCE)/ludcmp.f \
       ../$(SOURCE)/lubksb.f \
+      ../$(SOURCE)/lowercase_conversion.f90 \
       ../$(SOURCE)/molfys.f 
 
 eqwidt_luobj = \

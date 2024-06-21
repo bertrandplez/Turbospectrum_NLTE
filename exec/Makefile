@@ -55,6 +55,7 @@ babsma_luobj =  \
       ../$(SOURCE)/molecpartf.f \
       ../$(SOURCE)/ludcmp.f \
       ../$(SOURCE)/lubksb.f \
+      ../$(SOURCE)/lowercase_conversion.f90 \
       ../$(SOURCE)/molfys.f 
 
 eqwidt_luobj = \
@@ -190,6 +191,6 @@ babsma_lu : $(babsma_luobj) $(include1) $(include2)
 bsyn_lu: $(bsyn_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o bsyn_lu  $(bsyn_luobj)
  
- eqwidt_lu: $(eqwidt_luobj) $(include1) $(include2)
+eqwidt_lu: $(eqwidt_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o eqwidt_lu  $(eqwidt_luobj)
  

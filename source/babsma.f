@@ -34,7 +34,7 @@
       LOGICAL MRXF,XIFIX
       character*50 blabla
       CHARACTER*1024 DETOUT,OUTMOD,outmod2
-      CHARACTER*50 MOCODE,marcsformat, atmosLabel
+      CHARACTER*50 mocode,mocodei,marcsformat, atmosLabel
 *
 * from bsyn; this ensures that continuum opacities are computed for all
 * wavelengths of the bsyn calculation. Babsma must be called before each 
@@ -550,13 +550,14 @@ cccc          print*,'reading ntau again ',ntau
         do while (.true.)
 !          read(imod,'(a)',err=761) atmosLabel
           read(imod,'(a)',err=761) mocode
-          mocode=adjustl(mocode)
-          if (mocode(1:4).eq.'MASS') then
+          mocodei=adjustl(mocode)
+          call lowercase_conversion(mocodei,mocode)
+          if (mocode(1:4).eq.'mass') then
 * MULTI model with MASS scale
             massscale=.true.
             print*,'MULTI formatted model with mass-scale'
             exit
-          else if (mocode(1:3).eq.'TAU') then
+          else if (mocode(1:3).eq.'tau') then
 * MULTI model with TAU scale (Assume tau_500)
             massscale=.false.
             print*,'MULTI formatted model with tau-scale'
@@ -574,13 +575,18 @@ cccc          print*,'reading ntau again ',ntau
           endif
         enddo
         do while (.true.)
-          read(imod,'(a)',err=761) mocode
+          read(imod,'(a)',err=761) mocodei
+          call lowercase_conversion(mocodei,mocode)
           mocode=mocode(2:40)
           mocode=adjustl(mocode)
-          if (mocode(1:4).eq.'NDEP') exit
+          if (mocode(1:4).eq.'ndep') exit
         enddo
         read(imod,*) ntau
-        read(imod,*)
+        read(imod,'(a)') mocode
+        do while (mocode(1:1).eq.'*') 
+          read(imod,'(a)') mocode
+        enddo
+        backspace(imod)
         mocode='MULTI'
         print*,'Multi model ',ntau,' layers'
 ! assume lambda std = 5000A
