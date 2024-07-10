@@ -48,7 +48,7 @@
      &    'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th',
      &    'Pa','U ','  ','  ','  ','  ','  ','  ','  ','  ' /
 *
-      abund_source='magg'
+      abund_source='asp2007'
       linemaskfile=' '
       contmaskfile=' '
       segmentsfile=' '

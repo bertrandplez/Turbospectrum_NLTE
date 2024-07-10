@@ -7,8 +7,8 @@ SOURCE = source
 include1 = ../$(SOURCE)/spectrum.inc
 include2 = ../$(SOURCE)/tsuji.par
 
-OPT1 = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy -Wall -Wsurprising
-LINKOPT = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=medium -std=legacy -Wall -Wsurprising
+OPT1 = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=small -std=legacy -Wall -Wsurprising
+LINKOPT = -L/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=small -std=legacy -Wall -Wsurprising
 
 
 babsma_luobj =  \
