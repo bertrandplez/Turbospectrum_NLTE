@@ -20,7 +20,7 @@
 * to decrease these numbers, as arrays will be of size 
 * real*4: NDP*lpoint
 *
-      PARAMETER (NDP=150,NRAYS=180,lpoint=1000000)
+      PARAMETER (NDP=150,NRAYS=180,lpoint=500000)
 *
 *  equation of state parameters   (for tabs and absko)
 *
