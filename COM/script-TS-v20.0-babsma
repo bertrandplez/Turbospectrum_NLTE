@@ -5,10 +5,9 @@
 #
 
 date
-set mpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
-set dpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
+set mpath = models
 
-set MODEL = atmos.sun_marcs_t5777_4.44_0.00_vmic1_new
+set MODEL = p5777_g+4.4_m0.0_t01_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00.mod
 
 set Feabu = 7.50
 
@@ -59,6 +58,6 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 # if xifix true, fixed microturbulence is read from next line (km/s)
 # otherwise the value(s) are read from the model atmosphere.
 #
-'XIFIX:' 'F'
+'XIFIX:' 'T'
 $TURBVEL
 EOF

@@ -5,10 +5,10 @@
 #
 
 date
-set mpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
-set dpath = ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/COM/TEST-data
+set mpath = models
+set dpath = TEST-data
 
-set MODEL = atmos.sun_marcs_t5777_4.44_0.00_vmic1_new
+set MODEL = p5777_g+4.4_m0.0_t01_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+0.00.mod
 
 set Caabu = 6.34
 set Feabu = 7.50
@@ -58,7 +58,7 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/babsma_lu <<EOF
 # if xifix true, fixed microturbulence is read from next line (km/s)
 # otherwise the value(s) are read from the model atmosphere.
 #
-'XIFIX:' 'F'
+'XIFIX:' 'T'
 $TURBVEL
 EOF
 
@@ -79,15 +79,16 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'NLTEINFOFILE:'  'DATA/SPECIES_LTE_NLTE.dat'
 #
 ###########
-# if present these files will be used to compute the spectrum in a number of 
-# windows given by SEGMENTSFILE. 
-# Comment out if not needed
+# if present this file will be used to compute the spectrum in a number of  
+# windows specified in SEGMENTSFILE, with spectral resolution given by
+# RESOLUTION.
+# If not specified, a default value of 500000 is used
+# Note that a constant step is set for each window, using this resolution.
+# Comment out if not needed, and the spectrum will be computed from 
+# LAMBDA_MIN to LAMBDA_MAX with a wavelength step = LAMBDA_STEP
+# Segments must NOT overlap
 #
 'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
-#
-# spectral resolution  to be used in these windows. 
-# If not specified, a default value of 500000 is used
-#
 'RESOLUTION:'     '300000.'
 ###########
 # spectral interval in the case of a single wavelength interval, i.e. no 
@@ -130,14 +131,12 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'S-PROCESS  :'    '0.00'
 'INDIVIDUAL ABUNDANCES:'   '1'
 26  $Feabu
-'ISOTOPES : ' '2'
-6.012 0.9
-6.013 0.1
+'ISOTOPES : ' '0'
 ###########
 # line lists. First how many there are, and then the list of lists
 #
 'NFILES   :' '2'
-TEST-data/nlte_linelist_test.txt
+linelists/nlte_linelist_test.txt
 DATA/Hlinedata
 ###########
 # spherical (T) or plane-parallel (F) radiative transfer. 
