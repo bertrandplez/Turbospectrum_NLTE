@@ -292,10 +292,6 @@ c      endif
         abu_min = 99999999999.
         abu_max = -1000.
         do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
            if  (teff(cnt).eq.n_teff(cnt1).and.
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
@@ -337,10 +333,6 @@ c         print*, abu_max
         enddo
         flag = 0
         do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
            if  (teff(cnt).eq.n_teff(cnt1).and.
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
@@ -357,10 +349,6 @@ c         print*, abu_max
          enddo
         if (flag.eq.0) then
           do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
            if  (teff(cnt).eq.n_teff(cnt1).and.
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
@@ -758,12 +746,7 @@ c      stop
          write(27,1969) coefval(k), power(k,:)
        enddo  
  1969  format('# ', a15,3(1x,f10.6))
-       if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-          write(27,1971) z_ref+7.50
-       else
-          write(27,1971) abu_ref
-       endif 
+       write(27,1971) abu_ref
  1971  format(f10.6,1x)
        write(27,1972) ndepth_ref
  1972  format(i3,1x)
@@ -776,7 +759,7 @@ c      stop
        do n=1,ndepth_ref
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(1pe11.5,1x))
+ 1975  format(1000(1pe12.5,1x))
          
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
@@ -1179,7 +1162,7 @@ C        CONVERT TO 'PHYSICAL FLUX'
       FLUX=3.14159*FLUX
       DO 2 I=1,NEL
     2 ABUND(I)=ALOG10(ABUND(I))+12.
-      metal=abund(15)-7.50
+!      metal=abund(15)-7.50
       READ(IARCH)JTAU,NCORE,DIFLOG,TAUM,RADIUS,(RR(K),K=1,JTAU)
       if (jtau.gt.ndp) then
         print*, 'ERROR !!! Jtau (number of depths of model) = ',jtau
