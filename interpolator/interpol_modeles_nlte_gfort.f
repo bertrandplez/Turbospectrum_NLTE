@@ -298,10 +298,12 @@ c      allocate(n_dummy(nlte_file))
      &        n_pos(cnt1)
 
             do cnt = 1, 8
-              if  (teff(cnt).eq.n_teff(cnt1).and.
-     &            logg(cnt).le.(n_logg(cnt1)+0.00001).and.
-     &            logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
-     &            metal(cnt).eq.n_metal(cnt1).and.
+              if  (teff(cnt).le.n_teff(cnt1)+1.0.and.
+     &            teff(cnt).ge.n_teff(cnt1)-1.0.and.
+     &            logg(cnt).le.(n_logg(cnt1)+0.01).and.
+     &            logg(cnt).ge.(n_logg(cnt1)-0.01).and.
+     &            metal(cnt).le.(n_metal(cnt1)+0.01).and.
+     &            metal(cnt).ge.(n_metal(cnt1)-0.01).and.
      &            trimmed_models(cnt).eq.trim(id_model(cnt1))) then
 
                   nctr_use_models(cnt,cnt1) = 1
@@ -340,8 +342,8 @@ c      allocate(n_dummy(nlte_file))
 
 *********MB: cross-correlate the parameters with those in the input file
 
-      do cnt1=1, nlte_file
-         do cnt = 1, 8
+      do cnt = 1, 8
+         do cnt1=1, nlte_file
             flag = 0
             if (nctr_use_models(cnt,cnt1).eq.1.and.
      &         abu_temp(cnt).le.(n_abu(cnt1)+0.099).and.
@@ -349,7 +351,7 @@ c      allocate(n_dummy(nlte_file))
                index_ptr(cnt) = cnt1
                flag = 1
                write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1),
-     &            index_ptr(cnt)
+     &            index_ptr(cnt), cnt
                exit
             endif
             if (flag.eq.0) then
@@ -358,7 +360,7 @@ c      allocate(n_dummy(nlte_file))
      &            abu_temp(cnt).ge.(n_abu(cnt1)-0.199)) then
                   index_ptr(cnt) = cnt1
                   write(*,*) teff(cnt), logg(cnt), metal(cnt),
-     &               n_abu(cnt1), index_ptr(cnt)
+     &               n_abu(cnt1), index_ptr(cnt), cnt
                   exit
                endif
             endif
