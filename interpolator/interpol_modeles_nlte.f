@@ -112,7 +112,7 @@ c      parameter (nlte_file=248533) !updated by the user. is the length of the n
 ******MB
       character*15, dimension (8) :: coefval
       character*256 :: nlte_binary, nlte_model_list
-      integer :: n_dep, n_lev, cnt, cnt1, flag
+      integer :: n_dep, n_lev, cnt, cnt1, flag, idt
 c      character*500, dimension (nlte_file) :: id_model
       character*500, dimension (:), allocatable :: id_model
       character*1000 :: n_comment, NLTEgrid_header
@@ -128,9 +128,14 @@ c      integer*8, dimension (nlte_file) :: n_pos1, nnpos
      &     n_alpha,n_mass,n_vturb
 c      real, dimension (:), allocatable :: nnlogg,nnmetal, nnteff
       integer, dimension (:), allocatable ::  index_ptr
-      integer, allocatable :: nctr_use_models(:,:)
 c      integer, dimension (:), allocatable :: n_dummy
       integer*8, dimension (:), allocatable :: n_pos1, nnpos
+******NS: the following variable are models that are needed, but unknown abundance
+      integer*8 :: models_to_use_size
+      integer*8, dimension (:,:), allocatable :: models_to_use
+      integer*8, dimension (8) :: last_model_idx
+      integer*8 :: iteration
+      real :: abd_to_check
       real :: n_result
       integer*4           ::  tmp(1)
 c      character*65, dimension (nlte_file) :: n_pos
@@ -177,6 +182,8 @@ c      character*65, dimension (nlte_file) :: n_pos
 ****** check number of layer, reference optical depth, and geometry compatibility ******
 
       out=9
+      models_to_use_size = 1000
+      allocate(models_to_use(8, models_to_use_size))
 
 ******MB: loop to 11 : new string added (interpolation coefficients)      
       do file=1,11
@@ -213,7 +220,6 @@ c      character*65, dimension (nlte_file) :: n_pos
      & n_mass(nlte_file),n_vturb(nlte_file))
 c      allocate(nnlogg(nlte_file),nnmetal(nlte_file), nnteff(nlte_file))
       allocate(index_ptr(nlte_file))
-      allocate(nctr_use_models(8, nlte_file))
 c      allocate(n_dummy(nlte_file))
       allocate(n_pos1(nlte_file), nnpos(nlte_file))
       allocate(n_pos(nlte_file))
@@ -306,7 +312,8 @@ c      allocate(n_dummy(nlte_file))
      &            metal(cnt).ge.(n_metal(cnt1)-0.01).and.
      &            trimmed_models(cnt).eq.trim(id_model(cnt1))) then
 
-                  nctr_use_models(cnt,cnt1) = 1
+                  last_model_idx(cnt) = last_model_idx(cnt) + 1
+                  models_to_use(cnt,last_model_idx(cnt)) = cnt1
 
                   if (n_abu(cnt1).lt.abu_min(cnt)) then
                      abu_min(cnt) = n_abu(cnt1)
@@ -343,27 +350,26 @@ c      allocate(n_dummy(nlte_file))
 *********MB: cross-correlate the parameters with those in the input file
 
       do cnt = 1, 8
-         do cnt1=1, nlte_file
-            flag = 0
-            if (nctr_use_models(cnt,cnt1).eq.1.and.
-     &         abu_temp(cnt).le.(n_abu(cnt1)+0.099).and.
-     &         abu_temp(cnt).ge.(n_abu(cnt1)-0.099)) then
-               index_ptr(cnt) = cnt1
-               flag = 1
-               write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1),
-     &            index_ptr(cnt), cnt
-               exit
-            endif
-            if (flag.eq.0) then
-               if (nctr_use_models(cnt,cnt1).eq.1.and.
-     &            abu_temp(cnt).le.(n_abu(cnt1)+0.199).and.
-     &            abu_temp(cnt).ge.(n_abu(cnt1)-0.199)) then
-                  index_ptr(cnt) = cnt1
+         flag = 0
+         iteration = 1
+         ! while flag is 0 and iteration < 6
+         ! if a match is found, set flag to 1 and exit the loop
+         ! if no match is found, check if the model is used in the grid
+         ! if it is, set flag to 1 and exit the loop
+         do while (flag.eq.0 .and. iteration.lt.6)
+            do cnt1=1, last_model_idx(cnt)
+               abd_to_check = 0.049999 * iteration
+               idt = models_to_use(cnt,cnt1)
+               if (abu_temp(cnt).le.(n_abu(idt)+abd_to_check).and.
+     &            abu_temp(cnt).ge.(n_abu(idt)-abd_to_check)) then
+                  index_ptr(cnt) = idt
+                  flag = 1
                   write(*,*) teff(cnt), logg(cnt), metal(cnt),
-     &               n_abu(cnt1), index_ptr(cnt), cnt
+     &               n_abu(idt), index_ptr(cnt), cnt
                   exit
                endif
-            endif
+            enddo
+            iteration = iteration + 1
          enddo
       enddo
 
