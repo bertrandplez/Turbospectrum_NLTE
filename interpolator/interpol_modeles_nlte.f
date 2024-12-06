@@ -97,47 +97,53 @@ c      parameter (nlte_file=248533) !updated by the user. is the length of the n
       real :: lambda_ref,temp_ref,logg_ref,z_ref,x,y,z,xinf,
      &        xsup,yinf,ysup,zinf,zsup,teffpoint,loggpoint,metpoint,
      &        abu_ref
-      character*256, dimension (nfile) :: FILE_IN
+      character*256, dimension (nfile) :: FILE_IN, trimmed_models
       character*256 :: FILE_ALT
       character*256 :: model_name
       real, dimension (:,:), allocatable:: taus,tauR,T,Pe,Pg,xit,rr,
      &        xkapref,rhox,taus_aux,tauR_aux,T_aux,Pe_aux,Pg_aux,
-     &        xit_aux,rr_aux,xkapref_aux 
+     &        xit_aux,rr_aux,xkapref_aux
       integer, dimension (nfile) :: ndepth
       real, dimension (nfile) :: xlr,teff,logg,metal
       logical, dimension (nfile) :: sph
       external :: blend_103
       real, external :: inf,sup
       real, dimension(8,3) :: lin_dif,power
-******MB      
+******MB
       character*15, dimension (8) :: coefval
       character*256 :: nlte_binary, nlte_model_list
-      integer :: n_dep, n_lev, cnt, cnt1, flag
+      integer :: n_dep, n_lev, cnt, cnt1, flag, idt
 c      character*500, dimension (nlte_file) :: id_model
       character*500, dimension (:), allocatable :: id_model
       character*1000 :: n_comment, NLTEgrid_header
-      real*8, allocatable :: nlte_tau(:), nlte_data(:,:), 
+      real*8, allocatable :: nlte_tau(:), nlte_data(:,:),
      &     bvals_aux(:,:,:), bvals(:,:,:), nnbvals(:,:,:),
      &     nntau_aux(:,:), nntau(:,:)
 c      real, dimension (nlte_file) :: n_logg,n_metal,n_teff,n_abu
 c      real, dimension (nlte_file) :: nnlogg,nnmetal, nnteff
-c      integer, dimension (nlte_file) ::  index
+c      integer, dimension (nlte_file) ::  index_ptr
 c      integer, dimension (nlte_file) :: n_dummy
 c      integer*8, dimension (nlte_file) :: n_pos1, nnpos
       real, dimension (:), allocatable :: n_logg,n_metal,n_teff,n_abu,
      &     n_alpha,n_mass,n_vturb
-      real, dimension (:), allocatable :: nnlogg,nnmetal, nnteff
-      integer, dimension (:), allocatable ::  index
-      integer, dimension (:), allocatable :: n_dummy
+c      real, dimension (:), allocatable :: nnlogg,nnmetal, nnteff
+      integer, dimension (:), allocatable ::  index_ptr
+c      integer, dimension (:), allocatable :: n_dummy
       integer*8, dimension (:), allocatable :: n_pos1, nnpos
+******NS: the following variable are models that are needed, but unknown abundance
+      integer*8 :: models_to_use_size
+      integer*8, dimension (:,:), allocatable :: models_to_use
+      integer*8, dimension (8) :: last_model_idx
+      integer*8 :: iteration
+      real :: abd_to_check
       real :: n_result
       integer*4           ::  tmp(1)
 c      character*65, dimension (nlte_file) :: n_pos
       character*65, dimension (:), allocatable :: n_pos
-      integer*8 :: int1, stat1, pos1
+      integer*8 :: int1, stat1, pos1, position, start_pos, end_pos
 
 ******JMG
-      real :: abu_min, abu_max
+      real, dimension (8) :: abu_min, abu_max
       real, dimension(nfile) :: abu_temp
 
       real y000
@@ -149,7 +155,7 @@ c      character*65, dimension (nlte_file) :: n_pos
       real y110
       real y111
 
-******ES/MB: printing the binary files      
+******ES/MB: printing the binary files
       CHARACTER*350 BinaryName, formatBin
       CHARACTER*1000 BinaryHeader
       CHARACTER*10 ABNDstring
@@ -176,6 +182,8 @@ c      character*65, dimension (nlte_file) :: n_pos
 ****** check number of layer, reference optical depth, and geometry compatibility ******
 
       out=9
+      models_to_use_size = 1000
+      allocate(models_to_use(8, models_to_use_size))
 
 ******MB: loop to 11 : new string added (interpolation coefficients)      
       do file=1,11
@@ -210,9 +218,9 @@ c      character*65, dimension (nlte_file) :: n_pos
       allocate(n_logg(nlte_file),n_metal(nlte_file),
      & n_teff(nlte_file),n_abu(nlte_file),n_alpha(nlte_file),
      & n_mass(nlte_file),n_vturb(nlte_file))
-      allocate(nnlogg(nlte_file),nnmetal(nlte_file), nnteff(nlte_file))
-      allocate(index(nlte_file))
-      allocate(n_dummy(nlte_file))
+c      allocate(nnlogg(nlte_file),nnmetal(nlte_file), nnteff(nlte_file))
+      allocate(index_ptr(nlte_file))
+c      allocate(n_dummy(nlte_file))
       allocate(n_pos1(nlte_file), nnpos(nlte_file))
       allocate(n_pos(nlte_file))
 
@@ -253,151 +261,141 @@ c      character*65, dimension (nlte_file) :: n_pos
       endif
  78   format('model',i2,'  Teff=',f8.0,'  logg=',f5.2,'  z=',f6.2)
 
+
+*********NS: get the model name from the input file
+      do cnt = 1, 8
+        position = index(FILE_IN(cnt), 'mod', BACK=.TRUE.)
+        ! Check if 'mod' was found and position is sufficient for extraction
+        if (position > 0 .and. position >= 73) then
+           ! Calculate start and end positions for model_name extraction
+           start_pos = position - 73
+           end_pos = position - 2
+
+           ! Ensure positions are within string bounds
+           start_pos = max(start_pos, 1)
+           end_pos = min(end_pos, LEN(FILE_IN(cnt)))
+
+           ! Extract the model_name substring
+           model_name = FILE_IN(cnt)(start_pos:end_pos)
+        else
+           ! Handle the case where 'mod' is not found or positions are invalid
+           model_name = ''
+        endif
+
+        ! Trim the extracted model_name
+        trimmed_models(cnt) = trim(model_name)
+
+        abu_min(cnt) = 999999.
+        abu_max(cnt) = -1000
+      enddo
+
 *********MB:read list of model atmospheres for which NLTE departures are available
 *********
       open(unit=199, file=nlte_model_list,  form='formatted')
       read(199,'(A)') n_comment
 
-      do cnt=1, nlte_file
+      do cnt1=1, nlte_file
          read(199, '(A)') n_comment
-c         print*, n_comment(0:1)
+         ! skip comments
          if (n_comment(1:1) .ne. '#') then
             read(n_comment, *)
-     &        id_model(cnt), n_teff(cnt), n_logg(cnt), n_metal(cnt),
-     &        n_alpha(cnt), n_mass(cnt), n_vturb(cnt), n_abu(cnt),
-     &        n_pos(cnt)
+     &        id_model(cnt1), n_teff(cnt1), n_logg(cnt1), n_metal(cnt1),
+     &        n_alpha(cnt1), n_mass(cnt1), n_vturb(cnt1), n_abu(cnt1),
+     &        n_pos(cnt1)
+
+            do cnt = 1, 8
+              if  (teff(cnt).le.n_teff(cnt1)+1.0.and.
+     &            teff(cnt).ge.n_teff(cnt1)-1.0.and.
+     &            logg(cnt).le.(n_logg(cnt1)+0.01).and.
+     &            logg(cnt).ge.(n_logg(cnt1)-0.01).and.
+     &            metal(cnt).le.(n_metal(cnt1)+0.01).and.
+     &            metal(cnt).ge.(n_metal(cnt1)-0.01).and.
+     &            trimmed_models(cnt).eq.trim(id_model(cnt1))) then
+
+                  last_model_idx(cnt) = last_model_idx(cnt) + 1
+                  models_to_use(cnt,last_model_idx(cnt)) = cnt1
+
+                  if (n_abu(cnt1).lt.abu_min(cnt)) then
+                     abu_min(cnt) = n_abu(cnt1)
+                  endif
+                  if (n_abu(cnt1).gt.abu_max(cnt)) then
+                     abu_max(cnt) = n_abu(cnt1)
+                  endif
+              endif
+            enddo
          endif
-         call str2int(n_pos(cnt),int1,stat1)
-         n_pos1(cnt) = int1
-c         print*, n_metal(cnt), metal(1)
-c         print*, n_pos(cnt), n_pos1(cnt)
       enddo
-      
-* 79   format(a72,2x,f7.1,6x,f5.2,6x,f5.2,4x,f5.2,a65)
+
       close(199)
 
-c      if  (nlte_file.le.20000) then
-c        do cnt=1, nlte_file
-c          id_model(cnt) = id_model(cnt)(2:73)
-c        enddo
-c      endif
-
 *********JMG: find limits of n_abu for the given model atmosphere, if abu_ref is outside of those limits, temporarily switch it to the min or max value while finding models
+
       do cnt = 1, 8
-        do letter = 1,256
-          if (FILE_IN(cnt)(letter:letter+2) .eq. 'mod') then
-              model_name = FILE_IN(cnt)(letter-73:letter-2)
-          endif
-        enddo
-        abu_min = 99999999999.
-        abu_max = -1000.
-        do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
-           if  (teff(cnt).eq.n_teff(cnt1).and.
-     &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
-     &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
-     &         metal(cnt).eq.n_metal(cnt1).and.
-     &         trim(model_name).eq.trim(id_model(cnt1))) then
-               if (n_abu(cnt1).lt.abu_min) then
-                  abu_min = n_abu(cnt1)
-               endif
-               if (n_abu(cnt1).gt.abu_max) then
-                  abu_max = n_abu(cnt1)
-               endif
-           endif
-         enddo
-c         print*, abu_min
-c         print*, abu_max
-         if  (abu_ref.lt.abu_min) then
-             abu_temp(cnt) = abu_min
+         if  (abu_ref.lt.abu_min(cnt)) then
+             abu_temp(cnt) = abu_min(cnt)
              write(*,*) 'WARNING: ref. abund below min value in grid'
-             write(*,83) abu_ref, abu_min
+             write(*,83) abu_ref, abu_min(cnt)
  83   format('Ref. abund is ',f8.2, 'Min abund is ',f8.2)
-         else if (abu_ref.gt.abu_max) then
-             abu_temp(cnt) = abu_max
+         else if (abu_ref.gt.abu_max(cnt)) then
+             abu_temp(cnt) = abu_max(cnt)
              write(*,*) 'WARNING: ref. abund above max value in grid'
-             write(*,84) abu_ref, abu_max
+             write(*,84) abu_ref, abu_max(cnt)
  84   format('Ref. abund is ',f8.2, 'Max abund is ',f8.2)
          else
              abu_temp(cnt) = abu_ref
          endif
-      enddo 
-      
-      
+      enddo
+
+
 *********MB: cross-correlate the parameters with those in the input file
 
       do cnt = 1, 8
-        do letter = 1,256
-          if (FILE_IN(cnt)(letter:letter+2) .eq. 'mod') then
-              model_name = FILE_IN(cnt)(letter-73:letter-2)
-          endif
-        enddo
-        flag = 0
-        do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
-           if  (teff(cnt).eq.n_teff(cnt1).and.
-     &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
-     &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
-     &         metal(cnt).eq.n_metal(cnt1).and.
-     &         abu_temp(cnt).le.(n_abu(cnt1)+0.099).and.
-     &         abu_temp(cnt).ge.(n_abu(cnt1)-0.099).and.
-     &         trim(model_name).eq.trim(id_model(cnt1))) then
-               index(cnt) = cnt1
-               flag = 1
-             write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1), 
-     &          index(cnt)
-            exit
-           endif
+         flag = 0
+         iteration = 1
+         ! while flag is 0 and iteration < 6
+         ! if a match is found, set flag to 1 and exit the loop
+         ! if no match is found, check if the model is used in the grid
+         ! if it is, set flag to 1 and exit the loop
+         do while (flag.eq.0 .and. iteration.lt.6)
+            do cnt1=1, last_model_idx(cnt)
+               abd_to_check = 0.049999 * iteration
+               idt = models_to_use(cnt,cnt1)
+               if (abu_temp(cnt).le.(n_abu(idt)+abd_to_check).and.
+     &            abu_temp(cnt).ge.(n_abu(idt)-abd_to_check)) then
+                  index_ptr(cnt) = idt
+                  flag = 1
+                  write(*,*) teff(cnt), logg(cnt), metal(cnt),
+     &               n_abu(idt), index_ptr(cnt), cnt
+                  exit
+               endif
+            enddo
+            iteration = iteration + 1
          enddo
-        if (flag.eq.0) then
-          do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
-           if  (teff(cnt).eq.n_teff(cnt1).and.
-     &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
-     &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
-     &         metal(cnt).eq.n_metal(cnt1).and.
-     &         abu_temp(cnt).le.(n_abu(cnt1)+0.199).and.
-     &         abu_temp(cnt).ge.(n_abu(cnt1)-0.199).and.
-     &         trim(model_name).eq.trim(id_model(cnt1))) then
-               index(cnt) = cnt1
-               flag = 1
-             write(*,*) teff(cnt), logg(cnt), metal(cnt), n_abu(cnt1), 
-     &          index(cnt)
-            exit
-           endif
-          enddo
-        endif
-      enddo   
+      enddo
 
       write(*,*)
      &    'new NLTE array: Teff, Logg, [Fe/H], position / binary'
-         
+
 *********MB create a new NLTE array
 
       do cnt = 1, 8
-         nnteff(cnt) = n_teff(index(cnt))
-         nnlogg(cnt) = n_logg(index(cnt))
-         nnmetal(cnt) = n_metal(index(cnt))
-         nnpos(cnt) = n_pos1(index(cnt))
+         if (index_ptr(cnt).eq.0) then
+            write(*,*) 'ERROR: no match found for model ', cnt
+            stop
+         endif
+         call str2int(n_pos(index_ptr(cnt)),int1,stat1)
+         nnpos(cnt) = int1
          write(*,81) 'new NLTE array: ',
-     &   nnteff(cnt), nnlogg(cnt), nnmetal(cnt), nnpos(cnt)
- 81      format(a17, f5.0, f5.2, 2x, f5.2, 2x, i10)
+     &   n_teff(index_ptr(cnt)), n_logg(index_ptr(cnt)),
+     &   n_metal(index_ptr(cnt)), nnpos(cnt)
+ 81      format(a17, f5.0, f5.2, 2x, f5.2, 2x, i14)
       enddo
 
 
 *********MB:read NLTE binary
 ********* do not read the entire binary file, but use pointers set by AUX
-********* the pointers were re-ordered to match (T,g,m) of the input MARCS binary models      
-      
+********* the pointers were re-ordered to match (T,g,m) of the input MARCS binary models
+
 ********* ES: changed the way NLTE bindary is read
 ********* following the changes in the girds' format
 ********* I will request the changes to be merged with master
@@ -437,7 +435,7 @@ c         print*, abu_max
       end do
 
 *********MB: print the selected departure values into a text file
-      
+
 *      open(unit=28, file='test_nlte_input.txt')
 *      do cnt=1,8
 *        write(28, *) '*'
@@ -447,16 +445,16 @@ c         print*, abu_max
 *       enddo
 *      enddo
 *      close(28)
-      
-      print*, 'NLTE file:  8 models read'  
+
+      print*, 'NLTE file:  8 models read'
       close(200)
 
       allocate(bvals(n_dep, n_lev, icomp))
       bvals = bvals_aux(1:n_dep,:,:)
-      
+
       allocate(nntau(n_dep, icomp))
       nntau = nntau_aux(1:n_dep,:)
-      
+
 *********MB:re-order NLTE departure files - NO NEED TO REORDER ANYMORE -
 *
       allocate(nnbvals(n_dep, n_lev, out))
@@ -467,24 +465,24 @@ c         print*, abu_max
 c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
          endif
       enddo
-      
-      
+
+
 *********MB:print checks
-      
+
       write(*,80) temp_ref,logg_ref,z_ref,abu_ref
  80   format('Interpolation point : Teff=',f8.0,'  logg=',f5.2,
      &     '  z=',f6.2,'  abund=',f6.2)
-      
+
 **************check if files are length and depth ref compatible *******
-      
+
       if (.not.(check)) then
-         write(*,*) 'All the models do not have the same' 
+         write(*,*) 'All the models do not have the same'
           write(*,*) 'lambda ref'
           write(*,*) 'no interpolation done'
           stop
-       else    
+       else
       if (.not.(verif)) then
-         write(*,*) 'WARNING : All the models do not have the same' 
+         write(*,*) 'WARNING : All the models do not have the same'
          write(*,*) 'number of layers, resampling to',
      &                 ndepth(1),'layers'
       end if
@@ -494,20 +492,20 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
 
 *********MB:check if NLTE n_depths are consistent with the input MARCS binary models
 *********only  the last entry in the binary file is checked (suboptimal)
-      
+
       if (ndepth_ref.ne.n_dep) then
        write(*,*) 'ERROR: NLTE departures are on a different tau scale!'
       else if (ndepth_ref.eq.n_dep) then
        write(*,*) '*** # depths (NLTE, MARCS) consistent'
       endif
-      
+
 ********* calculation of the interpolation point(x,y,z) in {Teff,logg,z} space******************
-      
+
        allocate(taus(ndepth_ref,nfile),tauR(ndepth_ref,nfile),
      & T(ndepth_ref,nfile),Pe(ndepth_ref,nfile),Pg(ndepth_ref,nfile),
      & xit(ndepth_ref,nfile),rr(ndepth_ref,nfile),
      &     xkapref(ndepth_ref,nfile))
-       
+
        taus=taus_aux(1:ndepth_ref,:)
        tauR=tauR_aux(1:ndepth_ref,:)
        T=T_aux(1:ndepth_ref,:)
@@ -527,15 +525,15 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
             teffpoint=0
          else
           teffpoint=(temp_ref-xinf)/(xsup-xinf)
-         end if 
+         end if
          if (ysup.eq.yinf) then
             loggpoint=0
-         else      
+         else
           loggpoint=(logg_ref-yinf)/(ysup-yinf)
          end if
          if (zsup.eq.zinf) then
             metpoint=0
-         else   
+         else
           metpoint=(z_ref-zinf)/(zsup-zinf)
          end if
          extrapol=((teffpoint.lt.0).or.(teffpoint.gt.1)
@@ -545,51 +543,51 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
          write(*,*) '!!!  WARNING : extrapolation  !!!'
          end if
 
-*     
+*
 *******resample each layer of each input model on a common depth basis(tau5000 or tauRoss, see resample routine)*****************
-!if you don't want to resample all the model to the same depth scale, just comment the following line  
+!if you don't want to resample all the model to the same depth scale, just comment the following line
 !         call resample(taus,tauR,T,Pe,Pg,xit,rr,xkapref)
 
 
 ****** initialisation of empirical constants for optimized interpolation (see TM thesis)*************
-         
+
          lin_dif(1,1)=0                          !tau5000 vs Teff
          lin_dif(1,2)=0                          ! ...    vs logg
-         lin_dif(1,3)=0                          ! ...    vs z    
+         lin_dif(1,3)=0                          ! ...    vs z
          lin_dif(2,1)=0                          !tauross vs Teff
-         lin_dif(2,2)=0                          ! ...    vs logg 
-         lin_dif(2,3)=0                          ! ...    vs z    
+         lin_dif(2,2)=0                          ! ...    vs logg
+         lin_dif(2,3)=0                          ! ...    vs z
          lin_dif(3,1)=0.15                       !T       vs Teff
-         lin_dif(3,2)=0.3                        ! ...    vs logg 
-         lin_dif(3,3)=1-(temp_ref/4000)**2.0     ! ...    vs z    
+         lin_dif(3,2)=0.3                        ! ...    vs logg
+         lin_dif(3,3)=1-(temp_ref/4000)**2.0     ! ...    vs z
          lin_dif(4,1)=0.15                       !logPe   vs Teff
-         lin_dif(4,2)=0.06                       ! ...    vs logg 
-         lin_dif(4,3)=1-(temp_ref/3500)**2.5     ! ...    vs z    
+         lin_dif(4,2)=0.06                       ! ...    vs logg
+         lin_dif(4,3)=1-(temp_ref/3500)**2.5     ! ...    vs z
          lin_dif(5,1)=-0.4                       !logPg   vs Teff
-         lin_dif(5,2)=0.06                       ! ...    vs logg  
-         lin_dif(5,3)=1-(temp_ref/4100)**4       ! ...    vs z    
+         lin_dif(5,2)=0.06                       ! ...    vs logg
+         lin_dif(5,3)=1-(temp_ref/4100)**4       ! ...    vs z
          lin_dif(6,1)=0                          !xit     vs Teff
-         lin_dif(6,2)=0                          ! ...    vs logg  
-         lin_dif(6,3)=0                          ! ...    vs z    
+         lin_dif(6,2)=0                          ! ...    vs logg
+         lin_dif(6,3)=0                          ! ...    vs z
          lin_dif(7,1)=0                          !rr      vs Teff
-         lin_dif(7,2)=0                          ! ...    vs logg  
-         lin_dif(7,3)=0                          ! ...    vs z    
+         lin_dif(7,2)=0                          ! ...    vs logg
+         lin_dif(7,3)=0                          ! ...    vs z
          lin_dif(8,1)=-0.15                      !logxkapref vs Teff
-         lin_dif(8,2)=-0.12                      ! ...    vs logg  
-         lin_dif(8,3)=1-(temp_ref/3700)**3.5     ! ...    vs z    
-       
+         lin_dif(8,2)=-0.12                      ! ...    vs logg
+         lin_dif(8,3)=1-(temp_ref/3700)**3.5     ! ...    vs z
+
          if (optimize) then
           write(*,*) 'optimized interpolation applied for standard compo
      &sition models'
          else
             lin_dif=0.
              write(*,*) 'linear interpolation applied'
-         end if   
+         end if
 !these constants are calibrated on a broad range of stellar parameters; scale them now to the present one.
             power(:,1)= 1-(lin_dif(:,1)*(abs(xsup-xinf)/(7000-3800)))
             power(:,2)= 1-(lin_dif(:,2)*(abs(ysup-yinf)/(5-0.0)))
             power(:,3)= 1-(lin_dif(:,3)*(abs(zsup-zinf)/(0-(-4))))
-                  
+
 ****** interpolation of each component of the atmosphere (taus,teff,Pe,Pg,microt,rr) and at each layer *****************
 
 
@@ -607,38 +605,38 @@ c          write(*,*) 'new NLTE array: ', nnbvals(:,1,1)
           call blend_103(x,y,z,tauR(k,1),tauR(k,2),
      &     tauR(k,3),tauR(k,4),tauR(k,5),tauR(k,6),tauR(k,7),tauR(k,8)
      &     ,tauR(k,out))
-          
+
           x=(teffpoint)**power(3,1)
           y=(loggpoint)**power(3,2)
           z=(metpoint)**power(3,3)
           call blend_103(x,y,z,T(k,1),T(k,2),T(k,3),T(k,4)
      &     ,T(k,5),T(k,6),T(k,7),T(k,8),T(k,out))
-          
+
           x=(teffpoint)**power(4,1)
           y=(loggpoint)**power(4,2)
           z=(metpoint)**power(4,3)
           call blend_103(x,y,z,Pe(k,1),Pe(k,2),Pe(k,3),Pe(k,4)
      &     ,Pe(k,5),Pe(k,6),Pe(k,7),Pe(k,8),Pe(k,out))
-          
+
           x=(teffpoint)**power(5,1)
           y=(loggpoint)**power(5,2)
           z=(metpoint)**power(5,3)
           call blend_103(x,y,z,Pg(k,1),Pg(k,2),Pg(k,3),Pg(k,4)
      &     ,Pg(k,5),Pg(k,6),Pg(k,7),Pg(k,8),Pg(k,out))
-          
+
           x=(teffpoint)**power(6,1)
           y=(loggpoint)**power(6,2)
           z=(metpoint)**power(6,3)
           call blend_103(x,y,z,xit(k,1),xit(k,2),
      &     xit(k,3),xit(k,4),xit(k,5),xit(k,6),xit(k,7),xit(k,8)
-     &     ,xit(k,out))       
- 
+     &     ,xit(k,out))
+
           x=(teffpoint)**power(7,1)
           y=(loggpoint)**power(7,2)
           z=(metpoint)**power(7,3)
           call blend_103(x,y,z,rr(k,1),rr(k,2),
      &     rr(k,3),rr(k,4),rr(k,5),rr(k,6),rr(k,7),rr(k,8)
-     &     ,rr(k,out))        
+     &     ,rr(k,out))
 
           x=(teffpoint)**power(8,1)
           y=(loggpoint)**power(8,2)
@@ -675,19 +673,19 @@ c     &     xkapref(k,7),xkapref(k,8),xkapref(k,out)
            call blend_103(x,y,z,
      &      y000, y001, y010, y011,
      &      y100, y101, y110, y111, n_result)
-           
+
            nnbvals(k,n,out)=n_result
-c           if (n.eq.1) then 
+c           if (n.eq.1) then
 c           write(*,fmt="(i2, 9(f10.5,2x))") k,
-c     &      nnbvals(k,n,1), nnbvals(k,n,2),nnbvals(k,n,3), 
-c     &      nnbvals(k,n,4), nnbvals(k,n,5),nnbvals(k,n,6), 
+c     &      nnbvals(k,n,1), nnbvals(k,n,2),nnbvals(k,n,3),
+c     &      nnbvals(k,n,4), nnbvals(k,n,5),nnbvals(k,n,6),
 c     &      nnbvals(k,n,7), nnbvals(k,n,8), n_result
 c           endif
 
-           if (n.eq.1) then 
+           if (n.eq.1) then
            write(*,fmt="('New b-values: ', i2, f10.5)") k, n_result
            endif
-           
+
         enddo
       end do
 
@@ -708,7 +706,7 @@ c           endif
 
 ********write interpolated model in file nber out (basma compatible format)***********
 ********MB add print of interpolation coefficients
-      
+
       write(*,*) 'now write result'
 c      write(*,*) FILE_IN(out)
 c      stop
@@ -723,7 +721,7 @@ c      stop
          do k=1,ndepth_ref
            write(23,1968) taus(k,out),T(k,out),Pe(k,out),
      &                    Pg(k,out),xit(k,out),rr(k,out),taur(k,out)
-         enddo  
+         enddo
  1968   format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
         write(25,19671) ndepth_ref,xlr(out)
 19671   format('sphINTERPOL',1x,i3,f8.0)
@@ -734,7 +732,7 @@ c      stop
      &     rhox(k,out)
 19681      format(i5,1x,f8.4,1x,f8.2,2(1x,f8.4),1x,e15.6)
         enddo
-        
+
         else
         write(*,*) 'plane parallel models'
         write(23,1966) ndepth_ref,xlr(out),logg_ref
@@ -745,25 +743,20 @@ c      stop
 1965       format(f8.4,1x,f8.2,3(1x,f8.4),1x,e15.6,1x,f8.4)
           enddo
         write(25,19661) xlr(out)
-19661   format('ppINTERPOL',f8.0) 
+19661   format('ppINTERPOL',f8.0)
         write(25,19672)
          do k=1,ndepth_ref
            write(25,19681) k,taus(k,out),T(k,out),Pe(k,out),Pg(k,out),
      &                   rhox(k,out)
-         enddo  
+         enddo
       end if
-      
-******** MB write interpolation coefficients into a TEXT file      
+
+******** MB write interpolation coefficients into a TEXT file
        do k=1,8
          write(27,1969) coefval(k), power(k,:)
-       enddo  
+       enddo
  1969  format('# ', a15,3(1x,f10.6))
-       if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-          write(27,1971) z_ref+7.50
-       else
-          write(27,1971) abu_ref
-       endif 
+       write(27,1971) abu_ref
  1971  format(f10.6,1x)
        write(27,1972) ndepth_ref
  1972  format(i3,1x)
@@ -776,8 +769,8 @@ c      stop
        do n=1,ndepth_ref
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(1pe11.5,1x))
-         
+ 1975  format(1000(1pe12.5,1x))
+
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
        write(27,2021) (FILE_IN(file),file=1,8)
@@ -788,7 +781,7 @@ c      stop
        close(27)
 c
 c
-******** MB write interpolation coefficients into a BINARY file  
+******** MB write interpolation coefficients into a BINARY file
 c
 c
 c  WRITES DEPARTURE COEFFICENTS AND LOG(TAU500) SCALE INTO
@@ -803,7 +796,7 @@ C
 c      ABND = 7.0
 c      ATOMID = 'Fe'
 c      ATMOID = ''
-c      
+c
 c      write(ABNDstring, '(F10.2)') ABND
 c      ABNDstring = TRIM(ADJUSTL(ABNDstring))
 c
@@ -816,9 +809,9 @@ c         write(BinaryName, '(A200, A3, A2, A1, A10)')
 c     &        TRIM(ATMOID), '_A_',
 c     &        TRIM(ATOMID(1:2)), '_', ABNDstring
 c      endif
-c      
+c
 c      BinaryName = ADJUSTL(TRIM(BinaryName))
-c      
+c
 c      write(BinaryName, '(A220, A6)') TRIM(BinaryName), '.tsbin'
 c      BinaryName = ADJUSTL(TRIM(BinaryName))
 c
@@ -833,34 +826,34 @@ c      write(LBIN4TS) BinaryHeader
 c      write(LBIN4TS) ndepth_ref
 c      write(LBIN4TS) n_lev
 c      write(LBIN4TS) taus(1:ndepth_ref,out)
-c      
+c
 c      DO I = 1, NK
 c          WRITE(LBIN4TS) N(I,1:NDEP)/NSTAR(I,1:NDEP)
 c      ENDDO
 c      CALL CLOSE(LBIN4TS)
 c      END
-       
-       
+
+
 
 ********** write a file compatible for sm (used for a control plot) ************
       open (unit=24,file='modele.sm')
       do file=1,8
        do k=1,ndepth_ref
         write(24,*) taus(k,file),T(k,file),Pe(k,file),
-     &   Pg(k,file),taur(k,file)   
+     &   Pg(k,file),taur(k,file)
        end do
       end do
-      
+
 !case of a 10th comparison model
       read(*,*) FILE_IN(11)
-      if (test) then 
+      if (test) then
          file = 11
-      if (binary) then   
+      if (binary) then
       call extract_bin(FILE_IN(file),teff(file),logg(file),metal(file),
      & ndepth(file),xlr(file),taus_aux(:,file),tauR_aux(:,file),
      & T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),xit_aux(:,file),
      & rr_aux(:,file),sph(file),xkapref_aux(:,file))
-      else 
+      else
       call extract_ascii(FILE_IN(file),teff(file),logg(file),
      & metal(file),ndepth(file),xlr(file),taus_aux(:,file),
      & tauR_aux(:,file),T_aux(:,file),Pe_aux(:,file),Pg_aux(:,file),
@@ -868,10 +861,10 @@ c      END
       endif
       do k=1,ndepth(file)
        write(24,*) taus_aux(k,file),T_aux(k,file),Pe_aux(k,file),
-     &               Pg_aux(k,file),tauR_aux(k,file)  
+     &               Pg_aux(k,file),tauR_aux(k,file)
       end do
       end if
-      close(24)      
+      close(24)
 
       if (extrapol) then
           write (*,*) 'extrapolation done'
@@ -917,11 +910,11 @@ c-------------------------------------------------------------------------------
 
 
 
-   
+
 
 
 c---------------------------------------------------------------------------------
-      subroutine blend_103 (r,s,t,x000,x001,x010,x011,x100,x101,x110, 
+      subroutine blend_103 (r,s,t,x000,x001,x010,x011,x100,x101,x110,
      & x111, x )
 !
 !*******************************************************************************
@@ -1033,15 +1026,15 @@ c-------------------------------------------------------------------------------
 !
 !  Interpolate the interior point.
 !
-      
-      x = 
-     & 1.0E+00     * ( + x000 ) 
-     & + r         * ( - x000 + x100 ) 
-     & +     s     * ( - x000        + x010 ) 
-     & +         t * ( - x000               + x001 ) 
-     & + r * s     * ( + x000 - x100 - x010                      + x110) 
-     & + r     * t * ( + x000 - x100        - x001        + x101 ) 
-     & +     s * t * ( + x000        - x010 - x001 + x011 ) 
+
+      x =
+     & 1.0E+00     * ( + x000 )
+     & + r         * ( - x000 + x100 )
+     & +     s     * ( - x000        + x010 )
+     & +         t * ( - x000               + x001 )
+     & + r * s     * ( + x000 - x100 - x010                      + x110)
+     & + r     * t * ( + x000 - x100        - x001        + x101 )
+     & +     s * t * ( + x000        - x010 - x001 + x011 )
      & + r * s * t * ( - x000 + x100 + x010 + x001 - x011 - x101 - x110+
      &                                                            x111 )
 
@@ -1111,7 +1104,7 @@ c         open(21,file=file2,status='unknown')
          prese(k)=log10(pe(k))
          presg(k)= log10(pg(k))
          kappa(k)=log10(xkapr(k))
-      end do   
+      end do
          xit=2.0
          xlr_ref=xlr(nlp)
          grav=log10(GG)

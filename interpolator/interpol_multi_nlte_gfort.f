@@ -321,10 +321,6 @@ c         print*, n_pos(cnt), n_pos1(cnt)
         abu_min = 99999999999.
         abu_max = -1000.
         do cnt1 = 1, nlte_file
-           if  (nlte_file.le.20000.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-           endif
            if  (teff(cnt).eq.n_teff(cnt1).and.
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
@@ -364,11 +360,6 @@ c         print*, abu_max
           endif
         enddo
         do cnt1 = 1, nlte_file
-           if  (nlte_file.le.190.and.
-     &         abu_ref.le.11.99999) then
-               abu_ref = metal(cnt)+7.50
-c               abu_ref = z_ref+7.50
-           endif
            if  (teff(cnt).eq.n_teff(cnt1).and.
      &         logg(cnt).le.(n_logg(cnt1)+0.00001).and.
      &         logg(cnt).ge.(n_logg(cnt1)-0.00001).and.
@@ -862,12 +853,7 @@ c       enddo
        enddo  
  1969  format('# ', a15,3(1x,f10.6))
 c       write(27,1971) abu_ref
-       if  (nlte_file.le.190.and.
-     &         abu_ref.le.11.99999) then
-         write(27,1971) z_ref+7.50
-       else
-         write(27,1971) abu_ref
-       endif
+       write(27,1971) abu_ref
  1971  format(f10.6,1x)
        write(27,1972) ndepth_final
  1972  format(i3,1x)
@@ -880,7 +866,7 @@ c       write(27,1971) abu_ref
        do n=1,ndepth_final
          write(27,1975)  (nnbvals(n,m,out), m=1, n_lev)
         enddo
- 1975  format(1000(1pe11.5,1x))
+ 1975  format(1000(1pe12.5,1x))
          
        write(23,2021) (FILE_IN(file),file=1,8)
        write(25,2021) (FILE_IN(file),file=1,8)
