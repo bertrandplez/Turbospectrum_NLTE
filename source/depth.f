@@ -34,15 +34,24 @@
 *
 *-----------------------------------------------------------------------
 *
+      implicit none
+
       INCLUDE 'spectrum.inc'
 *
+      integer iel,i,idamp,idum,ijon,ipress,nat,ndepth,nmol
+      real x,a,algh,alogc6,anjon,aq1,aq2,aq3,boltz,c,chi,chi2,chi3,chie,
+     &     consta,constb,dbvcon,dnud,duma,dumb,dumc,dumd,dume,e,fdamp,
+     &     fpartition,fyrapi,g,gam6,gam6anstee,gamh,gamma,gampre,gamrad,
+     &     h,heh,pe,pg,ph,ph2,phe,q1,q1lim,q2,q2lim,q3,q3lim,redmas,
+     &     relvel,ro,saha,saha1,saha2,sigma,stim,t,temp,tlim1,
+     &     tlim2,tlim3,tqa,xi,xite,xl,gammln,ex10
       character*1 recipe
-      REAL N,MU,MA,MH,M
+      REAL N,MA,MH,M
       REAL NTOT,NTT
       REAL MUM,gamvdw10000,gamst,gamstark,xne,eudiff
       real tempstark,chiu,eion
       doubleprecision ionpot
-      DIMENSION Q(NDP),theta(ndp),xi0(ndp)
+      real q(ndp),theta(ndp),xi0(ndp)
 *
       COMMON/POP/ N(NDP),A(NDP),DNUD(NDP),STIM(NDP),ANJON(NDP),DBVCON
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),
@@ -108,18 +117,18 @@
 *  fooled by 00 in atoms.
 *
         call partf(IEL,1,T(I),1,Q1(I),ionpot)
-        chi=ionpot
+        chi=sngl(ionpot)
         IF(IEL.GT.NAT) GOTO 20
         CALL INP3(TQA,AQ2,T(I),Q2(I))
         Q2(I)=EXP(Q2(I))
         IF(TEMP.LE.TLIM2) Q2(I)=Q2LIM
         call partf(IEL,2,T(I),1,Q2(I),ionpot)
-        chi2=ionpot
+        chi2=sngl(ionpot)
         CALL INP3(TQA,AQ3,T(I),Q3(I))
         Q3(I)=EXP(Q3(I))
         IF(TEMP.LE.TLIM3) Q3(I)=Q3LIM
         call partf(IEL,3,T(I),1,Q3(I),ionpot)
-        chi3=ionpot
+        chi3=sngl(ionpot)
         SAHA = 2.5*ALOG10(TEMP) - ALOG10(PE(I)) - 0.1761
         SAHA1 = SAHA + ALOG10(Q2(I)/Q1(I)) - THETA(i)*CHI
         SAHA2 = SAHA + ALOG10(Q3(I)/Q2(I)) - THETA(i)*CHI2
@@ -228,7 +237,7 @@ cc          endif
             stop 'in subroutine depth.f of bsyn/eqwidt.f'
           endif
 ! XL is wavelength in cm
-          chiu=chie+3.40*3647./(xl*1.d8)
+          chiu=chie+3.40*3647./(xl*1.e8)
           Eudiff=13.598*(ijon/(eion-chiu))**2
 
 * preparation of T dependent factors for the Pe loop below:
@@ -269,6 +278,8 @@ cc          endif
 **********************************************************************************
       FUNCTION gammln(xx) 
 * returns ln gamma(xx) The Gamma function,
+      implicit none
+
       REAL gammln,xx 
       INTEGER j 
       DOUBLE PRECISION ser,stp,tmp,x,y,cof(6) 
@@ -285,7 +296,7 @@ cc          endif
         y=y+1.d0 
         ser=ser+cof(j)/y 
 11    continue 
-      gammln=tmp+log(stp*ser/x) 
+      gammln=sngl(tmp+log(stp*ser/x)) 
       return 
       END 
 *

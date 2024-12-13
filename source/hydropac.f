@@ -14,10 +14,10 @@
       include 'spectrum.inc'
 
       character comment*100,species*20
-      integer ion,nline,ntau,iter,l,k,i,lstart,lstartp,
-     &        nmy,nlbldu,iint,iweak,lunit,maxlam,ll,
-     ,        jlcont, nlcont,nf,nfo,nb,nbo,nl,lpos
-      doubleprecision ionpot,wave,xl1,xl2,del,xlboff,xlambda
+      integer ion,nline,ntau,l,k,i,
+     &        nmy,nlbldu,iint,iweak,lunit,maxlam,
+     ,        jlcont, nlcont
+      doubleprecision xl1,xl2,del,xlboff,xlambda
       doubleprecision source_function,source_f
 
 ! 150 is the max allowed number of H lines
@@ -27,18 +27,17 @@
       integer nlo(150),nup(150)
       character*9 lname(150)
 !
-      real fpart(ndp),pe,t,pg,xi,mum,ro,eps,xmyc,
+      real pe,t,pg,xi,mum,ro,eps,xmyc,
      &     ne(ndp),fact,
-     &     nh1(ndp),nhe1(ndp),hnorm,hnormnostim(ndp),stim,
-     &     diff,diffp,theta(ndp),hckt(ndp),abso,absos,absocont,
-     &     dopple(ndp),xkapr,cross,hlinop,h1bfg,alpha,
-     ,     ee(6),d0(ndp),d(lpoint,ndp),absoscont
-      logical  lymanalpha, usedam,notfound,contonly,kskip(ndp),lskip
+     &     nh1(ndp),nhe1(ndp),
+     &     hckt(ndp),abso,absos,absocont,
+     &     dopple(ndp),xkapr,cross,absoscont
+      logical  contonly
       logical  lineonly
 ! NLTE
       logical nlte,nlte_species
-      real xlsingle,bpl,corr,expcorr,bdl,bdu,ediff
       character*40 modid(*)
+      real xlsingle,bpl,expcorr,ediff
       integer modnlevel,modion(*),modnlev,nlevlist,maxlevel
       real b_departure(ndp,0:maxlevel),modenergy(*),modg(*),bd(1000)
       real*8 planck,clight,electron,boltzmann
@@ -46,7 +45,7 @@
 *      
       common /atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
      &               ntau
-      doubleprecision presneutral,presion,presion2,presion3, h1bfgc(30)    
+      doubleprecision presneutral,presion,presion2,presion3
       common /orderedpress/ presneutral(ndp,100),presion(ndp,100),
      &                      presion2(ndp,100),presion3(ndp,100)
       common /pieces/ xl1,xl2,del,eps,nmy,nlbldu,iint,xmyc,iweak
@@ -56,10 +55,6 @@
       common/rossc/ xkapr(ndp),cross(ndp)
       common/continuum/nlcont,jlcont(lpoint)
       
-      character*50 zMC
-      integer znlc ,  ii
-      real    zxlm,zBP(ndp),zXC(ndp),zS(ndp),zXI(ndp)
-
       data clight /2.99792458d8/, planck /6.62607015d-34/
       data boltzmann /1.380649d-23/, electron /1.602176634d-19/
 

@@ -11,7 +11,7 @@
 ! optical depth, departure coefficients
 !
       implicit none
-      character departurefile*256,oneline*256
+      character departurefile*256
       character header_dep1*500,header_dep2*1000
       integer iunit,modnlevel,i,ndepth_read,j,ndepth,maxlevel
       integer modnlevel_read,k
