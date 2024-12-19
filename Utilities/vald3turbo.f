@@ -6,8 +6,6 @@
 *
 *   Free format version for first line of each species in VALD3 data
 *    BPz 5/02-2019
-*   Further improved for better detection of isotopes by Nik Piskunov (June 2024)
-*    added to TS-NLTE on October 1, 2024
 *
       implicit none
       integer       imax,maxatom,j,jj,jjj,jjjj,k,kk,iarg
@@ -339,6 +337,9 @@ c                print*,'full',string4(kk:k)
 *              full=string4(29:42)
 *            endif
 
+            
+            j=index(string1(2:),' ')
+            if(full(1:j-1).ne.string1(2:j)) full=string1(2:j)
             call identify(full,lele,species,ionic,elem1,elem2)
 
             read(species,'(f11.6)') sss
