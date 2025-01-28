@@ -293,10 +293,11 @@ c          if (nelemi.ne.2) then
       else
 *******************
 * we end up here if we skipped the preliminary equilibrium
-        pgin=pg
-        do i=1,nmetal
-          p(nelemx(i))=p(nelemx(i))*(pe/pep)
-        enddo
+*******************
+        pgin=spg
+!        do i=1,nmetal
+!          p(nelemx(i))=p(nelemx(i))*(pe/pep)
+!        enddo
       endif
 C
 C    RUSSELL EQUATIONS
