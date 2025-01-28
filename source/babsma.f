@@ -941,7 +941,7 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
 
 * attempt to ease convergence at low T / BPz 15/05-2018
       if (mocode(1:4).eq.'alva') then
-        if (t(1).lt.1000.) then
+!        if (t(1).lt.1000.) then
 !
 ! solve chemical equilibrium starting from high T and Pg,
 ! progressing towards outer cooler layers
@@ -965,7 +965,7 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
 889         format('after jon iter T, Pe, Pg Pgin ',f6.0,3(1x,1pe10.3))
           enddo
         endif
-      endif
+!      endif
 
 * end of attempt
 
