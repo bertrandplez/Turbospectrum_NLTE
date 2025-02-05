@@ -118,7 +118,7 @@ C
 C  Paul Barklem, Uppsala, August 2003
 C
       IMPLICIT NONE
-      INTEGER N, NLO(*), NUP(*), NLEVELS, I, J, NBF, NL, FF,FN
+      INTEGER N, NLO(*), NUP(*), NLEVELS, I, J, NBF, NL
       PARAMETER (NLEVELS = 100)  
       PARAMETER (NBF = 6)  
       REAL NH, NHE, NE, T, CONTIN, DOP, TOTAL, fact
@@ -127,7 +127,6 @@ C
       REAL NLTE(NLEVELS), NPOP(*), NP(NLEVELS), b_departure(*)
       REAL Z, H, C, HC, K, KT, LINE, SIGMA, CHI, SF, PROF
       REAL IONH, X, HFNM, FNM(NLEVELS,NLEVELS), HLINOP, HBF
-      REAL TS, TF
       REAL*8 WAVE, WAVEH(*), REDCUT, source_f
       REAL*8 EHYD(NLEVELS), CONTH(NLEVELS), WCALC, D, WSTAR, TAPER
       LOGICAL FIRST,contonly,lineonly,nlte_flag,nlte_species
@@ -483,7 +482,7 @@ C  Based on code by Deane Peterson and Bob Kurucz
 C
       REAL*8 DELW,WAVE,WAVEH,DOP,D,FREQ,FREQNM,RAYLCUT,WAVE4000
       REAL*8 FINEST(14),FINSWT(14)
-      REAL*8 XN2,F,FO,HTOTAL,FREQSQ
+      REAL*8 XN2,FO,HTOTAL,FREQSQ
       DIMENSION STCOMP(5,4),STALPH(34),
      1          ISTAL(4),LNGHAL(4),STWTAL(34),
      2          STCPWT(5,4),LNCOMP(4)
@@ -994,7 +993,6 @@ C
       REAL*8 WAVE,WAVEH,DELW,DEL,F,FO,CLIGHT,FREQ,FREQNM
       REAL*4 K
       DIMENSION Y1WTM(2,2),XKNMTB(4,3)
-      LOGICAL LYMANALF
       SAVE
 C
 C  Knm constants as defined by Griem (1960, ApJ 132, 883) for the long 
@@ -1458,7 +1456,7 @@ C  Coded by Paul Barklem and Kjell Eriksson, Aug 2003
 C 	
       IMPLICIT NONE
       REAL NH, NE, NHE, NS, TEMP
-      REAL*8 IONH, A0, E, PI, K, CHI, RIH, NEUTR, ION, NS2, NS4 
+      REAL*8 IONH, A0, E, PI, K, CHI, RIH, NEUTR, NS2, NS4 
       REAL*8 F, A, BETAC, X, WNEUTR, WION, X1, X2      
       PARAMETER (IONH=2.17991E-11) 
       PARAMETER (A0=5.29177E-9)
@@ -1623,7 +1621,7 @@ C
       IMPLICIT NONE
       INTEGER N, I, J
       REAL X(*), Y(*), XI, YI
-      REAL XL(N), YL(N), XIL, YIL, XS(3), YLS(3), DY        
+      REAL YL(N), YIL, XS(3), YLS(3), DY        
 C
       J = 0
       DO I = 1, N

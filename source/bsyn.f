@@ -715,28 +715,31 @@ c      call eqmol_pe(t(20),pg(20),pgpg,pe(20),
 c     &      1.,1.,k,niter,skiprelim)
 
 * Test Plez 11-May-2018
-      do 43 k=ntau,1,-1
-*      do 43 k=1,ntau
+      do k=ntau,1,-1
+*      do k=1,ntau
 * end of test
 
         if ((abs((t(k)-tp)/t(k)).lt.3.e-2).and.
      &      (abs((pe(k)-pep)/pe(k)).lt.0.6)) then
           skiprelim=.true.
         else
-          skiprelim=.false.
+!          skiprelim=.false.
+! try to skip it all the time (BPz 27-Jan-2025)
+          skiprelim=.true.
         endif
         tp=t(k)
         pep=pe(k)
         call eqmol_pe(t(k),pg(k),pgpg,pe(k),1.,1.,k,niter,skiprelim)
-c        print*,'eqmol_pe calculated ',niter,' iterations'
-c        print*,k,pg(k),pgpg,ro(k),rhotsuji
+        print*,'eqmol_pe calculated ',niter,' iterations'
+        print*,k,pg(k),pgpg,ro(k),rhotsuji
 
-ccc      write(*,'(i3,15e10.3,/,3x,15e10.3)') k,presmo
+!        write(*,'(i3,15e10.3,/,3x,15e10.3)') k,presmo
 *
         PH(K)=presneutral(k,1)
         phe(k)=presneutral(k,2)
         ph2(k)=partryck(k,2)
-43    continue
+      enddo
+
       abundh=1./xmytsuji
       print*,'new abundh:',abundh
 *

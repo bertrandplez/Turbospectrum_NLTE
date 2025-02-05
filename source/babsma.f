@@ -502,9 +502,10 @@ cccc          print*,'reading ntau again ',ntau
           stop
         endif
       else
-        print*,' This is an ascii model '
+        print*,' This is a non-MARCS-formatted ascii model '
         open(unit=imod,file=datinpmod,status='old')
-        read(imod,*,err=765) mocode,ntau,xls,gravl,intryc,scale
+        read(imod,*,err=765) mocode,ntau,xls,gravl,xintryc,scale
+        intryc=xintryc
         if (ntau.gt.ndp) then
             print*,' ndp = ',ndp,'       ntau = ', ntau
             stop 'ndp too small!'
@@ -598,6 +599,8 @@ cccc          print*,'reading ntau again ',ntau
 761     stop 'COULD NOT READ MODEL ATMOSPHERE FILE !!!'
 764     continue
 
+        print*,'babsma trying non MARCS model', mocode, mocode(1:4)
+
 ***********************************************
         if (mocode(1:3).eq.'sph') then
           do k=1,ntau
@@ -629,209 +632,209 @@ cc1963        format(i3,2x,6(e12.0))
             pe(k)=xe(k)*0.908*pgl(k)
           enddo
 ***********************************************
-        else if (mocode(1:4).eq.'alva') then
+	else if (mocode(1:4).eq.'alva') then
 * modeles de Rodrigo sans echelle de profondeur optique.
 * Initially from R. Alvarez. Models without tau scale.
 * These models have T, Pgas, R, and either a depth dependent microturbulence, 
 * or a radial velocity field. The velocity field is used for models with a
 * wind extension. Calculations of flux spectra do not work in that case in 
 * the v12.1 and previous versions of the code. 
-          read (imod,'(a)') firstline
-          read(firstline,*,err=99,end=99) t(1),pgl(1),rr(1),xi(1)
-          print*,'checking firstline: ' ,t(1),pgl(1),rr(1),xi(1)
-          backspace(imod)
-          if (hydrovelo) then
-            print*, 'Reading a model with radial velocity field'
-          else
-            print*,
+	  read (imod,'(a)') firstline
+	  read(firstline,*,err=99,end=99) t(1),pgl(1),rr(1),xi(1)
+	  print*,'checking firstline: ' ,t(1),pgl(1),rr(1),xi(1)
+	  backspace(imod)
+	  if (hydrovelo) then
+	    print*, 'Reading a model with radial velocity field'
+	  else
+	    print*,
      &       ' Reading a model with depth dependent microturbulence'
-          endif
-          do k=1,ntau
-            if (hydrovelo) then
-              read(imod,*) t(k),pgl(k),rr(k),velocity(k)
-              xi(k)=xic
-              print*, k,t(k),pgl(k),rr(k),xi(k),velocity(k)
-            else
-              read(imod,*) t(k),pgl(k),rr(k),xi(k)
-              print*, k,t(k),pgl(k),rr(k),xi(k)
-            endif
+	  endif
+	  do k=1,ntau
+	    if (hydrovelo) then
+	      read(imod,*) t(k),pgl(k),rr(k),velocity(k)
+	      xi(k)=xic
+	      print*, k,t(k),pgl(k),rr(k),xi(k),velocity(k)
+	    else
+	      read(imod,*) t(k),pgl(k),rr(k),xi(k)
+	      print*, k,t(k),pgl(k),rr(k),xi(k)
+	    endif
 * check definition of rr. between tau,t,pe points? 10/12-1996
-            pe(k)=1.e-4
-            if (t(k).lt.2000.) then
+	    pe(k)=1.e-4
+	    if (t(k).lt.2000.) then
 * This estimate of Pe is crucial for the convergence of the molecular equilibrium
 * in the low temperature regime. In case of non convergence of the equilibrium, 
 * one may try to lower Pe through an increase of the exponent. I change this
 * exponent from 20 to 30 today. BPz 15/06-2012. 
-              pe(k)=1.e-4*pgl(k)*(t(k)/3000.)**30
-            endif
-          enddo
-          goto 98
+	      pe(k)=1.e-4*pgl(k)*(t(k)/3000.)**30
+	    endif
+	  enddo
+	  goto 98
  99       backspace (imod)
-          print*,' Reading a model without microturbulence or ',
+	  print*,' Reading a model without microturbulence or ',
      &       'radial velocity field'
-          do k=1,ntau
-            xifix=.true.
-            read(imod,*) t(k),pgl(k),rr(k)
-            print*, k,t(k),pgl(k),rr(k)
-            pe(k)=1.e-4
-            if (t(k).lt.2000.) then
-              pe(k)=1.e-4*pgl(k)*(t(k)/3000.)**30
-            endif
-          enddo
+	  do k=1,ntau
+	    xifix=.true.
+	    read(imod,*) t(k),pgl(k),rr(k)
+	    print*, k,t(k),pgl(k),rr(k)
+	    pe(k)=1.e-4
+	    if (t(k).lt.2000.) then
+	      pe(k)=1.e-4*pgl(k)*(t(k)/3000.)**30
+	    endif
+	  enddo
  98       continue
-          do k=1,ntau-1
-            drr(k)=rr(k)-rr(k+1)
-          enddo
-          drr(ntau)=drr(ntau-1)
+	  do k=1,ntau-1
+	    drr(k)=rr(k)-rr(k+1)
+	  enddo
+	  drr(ntau)=drr(ntau-1)
 ***********************************************
-        else if (mocode(1:7).eq.'Stagger') then
+	else if (mocode(1:7).eq.'Stagger') then
 * Stagger average <3D> model containing: depth, T, rho, averaged on constant tau surfaces
 * added by BPz 16/04-2018
           read(imod,*) Teff,gravl,metallicity,ntau
           do k=1,ntau
             read(imod,*) rr(k),T(k),rhobow(k)
-            pe(k)=1.e-10                                                  ! guess value only
-            pgl(k)=rhobow(k)*kboltz*t(k)/1.3/mh                           ! guess value only
-          enddo
-          intryc=0
-          scale=0.
+	    pe(k)=1.e-10                                                  ! guess value only
+	    pgl(k)=rhobow(k)*kboltz*t(k)/1.3/mh                           ! guess value only
+	  enddo
+	  intryc=0
+	  scale=0.
 
 ***********************************************
-        else if (mocode(1:7).eq.'Hoefner') then
+	else if (mocode(1:7).eq.'Hoefner') then
 * S. hoefner models, with velocity. BPz 04/03-2002
 * read header!
-          bla='#'
-          do while (bla.eq.'#')
-            read(imod,'(a)') bla
-          enddo
-          backspace(imod)
-          do k=1,ntau
-            read(imod,*) rr(k),rhobow(k),T(k),
+	  bla='#'
+	  do while (bla.eq.'#')
+	    read(imod,'(a)') bla
+	  enddo
+	  backspace(imod)
+	  do k=1,ntau
+	    read(imod,*) rr(k),rhobow(k),T(k),
      &                   pgl(k),tauhoefner,kappahoefner,tdust,k3hoefner,
      &                   velocity(k),
      &                   tradhoefner
-            pe(k)=1.e-10
+	    pe(k)=1.e-10
 * test !!!!!!!
-            print*
-            print*,' WARNING !!!!!!! TEST !!!!!! velocity=5km/s!!!!!!'
-            print*
-            velocity(k)=5.e5
-          enddo
+	    print*
+	    print*,' WARNING !!!!!!! TEST !!!!!! velocity=5km/s!!!!!!'
+	    print*
+	    velocity(k)=5.e5
+	  enddo
 * extrapolate inwards the models that have a tau_max too small.
-          kk=1
-          k=ntau+kk
-          do while ((T(k-1).le.6000.).and.(ntau+kk.le.ndp))
-            Tstep=min(400.,(t(ntau)-t(ntau-1))*2.**(float(kk)/2.))
-            t(k)=Tstep+t(k-1)
-            scalefactor=Tstep/(t(ntau)-t(ntau-1))
-            rhobow(k)=(rhobow(ntau)-rhobow(ntau-1))*scalefactor+
+	  kk=1
+	  k=ntau+kk
+	  do while ((T(k-1).le.6000.).and.(ntau+kk.le.ndp))
+	    Tstep=min(400.,(t(ntau)-t(ntau-1))*2.**(float(kk)/2.))
+	    t(k)=Tstep+t(k-1)
+	    scalefactor=Tstep/(t(ntau)-t(ntau-1))
+	    rhobow(k)=(rhobow(ntau)-rhobow(ntau-1))*scalefactor+
      &                  rhobow(k-1)
-            pgl(k)=(log(pgl(ntau))-log(pgl(ntau-1)))*scalefactor+
+	    pgl(k)=(log(pgl(ntau))-log(pgl(ntau-1)))*scalefactor+
      &                  log(pgl(k-1))
-            pgl(k)=exp(pgl(k))
-            pe(k)=1.e-10
-            velocity(k)=velocity(ntau)
-            print*,' k',k,' T ',t(k)
-            kk=kk+1
-            k=ntau+kk
-          enddo
-          ntauinput=ntau
-          ntau=ntau+kk-1
+	    pgl(k)=exp(pgl(k))
+	    pe(k)=1.e-10
+	    velocity(k)=velocity(ntau)
+	    print*,' k',k,' T ',t(k)
+	    kk=kk+1
+	    k=ntau+kk
+	  enddo
+	  ntauinput=ntau
+	  ntau=ntau+kk-1
 * the geometrical depths are computed using rho and the hydrostatic equation
 *
-          print*,'WARNING!!!! model extrapolated inwards',
+	  print*,'WARNING!!!! model extrapolated inwards',
      &              ' using the hydrostatic approximation!!!'
-          do k=2,ntauinput-1
+	  do k=2,ntauinput-1
 * this computed "hydrostatic" gravity is defined at integer tau-points
 * (i.e. where T, P, rho etc are defined)
-            ghoefner(k)=(pgl(k+1)-pgl(k-1))/2./(rr(k+1)-rr(k))/rhobow(k)
-          enddo
-          gr2=0.
+	    ghoefner(k)=(pgl(k+1)-pgl(k-1))/2./(rr(k+1)-rr(k))/rhobow(k)
+	  enddo
+	  gr2=0.
 * We estimate the gravity from an average of the 4 inner points.
-          do k=ntauinput-4,ntauinput-1
-            gr2=gr2+ghoefner(k)*((rr(k)+rr(k+1))*0.5)**2
-          enddo
-          gr2=gr2/4.
-          do k=ntauinput+1,ntau
+	  do k=ntauinput-4,ntauinput-1
+	    gr2=gr2+ghoefner(k)*((rr(k)+rr(k+1))*0.5)**2
+	  enddo
+	  gr2=gr2/4.
+	  do k=ntauinput+1,ntau
 * we solve for the radius, using gr2:
-            aequa=(pgl(k)-pgl(k-2))/(gr2*rhobow(k-1))/8.
-            bequa=rr(k-1)
-            gammaequa=bequa**2 + bequa/aequa
-            betaequa=2.*bequa - 1./aequa
-            rr(k)=(-betaequa + sqrt(betaequa**2-4.*gammaequa))/2.
-          enddo
-          do k=ntauinput,ntau-1
-            ghoefner(k)=(pgl(k+1)-pgl(k-1))/2./(rr(k+1)-rr(k))/rhobow(k)
-          enddo
+	    aequa=(pgl(k)-pgl(k-2))/(gr2*rhobow(k-1))/8.
+	    bequa=rr(k-1)
+	    gammaequa=bequa**2 + bequa/aequa
+	    betaequa=2.*bequa - 1./aequa
+	    rr(k)=(-betaequa + sqrt(betaequa**2-4.*gammaequa))/2.
+	  enddo
+	  do k=ntauinput,ntau-1
+	    ghoefner(k)=(pgl(k+1)-pgl(k-1))/2./(rr(k+1)-rr(k))/rhobow(k)
+	  enddo
 * check model:
-          print*,'Hoefner model. CHECK extrapolation'
-          print*,'   R       T       ro        Pg      gstatic*r^2'
-          do k=1,ntau-1
-            print*,rr(k),t(k),rhobow(k),pgl(k),
+	  print*,'Hoefner model. CHECK extrapolation'
+	  print*,'   R       T       ro        Pg      gstatic*r^2'
+	  do k=1,ntau-1
+	    print*,rr(k),t(k),rhobow(k),pgl(k),
      &             ghoefner(k)*((rr(k)+rr(k+1))*0.5)**2
-          enddo
-          k=ntau
-          print*,rr(k),t(k),rhobow(k),pgl(k),
+	  enddo
+	  k=ntau
+	  print*,rr(k),t(k),rhobow(k),pgl(k),
      &             ghoefner(k)*rr(k)**2
 *
 * SH models have velocity at r points, and rho,T, P in between.
 * T, P, rho from one line of input describe conditions between
 * the r of that line the r at next line of input. Models
 * starting from the outer layers and going inwards.
-          do k=1,ntau-1
-            drr(k)=rr(k)-rr(k+1)
-          enddo
-          drr(ntau)=drr(ntau-1)
+	  do k=1,ntau-1
+	    drr(k)=rr(k)-rr(k+1)
+	  enddo
+	  drr(ntau)=drr(ntau-1)
 
 ***********************************************
-        else if (mocode(1:6).eq.'KURUCZ') then
+	else if (mocode(1:6).eq.'KURUCZ') then
 *
 * Kurucz models. Reading + rinteg taken from moog. 06/04-2001 BPz+ST (Sivarani)
 *
 * Modified 16/07-2015 by BPz. rinteg moved down, to compute the tau-scale 
 * directly at the reference wavelength without using the Rosseland scale.
 * 
-          do k=1,ntau
-            read (imod,*) rhox(k),t(k),pgl(k),pe(k),kaprefmass(k)
+	  do k=1,ntau
+	    read (imod,*) rhox(k),t(k),pgl(k),pe(k),kaprefmass(k)
 ! pe read from model is ne
-            pe(k)=pe(k)*T(k)*kboltz
-            print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
+	    pe(k)=pe(k)*T(k)*kboltz
+	    print*,'reading: ', k, rhox(k),t(k),pgl(k),pe(k),
      &              kaprefmass(k)
-          enddo
+	  enddo
 ***********************************************
-        else if (mocode(1:5).eq.'MULTI') then
+	else if (mocode(1:5).eq.'MULTI') then
 !
 ! Multi2.3 format
 !  LG TAU      TEMPERATURE  NE           V            VTURB        
 ! velocities in km/s
 !
-          do k=1,ntau
-            read(imod,*) tau(k),t(k),pe(k),velocity(k),xi(k)
-            tau(k)=10.**tau(k)
+	  do k=1,ntau
+	    read(imod,*) tau(k),t(k),pe(k),velocity(k),xi(k)
+	    tau(k)=10.**tau(k)
 ! pe read from model is ne
-            pe(k)=pe(k)*T(k)*kboltz
-            velocity(k)=velocity(k)*1.e5        ! cm/s
-            xi(k)=xi(k)                         ! km/s
-            if (massscale) then
+	    pe(k)=pe(k)*T(k)*kboltz
+	    velocity(k)=velocity(k)*1.e5        ! cm/s
+	    xi(k)=xi(k)                         ! km/s
+	    if (massscale) then
 ! tau contains rhox  (column mass)
-              rhox(k)=tau(k)
-            endif
-          enddo
+	      rhox(k)=tau(k)
+	    endif
+	  enddo
 ***********************************************
-        else
-          DO 11 K=1,NTAU
-            READ(IMOD,*) TAU(K),T(K),PE(K),PGL(K),XI(K)
-            TAU(K)=10.**TAU(K)
-            T(K)=(1.000+SCALE)*T(K)
-            PE(K)=10.**PE(K)
-            PGL(K)=10.**PGL(K)
+	else
+	  DO 11 K=1,NTAU
+	    READ(IMOD,*) TAU(K),T(K),PE(K),PGL(K),XI(K)
+	    TAU(K)=10.**TAU(K)
+	    T(K)=(1.000+SCALE)*T(K)
+	    PE(K)=10.**PE(K)
+	    PGL(K)=10.**PGL(K)
    11     CONTINUE
-        endif
-        if (xifix) then
-          do K=1,NTAU
-            XI(K)=XIC
-          enddo
-        endif
+	endif
+	if (xifix) then
+	  do K=1,NTAU
+	    XI(K)=XIC
+	  enddo
+	endif
 *
       endif
 *
@@ -856,11 +859,11 @@ c      print*,'injon done'
       NLQ=0
       IPP=1
       DO 14 K=1,NP
-        NLP=NL(K+1)
-        NLQ=NLP+NLQ
-        DO 14 I=1,NLP
-          XLP(IPP)=XL(I,K+1)
-          IPP=IPP+1
+	NLP=NL(K+1)
+	NLQ=NLP+NLQ
+	DO 14 I=1,NLP
+	  XLP(IPP)=XL(I,K+1)
+	  IPP=IPP+1
    14 CONTINUE
 *
 * NOW, INITIATE ABSORPTION COEFFICIENT TABLES BY CALLING INABS
@@ -883,12 +886,12 @@ c      print*,'injon done'
 * OF IONIZATION EQ. AND OF ABS. COEFF.
 *
       IF(MRXF) THEN
-        WRITE(IMODUT,200) 'MRXF',NTAU,XLS
-        WRITE(IWRIT,300) 'MRXF',NTAU,XLS
+	WRITE(IMODUT,200) 'MRXF',NTAU,XLS
+	WRITE(IWRIT,300) 'MRXF',NTAU,XLS
       ELSE
-        WRITE(IMODUT,200) MOCODE(1:lenstr(mocode)),NTAU,XLS
-        WRITE(IMODUT2,2000) MOCODE(1:lenstr(mocode)),NTAU,XLS
-        WRITE(IWRIT,300) MOCODE(1:lenstr(mocode)),NTAU,XLS
+	WRITE(IMODUT,200) MOCODE(1:lenstr(mocode)),NTAU,XLS
+	WRITE(IMODUT2,2000) MOCODE(1:lenstr(mocode)),NTAU,XLS
+	WRITE(IWRIT,300) MOCODE(1:lenstr(mocode)),NTAU,XLS
       ENDIF
       WRITE(IMODUT,203) NLQ
       WRITE(IMODUT,204) (XLP(IPP),IPP=1,NLQ)
@@ -908,26 +911,26 @@ ccc      IF(NLQ.GT.NDP) STOP
 *  BPz 29/09-2021
       if (mocode(1:6).eq.'KURUCZ'.or.
      &      (mocode(1:5).eq.'MULTI'.and.massscale)) then
-        CALL ABSKO(NEWT,ntau,T,PE,1,1,ABSKK,SPRIDD)
-        do k=1,ntau
-          kaprefmass(k)=ABSKk(k)+SPRIDd(k)
-        enddo
-        newt=1
-        first = rhox(1)*kaprefmass(1)
+	CALL ABSKO(NEWT,ntau,T,PE,1,1,ABSKK,SPRIDD)
+	do k=1,ntau
+	  kaprefmass(k)=ABSKk(k)+SPRIDd(k)
+	enddo
+	newt=1
+	first = rhox(1)*kaprefmass(1)
 *        first = (kaprefmass(1)-rhox(1)/2.*
 *     &         (kaprefmass(2)-kaprefmass(1))/(rhox(2)-rhox(1)))*rhox(1)
-        tottau = rinteg(rhox,kaprefmass,tau,ntau,first)
-        tau(1) = first
-        print*,'Model with mass-scale. Computed tau-scale at lambda= ',
+	tottau = rinteg(rhox,kaprefmass,tau,ntau,first)
+	tau(1) = first
+	print*,'Model with mass-scale. Computed tau-scale at lambda= ',
      &     xls,'A'
-        print*,'tau(1)=',tau(1)
-        do k=2,ntau
-          tau(k) = tau(k-1) + tau(k)
-          print*,'tau(',k,')=',tau(k)
-        enddo
-        do k=1,ntau
+	print*,'tau(1)=',tau(1)
+	do k=2,ntau
+	  tau(k) = tau(k-1) + tau(k)
+	  print*,'tau(',k,')=',tau(k)
+	enddo
+	do k=1,ntau
 cc          kapref(k) = kaprefmass(k)*rho(k)
-          print 222, k,log10(tau(k)),tau(k),T(k), log10(pgl(k)),
+	  print 222, k,log10(tau(k)),tau(k),T(k), log10(pgl(k)),
      &                pgl(k),log10(pe(k))
 222       format(i3,x,f5.2,x,1pe11.4,2x,0pf7.1,2x,f6.3,x,1pe11.4,
      &             2x,0pf6.3)
@@ -938,7 +941,11 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
 
 * attempt to ease convergence at low T / BPz 15/05-2018
       if (mocode(1:4).eq.'alva') then
-        if (t(1).lt.1000.) then
+!        if (t(1).lt.1000.) then
+!
+! solve chemical equilibrium starting from high T and Pg,
+! progressing towards outer cooler layers
+!
           do k=ntau,1,-1
             pg=pgl(k)
             if (k.ne.ntau) then
@@ -958,7 +965,7 @@ cc          kapref(k) = kaprefmass(k)*rho(k)
 889         format('after jon iter T, Pe, Pg Pgin ',f6.0,3(1x,1pe10.3))
           enddo
         endif
-      endif
+!      endif
 
 * end of attempt
 
@@ -985,13 +992,13 @@ c      print*,'jon done'
      &               ' pgmod=',pgl(k)
             endif
           else
-* for funny models, like miras
+* for funny models, like miras, without electron pressure
             if (k.ne.1) then
 * better guess of pe from previous depth point
 ccccc	      if (mocode.ne.'bowe'.or.mocode.ne.'BOWE') then
-              if (mocode(1:4).eq.'alva') then
-                pe(k)=pe(k-1)*pgl(k)/pgl(k-1)
-              else
+!              if (mocode(1:4).eq.'alva') then
+!                pe(k)=pe(k-1)*pgl(k)/pgl(k-1)
+              if (mocode(1:4).ne.'alva') then
                 pe(k)=pe(k-1)*rhobow(k)/rhobow(k-1)
               endif
             endif
@@ -1057,16 +1064,17 @@ c              ratiobow=rhobow(k)/ro*molweight/1.26
      &              'xebow     xe_calc   pg'
 1965          print*,k,rhobow(k),ro,pe(k),xe(k),pe(k)/0.908/pgl(k),
      &                 pgl(k)
-            else if (mocode(1:4).eq.'alva') then
+!            else if (mocode(1:4).eq.'alva') then
 * must iterate on pe to get right pg in Rodrigo's models.
 * try better guess input pe:
-              pein=pe(k)*pgl(k)/pg
-              print*,'babsma, improving on guess Pe = ',pein
-              call pemake(t(k),pein,pgl(k),pe(k))
-              print*,'Alva format. Converged'
-              print*,'Pe=',pe(k)
-              CALL JON(T(K),pe(k),1,PG,RO,DUM,IO,k)
-* pg should be within eps of pgl (cf. pemake).
+!              pein=pe(k)*pgl(k)/pg
+!              pein=pe(k)
+!              print*,'babsma, improving on guess Pe = ',pein
+!              call pemake(t(k),pein,pgl(k),pe(k))
+!              print*,'Alva format. Converged'
+!              print*,'Pe=',pe(k)
+!              CALL JON(T(K),pe(k),1,PG,RO,DUM,IO,k)
+!* pg should be within eps of pgl (cf. pemake).
             endif
 
           ENDIF

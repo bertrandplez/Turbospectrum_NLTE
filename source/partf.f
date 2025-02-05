@@ -195,7 +195,7 @@ CC'/b1/plez/BIGGRID/DATA/tableU2.dat',
      &            status='old')
            READ(70, '(A)')
            nlevel=0
-           DO k=1,100 	
+           DO k=1,100 
              READ(70,*,end=99) E(k), g(k)
              nlevel=k
            ENDDO

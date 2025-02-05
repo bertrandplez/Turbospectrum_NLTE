@@ -13,7 +13,8 @@
       character*256 linefil,detout,inatom,inmod,inabun,inspec,
      &              outfil,mongofil,filterfil,continopac,inpmod,
      &              modelatomfile,departurefile,nlteinfofile,
-     &              contmaskfile,linemaskfile,segmentsfile
+     &              contmaskfile,linemaskfile,segmentsfile,
+     &              listoflistfile
       character*12 abund_source,haha
       logical tsuji,spherical,limbdark,abfind,multidump,xifix,mrxf,
      &        hydrovelo,pureLTE,departbin,nlte
@@ -183,7 +184,27 @@ ccc      inatom='DATA/atomdata-v12.1'
         read(iread,*) taum
         read(iread,*) ncore
         read(iread,*) diflog
+      else if (keyword(1:17).eq.'LIST_OF_LINELISTS') then
+!
+! This keyword signals a file (listoflistfile) that contains
+! a list of line lists to be used. BPlez 29-0ct-2024
+!
+        read(charvalue,10) listoflistfile
+        open(100, file = listoflistfile, status = 'old')
+        i=0
+        do while (.true.)
+          read(100,10,end=102) oneline
+          if (oneline(1:1).ne.'#') then
+            i=i+1        
+            read(oneline,'(a)') linefil(i)
+          endif
+        enddo
+ 102    noffil = i
       else if (keyword(1:6).eq.'NFILES') then
+!
+! This is the historical way of inputing line lists:
+! The list of file is given in the script
+!
         read(charvalue,*) noffil
         i=0
         do while (i.lt.noffil)
