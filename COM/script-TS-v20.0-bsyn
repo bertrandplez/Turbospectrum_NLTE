@@ -12,23 +12,23 @@ set MODEL = p5777_g+4.4_m0.0_t01_st_z+0.00_a+0.00_c+0.00_n+0.00_o+0.00_r+0.00_s+
 
 set Feabu = 7.50
  
-set lam_min    = '4800.'
+set lam_min    = '6400.'
 set lam_max    = '6800.'
 
-set deltalam   = '0.006'
+set deltalam   = '0.01'
 set METALLIC   = '     0.000'
 set TURBVEL = 1.0
 
-set SUFFIX     = _${lam_min}-${lam_max}_xit${TURBVEL}-NLTE-windows.spec
+set SUFFIX     = _${lam_min}-${lam_max}_xit${TURBVEL}-LTE-intens.spec
 set result     = ${MODEL}${SUFFIX}
 
-time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
+time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec-gf/bsyn_lu <<EOF
 ###########
 # Use NLTE if true. Source function is then computed with departure coefficients 
 # from departure coefficient file for the atoms in model atom files, if they 
 # are provided. 
 #
-'NLTE :'          '.true.'
+'NLTE :'          '.false.'
 ###########
 # file containing NLTE information 
 # (species, with LTE/NLTE flags, and associated files)
@@ -36,17 +36,20 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'NLTEINFOFILE:'  'DATA/SPECIES_LTE_NLTE.dat'
 #
 ###########
-# if present this file will be used to compute the spectrum in a number of 
-# windows specified in SEGMENTSFILE, with spectral resolution given by
-# RESOLUTION.
-# If not specified, a default value of 500000 is used
-# Note that a constant step is set for each window, using this resolution.
-# Comment out if not needed, and the spectrum will be computed from 
-# LAMBDA_MIN to LAMBDA_MAX with a wavelength step = LAMBDA_STEP
+# if present these files will be used to compute the spectrum in a number of
+# windows specified in SEGMENTSFILE.
+# Comment out if not needed, and the spectrum will be computed from
+# LAMBDA_MIN to LAMBDA_MAX
 # Segments must NOT overlap
 #
-'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
-'RESOLUTION:'     '300000.'
+#'SEGMENTSFILE:'     '${dpath}/uves_giant_Fe-seg.txt'
+#
+# spectral resolution  to be used in these windows.
+# If not specified, a default value of 500000 is used
+# Note that a constant step is set for each window, using this resolution
+# if no windows, LAMBDA_STEP is used.
+#
+#'RESOLUTION:'     '300000.'
 ###########
 # spectral interval in the case of a single wavelength interval, i.e. no 
 # segmentsfile.
@@ -57,10 +60,13 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 'LAMBDA_STEP:'    '${deltalam}'
 ###########
 # Intensity / Flux 
-# in the Intensity case, 12 angles are hardcoded, and spectra are computed 
+# in the Intensity case, 12 angles are hardcoded, and spectra are computed
 # for all of them, in addition to the flux.
+# It is possible to change these points by using points listed in the file
+# indicated by the keywork 'MU-POINTS'. A maximum of 30 points is currently possible
 #
-'INTENSITY/FLUX:' 'Flux'
+'INTENSITY/FLUX:' 'Intensity'
+'MU-POINTS:' '${dpath}/mupoints.dat'
 ###########
 # file containing continuous opacity at all model points. Can be computed with babsma.f
 # or be a .opa file from the MARCS web site.
@@ -92,16 +98,21 @@ time ~/Documents/GitHub/Turbospectrum/Turbospectrum2020/exec/bsyn_lu <<EOF
 26  $Feabu
 'ISOTOPES : ' '0'
 ###########
-# line lists. First how many there are, and then the list of lists
+# line lists. there are two ways of specifying them:
+# 1) Use NFILES to give their number, and then list them one per line below.
+# 2) List them all in a file: LIST_OF_LINELISTS
 #
-'NFILES   :' '2'
-linelists/nlte_linelist_test.txt
-DATA/Hlinedata
+#'NFILES   :' '2'
+#linelists/nlte_linelist_test.txt
+#DATA/Hlinedata
+'LIST_OF_LINELISTS:' 'linelists/list.list'
 ###########
 # spherical (T) or plane-parallel (F) radiative transfer. 
 # If spherical, a few more parameters are read
-# DO NOT CHANGE THESE PARAMETERS UNLESS YOU REALLY KNOW WHAT YOU ARE DOING.
-#
+# Do not change these parameters unless you really know what you are doing.
+# NB: the last one before EOF can be decreased towards 1, e.g. 1.001 to increase the sampling
+# of intercepting rays in spherical geometry. This may improve the accuracy of the radiative
+# transfer solution, but will increase computing time.
 'SPHERICAL:'  'F'
   30
   300.00

@@ -1,4 +1,4 @@
-      SUBROUTINE BSYNB(NALLIN)
+      SUBROUTINE BSYNB(nangles,muoutp)
 *
 *-----------------------------------------------------------------------
 *
@@ -78,43 +78,31 @@
       real bigsource(2*ndp)
       logical computeIplus,optthin
 *
-cc      real muout(10),isurf(10,lpoint),icsurf(10,lpoint),yout(10)
       real costheta(nrays)
-cc,uin(nrays)
-cc      integer iout(10)
-* muout are mu-point for output intensities, icsurf is for continuum intensity 
-*  and isurf for absolute intensity
+*
       character*4 iblnk
       DATA IBLNK/'    '/,profold/0./,first/.true./
       data debug/.false./
       data write_radius/.true./
-!
-!      data muout /-1.0, -0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1/
-! use log(mu) instead ot better cover the limb
-cc     data muout /0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.25, -1.50,
-cc     &            -1.75, -2.0/
-cc
-cc      do i=1,10
-cc        muout(i)=-(10.**muout(i))
-cc      enddo
 
-* mu-points for intensity output.
-* Use 12 Gauss-Radau points
+* icsurf is for continuum intensity and isurf for absolute intensity
+* muoutp are mu-points for output intensities
+* Use 12 Gauss-Radau points by default, if nangles < 0,
+* Otherwise use nangles mu-points from input
+*
       logical extrap
       integer nangles
-      parameter (nangles=12)
       integer iout(nangles)
-      real muout(nangles),yout(nangles),isurf(nangles,lpoint),
-     &     icsurf(nangles,lpoint),uin(nrays),muoutp(nangles)
-      data muoutp /0.010018, 0.052035, 0.124619, 0.222841, 0.340008,
-     &            0.468138, 0.598497, 0.722203, 0.830825, 0.916958,
-     &            0.974726, 1.000000/
-
-! in spherical case, cos(theta) must be <0. muoutp are the cos(theta for the PP case.
-
+      real muout(nangles),yout(nangles),uin(nrays),muoutp(nangles)
+      real, allocatable :: isurf(:,:),icsurf(:,:)
+!
+! in spherical case, cos(theta) must be <0. muoutp are the cos(theta) for the PP case.
       do i=1,nangles
         muout(i)=-muoutp(nangles+1-i)
       enddo
+
+      allocate(isurf(nangles,lpoint))
+      allocate(icsurf(nangles,lpoint))
 
       PI=4.*atan(1.)
 ! 3.141593
@@ -366,7 +354,7 @@ C
 !
       if (iint.gt.0) then
         write(46,1111) (-muout(j),j=nangles,1,-1)
-1111    format ('# mu-points ',12(1x,1pe13.6))
+1111    format ('# mu-points ',30(1x,1pe13.6))
       endif
  
       do j=1,maxlam
@@ -560,7 +548,7 @@ cc              print*,'Pfeau(1,1) ',pfeau(1,1)
 * Replace Y1 by surfIplus, to prepare integration of flux
             write(98,*) y1(i),surfiplus/y1(i),taulambda(ntauicall)
 
-            if (j.eq.10) then
+            if (abs(xlambda(j)-23707.55).lt.0.001) then
               do k=1,ntauicall
                 write(94,*) xmu(i,1),taulambda(k),bigsource(k)
               enddo
@@ -587,14 +575,16 @@ cccc          endif
 * calculate emergent line intensity at prescribed mu-points
 *
 !*
-!* PRINT OUT lambda number 10
+!* PRINT OUT one lambda
 !*
+        if (abs(xlambda(j)-23707.55).lt.0.001) then
+
 !        if (j.eq.10) then
-!          write(111,'(a)') 'original'
-!          do k=1,mmu(1)
-!           write(111,*) xmu(k,1),y1(k)
-!          enddo
-!        endif
+          write(111,'(a)') 'original'
+          do k=1,mmu(1)
+           write(111,*) xmu(k,1),y1(k)
+          enddo
+        endif
 
         do k=1,mmu(1)
           costheta(k)=xmu(k,1)
@@ -606,16 +596,17 @@ cccc          endif
           isurf(k,j)=yout(k)
         enddo
 !*
-!* PRINT OUT lambda number 10
+!* PRINT OUT one lambda
 !*
-!        if (j.eq.10) then
-!          write(111,'(a)') 'interpolated'
-!          do k=1,nangles
-!            write(111,*) muout(k),isurf(k,j)
-!          enddo
-!          write(111,'(a)') 'FLUX at outermost layer'
-!          write(111,*) hsurf*4.*pi
-!        endif
+        if (abs(xlambda(j)-23707.55).lt.0.001) then
+
+          write(111,'(a)') 'interpolated'
+          do k=1,nangles
+            write(111,*) muout(k),isurf(k,j)
+          enddo
+          write(111,'(a)') 'FLUX at outermost layer'
+          write(111,*) hsurf*4.*pi
+        endif
 !
 *
 * Spherical fluxes
@@ -702,7 +693,7 @@ c We should have surface flux here!
           endif
         else if (iint.gt.0) then
           if (computeIplus) then
-* We store additional columns for the intensity at mu=1.0 to 0.1, step 0.1.
+* We store additional columns for the intensity.
 * So we have: lambda, normalized and absolute flux for summed source function,
 * absolute Feautrier flux, and intensities for summed source function:
 * , intensity at mu=1.0,  normalized intensity at mu=1.0,
@@ -711,17 +702,20 @@ c We should have surface flux here!
      &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),
      &                     k=nangles,1,-1)
 1967        format(f11.3,1x,f10.5,1x,1pe12.5,1x,1pe12.5,2x,
-     &             12(1x,1pe12.5,1x,0pf10.5))
+     &             30(1x,1pe12.5,1x,0pf10.5))
           else
-* We store additional columns for the intensity at 12 values of mu
+* We store additional columns for the intensity at nangles values of mu
 * So we have: lambda, normalized flux, flux, and then intensity and normalised intensity
 * for all mu's
+* BPz 30-Jan-2025: format changed for normalized intensities to allow large numbers
+*                  as this may happen with extended envelopes when lines go in emission
 
             write(46,1965) xlambda(j),prf,fluxme,
      &                    (isurf(k,j),isurf(k,j)/icsurf(k,j),
      &                     k=nangles,1,-1)
 1965        format(f11.3,1x,f10.5,1x,1pe12.5,2x,
-     &             12(1x,1pe12.5,1x,0pf10.5))
+     &             30(2(1x,1pe12.5)))
+!     &             20(1x,1pe12.5,1x,0pf10.5))
 cc            write(46,1965) xlambda(j),prf,fluxme,y1(1)
 2018        format(f11.3,1x,f10.5,1x,1pe12.5,1x,e12.5,1x,e12.5)
           endif

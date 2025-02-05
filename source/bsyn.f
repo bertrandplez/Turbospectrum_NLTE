@@ -166,6 +166,8 @@
       integer datnoffil,datncore,datmaxfil,datmihal,datiint
       real    isoch(1000),isochfact(1000),datisoch(1000),
      &        datisochfact(1000)
+      integer datnangles,nangles
+      real    datmuoutp(30),muoutp(30)
       real    datxmyc,datscattfrac
       character*128 datfilmet,datfilmol,datfilwavel
       character*256 datlinefil(maxfil),datdetout,
@@ -198,7 +200,7 @@
      &                 datnlte,datmodelatomfile,datdeparturefile,
      &                 datdepartbin,datcontmaskfile,datlinemaskfile,
      &                 datsegmentsfile,datnlteinfofile,
-     &                 databund_source
+     &                 databund_source,datnangles,datmuoutp
 
       real amass(92,0:250),abund(92),fixabund(92),
      &         isotopfrac(92,0:250)
@@ -336,6 +338,9 @@ ccc      external commn_handler
           stop 'Stop in bsyn'
         endif
       endif
+! mu-points for intensity output
+      nangles=datnangles
+      muoutp=datmuoutp
 
       print*,tsuji,filmet(1:index(filmet,' ')),
      &       filmol(1:index(filmol,' '))
@@ -1706,9 +1711,9 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
 *
       if (.not.multidump) then
         if (spherical) then
-          CALL BSYNB(NALLIN)
+          call bsynb(nangles,muoutp)
         else
-          CALL BSYNBplatt(NALLIN)
+          call bsynbplatt(nangles,muoutp)
         endif
       else
 * dump opacities for MULTI input. 20 juin 1994.
