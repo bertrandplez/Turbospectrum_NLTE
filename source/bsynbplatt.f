@@ -1,4 +1,4 @@
-      SUBROUTINE BSYNBplatt(NALLIN)
+      SUBROUTINE BSYNBplatt(nangles,muoutp)
 *
 *-----------------------------------------------------------------------
 *
@@ -48,17 +48,16 @@
       real fcfc(lpoint),y1cy1c(lpoint),y1y1(nrays,lpoint),
      & xlm(lpoint)
 
-* mu-points for intensity output.
-* Use 12 Gauss-Radau points
+* icsurf is for continuum intensity and isurf for absolute intensity
+* muoutp are mu-points for output intensities
+* Use 12 Gauss-Radau points by default, if nangles < 0,
+* Otherwise use nangles mu-points from input
+*     
       logical extrap
       integer nangles
-      parameter (nangles=12)
       integer iout(nangles)
-      real muout(nangles),yout(nangles),isurf(nangles,lpoint),
-     &     icsurf(nangles,lpoint),uin(nrays)
-      data muout /0.010018, 0.052035, 0.124619, 0.222841, 0.340008,
-     &            0.468138, 0.598497, 0.722203, 0.830825, 0.916958,
-     &            0.974726, 1.000000/
+      real muout(nangles),yout(nangles),uin(nrays),muoutp(nangles)
+      real, allocatable :: isurf(:,:), icsurf(:,:)
 
 * special version NLTE
       logical nlte
@@ -78,6 +77,14 @@
 *
 * Initiate angle quadrature points 
 *
+      do i=1,nangles
+!        muout(i)=muoutp(nangles+1-i)
+        muout(i)=muoutp(i)
+      enddo
+
+      allocate(isurf(nangles,lpoint))
+      allocate(icsurf(nangles,lpoint))
+
       NMY=NMX
       CALL GAUSI(NMY,0.,1.,WMY,XMY)
       DO 1 I=1,NMY
@@ -292,7 +299,7 @@ cc        enddo
 *
       if (iint.gt.0) then
         write(46,1111) muout(1:nangles)
-1111    format ('# mu-points ',12(1x,1pe13.6))
+1111    format ('# mu-points ',30(1x,1pe13.6))
       endif
       do j=1,maxlam
         plezflux=1.-prof(j)
@@ -306,7 +313,7 @@ cc        enddo
           write(46,1965) xlambda(j),plezflux,fluxme(j),
      &                   (isurf(k,j),isurf(k,j)/icsurf(k,j),k=1,nangles)
 cc     &                   icenter(j),iprf(j)
-1965      format(f11.3,1x,f10.5,1x,1pe12.5,12(1x,1pe12.5,1x,0pf8.5))
+1965      format(f11.3,1x,f10.5,1x,1pe12.5,30(1x,1pe12.5,1x,0pf8.5))
         endif
       enddo
 

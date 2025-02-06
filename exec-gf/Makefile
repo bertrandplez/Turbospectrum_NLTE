@@ -11,7 +11,7 @@ include2 = ../$(SOURCE)/tsuji.par
 
 #LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -Wall -Wsurprising -ffpe-trap=zero,invalid -fbacktrace -std=legacy
 
-LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -fbacktrace -std=legacy
+LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -fbacktrace -std=legacy -mcmodel=small
 # -fno-sign-zero
 #-ffpe-trap=zero,invalid 
 

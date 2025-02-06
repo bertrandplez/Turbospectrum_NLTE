@@ -34,7 +34,7 @@
       LOGICAL MRXF,XIFIX
       character*50 blabla
       CHARACTER*1024 DETOUT,OUTMOD,outmod2
-      CHARACTER*50 mocode,mocodei,marcsformat, atmosLabel
+      CHARACTER*50 mocode,mocodei,marcsformat, atmosLabel,momocode
 *
 * from bsyn; this ensures that continuum opacities are computed for all
 * wavelengths of the bsyn calculation. Babsma must be called before each 
@@ -324,7 +324,8 @@ c              if (xlambda(j).gt.edge(k)) then
 * JON DATA AND ABSKOEFF DATA TO BE READ FROM UNIT 11
 * PRINTOUT ON UNIT 7
 * PRELIMINARY FILES ON UNIT 15 AND 16
-* MODEL READ FROM UNIT 12, NEW MODEL DATA WRITTEN ON UNIT 13
+* MODEL READ FROM UNIT 12, NEW MODEL DATA WRITTEN ON UNIT 13 
+*          (imodut2, .mod model, readable by basma.f, with a tau-scale)
 *
       OPEN(UNIT=IWRIT,FILE=DETOUT,STATUS='UNKNOWN')
       OPEN(UNIT=IREAT,FILE=datcontinopac,STATUS='OLD')
@@ -890,7 +891,8 @@ c      print*,'injon done'
 	WRITE(IWRIT,300) 'MRXF',NTAU,XLS
       ELSE
 	WRITE(IMODUT,200) MOCODE(1:lenstr(mocode)),NTAU,XLS
-	WRITE(IMODUT2,2000) MOCODE(1:lenstr(mocode)),NTAU,XLS
+        momocode='tau_'//mocode(1:lenstr(mocode))
+	WRITE(IMODUT2,2000) momocode(1:lenstr(momocode)),NTAU,XLS
 	WRITE(IWRIT,300) MOCODE(1:lenstr(mocode)),NTAU,XLS
       ENDIF
       WRITE(IMODUT,203) NLQ
