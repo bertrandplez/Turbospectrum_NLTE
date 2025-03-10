@@ -306,9 +306,9 @@ c
 !        firsth=.false.
 !      endif
 *
-      ne=pe(ntp)/(t(ntp)*1.38066e-16)
-      nh1=sngl(presneutral(ntp,1))/(t(ntp)*1.38066e-16)
-      nhe1=sngl(presneutral(ntp,2))/(t(ntp)*1.38066e-16)
+      ne=pe(ntp)/(t(ntp)*1.38066d-16)
+      nh1=presneutral(ntp,1)/(t(ntp)*1.38066d-16)
+      nhe1=presneutral(ntp,2)/(t(ntp)*1.38066d-16)
 ! dopple not used for continuum
       dopple=0.0
       xlambda=dble(xla(jp))

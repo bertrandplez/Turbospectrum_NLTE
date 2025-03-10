@@ -970,9 +970,9 @@ cc          call Hlineadd(lunit,nline,xlboff)
             total = total/ross(j)/ro(j)
             ABSO(j,i)=ABSO(j,i)+total*absfrac
             ABSOS(j,i)=ABSOS(j,i)+total*scattfrac
-          if (j == 25) 
-     &          print*,j,sngl(xlambda(i)),abso(j,i),
-     &          absocont(j,i)
+!          if (j == 25) 
+!     &          print*,j,sngl(xlambda(i)),abso(j,i),
+!     &          absocont(j,i)
         enddo
       enddo
 

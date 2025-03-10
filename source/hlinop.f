@@ -196,7 +196,6 @@ C
       END
 
 C***********************************************************************
-C***********************************************************************
       REAL*8 FUNCTION HPROFL(N,M,WAVE,WAVEH,T,XNE,H1FRC,HE1FRC,DOPPH)
 C  
 C hprofl = normalised line profile 
@@ -214,288 +213,149 @@ C        = reduced Doppler width delta_nu / nu_0
 C
 C  Based on code by Deane Peterson and Bob Kurucz
 C
-      implicit none
-      integer, parameter :: dp = selected_real_kind(15, 307)
-      integer, parameter :: sp = selected_real_kind(6, 37)
-      integer, parameter :: NHaH2 = 49, NHaH2p = 74
-      integer, parameter :: NLyaH2 = 95, NLyaH2p = 45, NLybH2 = 45
-      integer, parameter :: NLybH2p = 26, NLygH2p = 27
-      integer :: i, icut, ifins, ipos, k, m, m1, mmn, n, n1, nwid
-      real(dp), PARAMETER :: CLIGHT = 2.99792458E18
-      real(dp), PARAMETER :: CLIGHTCM = 2.99792458E10
-      real(dp), PARAMETER :: PI = 3.14159265359, SQRTPI = 1.77245385
-      real(dp) :: A, ALF(3), ASUM(100), ASUMLYMAN(100), BALFAC(3)
-      real(dp) :: D, del, DELW, dlHaH2, dlHaH2p, dlLyaH2, dlLyaH2p
-      real(dp) :: dlLybH2, dlLybH2p, dlLygH2p, DOP, dopph, EHYD(100)
-      real(dp) :: F, FINEST(14), FINSWT(14), FO, FREQ, FREQNM, FREQSQ
-      real(dp) :: gnm, grdwave, h1frc, HaH2(NHaH2), HaH2p(NHaH2p)
-      real(dp) :: he1frc, hfnm, hfwid, hhw, HTOTAL, hwlor, hwstk
-      real(dp) :: ISTAL(4), LNCOMP(4), LNGHAL(4), LyaH2(NLyaH2)
-      real(dp) :: LyaH2p(NLyaH2p), LybH2(NLybH2)
-      real(dp) :: LybH2p(NLybH2p), LygH2p(NLygH2p), radamp, RAYLCUT
-      real(dp) :: resont, satb, SIGMA(3), STALPH(34), stark, stark1
-      real(dp) :: STCOMP(5,4), STCPWT(5,4), STWTAL(34), t,t3nhe, t43
-      real(dp) :: vbarh, vdw, WAVE, WAVEH, wavermp, wavermp0, wbrgd
-      real(dp) :: xfac, xfacmax, xHaH2, xHaH2p, xknm, XKNMTB(4,3)
-      real(dp) :: xlh1frc, xlHaH2, xlHaH2p, xlne, xlLyaH2
-      real(dp) :: xlLyaH2p, xlLybH2, xlLybH2p, xlLygH2p, xlnHaH2
-      real(dp) :: xlnHaH2p, xlnlyah2, xlnlyah2p, xlnlybh2, xlnlybh2p
-      real(dp) :: xlnlygh2p, xLyaH2, xLyaH2p, xLybH2, xLybh2p, xLygH2p
-      real(dp) :: xm, xm2, xm2mn2, xmn2, xn, XN2, xne, xself, xself0
-      real(dp) :: xstark, xstark0, xstarkb
-      DATA   xlLyaH2,  xlLyaH2p,   xlLybH2,  xlLybH2p,  xlLygH2p /
-     &     1278.7_dp, 1290.3_dp, 1034.6_dp, 1032.4_dp, 975.72_dp /
-      DATA    xlHaH2,   xlHaH2p /
-     &     6649.3_dp, 6819.8_dp /
-      DATA   dlLyaH2, dlLyaH2p, dlLybH2, dlLybH2p, dlLygH2p /
-     &        4.0_dp,   3.0_dp,  3.0_dp,   2.0_dp,  1.00_dp /
-      DATA    dlHaH2, dlHaH2p /
-     &       38.0_dp, 42.4_dp /
-      DATA   xLNLyaH2, xLNLyaH2p, xLNLybH2, xLNLybH2p, xLNLygH2p /
-     &       -18.0_dp,  -17.0_dp, -18.0_dp,  -17.0_dp,  -17.0_dp /
-      DATA    xLNHaH2,  xLNHaH2p /
-     &       -17.0_dp,  -17.0_dp /
+      REAL*8 DELW,WAVE,WAVEH,DOP,D,FREQ,FREQNM,RAYLCUT,WAVE4000
+      REAL*8 FINEST(14),FINSWT(14),stark1
+      REAL*8 XN2,F,FO,HTOTAL,FREQSQ
+      real*8 dopph,he1frc,h1frc,xne,t,hfnm
+      DIMENSION STCOMP(5,4),STALPH(34),
+     1          ISTAL(4),LNGHAL(4),STWTAL(34),
+     2          STCPWT(5,4),LNCOMP(4)
+      DIMENSION ASUM(100),ASUMLYMAN(100),XKNMTB(4,3)
+      DIMENSION SIGMA(3),ALF(3),BALFAC(3)
+      REAL*8 LYMANH2PLUS(111),LYMANH2(91)
+      REAL*8 CLIGHT
       LOGICAL LYMANALF
       SAVE
-      COMMON / CLEVELS / EHYD
 C
 C  Einstein A-value sums for H lines
 C
       DATA ASUM/
-     & 0.000d+00, 4.696d+08, 9.980d+07, 3.017d+07, 1.155d+07, 5.189d+06,
-     & 2.616d+06, 1.437d+06, 8.444d+05, 5.234d+05, 3.389d+05, 2.275d+05,
-     & 1.575d+05, 1.120d+05, 8.142d+04, 6.040d+04, 4.560d+04, 3.496d+04,
-     & 2.719d+04, 2.141d+04, 1.711d+04, 1.377d+04, 1.119d+04, 9.166d+03,
-     & 7.572d+03, 6.341d+03, 5.338d+03, 4.523d+03, 3.854d+03, 3.302d+03,
-     & 2.844d+03, 2.460d+03, 2.138d+03, 1.866d+03, 1.635d+03, 1.438d+03,
-     & 1.269d+03, 1.124d+03, 9.983d+02, 8.894d+02, 7.947d+02, 7.120d+02,
-     & 6.396d+02, 5.759d+02, 5.198d+02, 4.703d+02, 4.263d+02, 3.873d+02,
-     & 3.526d+02, 3.215d+02, 2.938d+02, 2.689d+02, 2.465d+02, 2.264d+02,
-     & 2.082d+02, 1.918d+02, 1.769d+02, 1.634d+02, 1.512d+02, 1.400d+02,
-     & 1.298d+02, 1.206d+02, 1.121d+02, 1.043d+02, 9.720d+01, 9.066d+01,
-     & 8.465d+01, 7.912d+01, 7.403d+01, 6.933d+01, 6.498d+01, 6.097d+01,
-     & 5.725d+01, 5.381d+01, 5.061d+01, 4.765d+01, 4.489d+01, 4.232d+01,
-     & 3.994d+01, 3.771d+01, 3.563d+01, 3.369d+01, 3.188d+01, 3.019d+01,
-     & 2.860d+01, 2.712d+01, 2.572d+01, 2.442d+01, 2.319d+01, 2.204d+01,
-     & 2.096d+01, 1.994d+01, 1.898d+01, 1.808d+01, 1.722d+01, 1.642d+01,
-     & 1.566d+01, 1.495d+01, 1.427d+01, 1.363d+01/
+     1 0.000E+00, 4.696E+08, 9.980E+07, 3.017E+07, 1.155E+07, 5.189E+06,
+     2 2.616E+06, 1.437E+06, 8.444E+05, 5.234E+05, 3.389E+05, 2.275E+05,
+     3 1.575E+05, 1.120E+05, 8.142E+04, 6.040E+04, 4.560E+04, 3.496E+04,
+     4 2.719E+04, 2.141E+04, 1.711E+04, 1.377E+04, 1.119E+04, 9.166E+03,
+     5 7.572E+03, 6.341E+03, 5.338E+03, 4.523E+03, 3.854E+03, 3.302E+03,
+     6 2.844E+03, 2.460E+03, 2.138E+03, 1.866E+03, 1.635E+03, 1.438E+03,
+     7 1.269E+03, 1.124E+03, 9.983E+02, 8.894E+02, 7.947E+02, 7.120E+02,
+     8 6.396E+02, 5.759E+02, 5.198E+02, 4.703E+02, 4.263E+02, 3.873E+02,
+     9 3.526E+02, 3.215E+02, 2.938E+02, 2.689E+02, 2.465E+02, 2.264E+02,
+     A 2.082E+02, 1.918E+02, 1.769E+02, 1.634E+02, 1.512E+02, 1.400E+02,
+     1 1.298E+02, 1.206E+02, 1.121E+02, 1.043E+02, 9.720E+01, 9.066E+01,
+     2 8.465E+01, 7.912E+01, 7.403E+01, 6.933E+01, 6.498E+01, 6.097E+01,
+     3 5.725E+01, 5.381E+01, 5.061E+01, 4.765E+01, 4.489E+01, 4.232E+01,
+     4 3.994E+01, 3.771E+01, 3.563E+01, 3.369E+01, 3.188E+01, 3.019E+01,
+     5 2.860E+01, 2.712E+01, 2.572E+01, 2.442E+01, 2.319E+01, 2.204E+01,
+     6 2.096E+01, 1.994E+01, 1.898E+01, 1.808E+01, 1.722E+01, 1.642E+01,
+     7 1.566E+01, 1.495E+01, 1.427E+01, 1.363E+01/
 C
 C  For Lyman lines only the s-p transition is allowed.
 C
       DATA ASUMLYMAN/
-     & 0.000d+00, 6.265d+08, 1.897d+08, 8.126d+07, 4.203d+07, 2.450d+07,
-     & 1.236d+07, 8.249d+06, 5.782d+06, 4.208d+06, 3.158d+06, 2.430d+06,
-     & 1.910d+06, 1.567d+06, 1.274d+06, 1.050d+06, 8.752d+05, 7.373d+05,
-     & 6.269d+05, 5.375d+05, 4.643d+05, 4.038d+05, 3.534d+05, 3.111d+05,
-     & 2.752d+05, 2.447d+05, 2.185d+05, 1.959d+05, 1.763d+05, 1.593d+05,
-     & 1.443d+05, 1.312d+05, 1.197d+05, 1.094d+05, 1.003d+05, 9.216d+04,
-     & 8.489d+04, 7.836d+04, 7.249d+04, 6.719d+04, 6.239d+04, 5.804d+04,
-     & 5.408d+04, 5.048d+04, 4.719d+04, 4.418d+04, 4.142d+04, 3.888d+04,
-     & 3.655d+04, 3.440d+04, 3.242d+04, 3.058d+04, 2.888d+04, 2.731d+04,
-     & 2.585d+04, 2.449d+04, 2.322d+04, 2.204d+04, 2.094d+04, 1.991d+04,
-     & 1.894d+04, 1.804d+04, 1.720d+04, 1.640d+04, 1.566d+04, 1.496d+04,
-     & 1.430d+04, 1.368d+04, 1.309d+04, 1.254d+04, 1.201d+04, 1.152d+04,
-     & 1.105d+04, 1.061d+04, 1.019d+04, 9.796d+03, 9.419d+03, 9.061d+03,
-     & 8.721d+03, 8.398d+03, 8.091d+03, 7.799d+03, 7.520d+03, 7.255d+03,
-     & 7.002d+03, 6.760d+03, 6.530d+03, 6.310d+03, 6.100d+03, 5.898d+03,
-     & 5.706d+03, 5.522d+03, 5.346d+03, 5.177d+03, 5.015d+03, 4.860d+03,
-     & 4.711d+03, 4.569d+03, 4.432d+03, 4.300d+03 /
+     1 0.000E+00, 6.265E+08, 1.897E+08, 8.126E+07, 4.203E+07, 2.450E+07,
+     2 1.236E+07, 8.249E+06, 5.782E+06, 4.208E+06, 3.158E+06, 2.430E+06,
+     3 1.910E+06, 1.567E+06, 1.274E+06, 1.050E+06, 8.752E+05, 7.373E+05,
+     4 6.269E+05, 5.375E+05, 4.643E+05, 4.038E+05, 3.534E+05, 3.111E+05,
+     5 2.752E+05, 2.447E+05, 2.185E+05, 1.959E+05, 1.763E+05, 1.593E+05,
+     6 1.443E+05, 1.312E+05, 1.197E+05, 1.094E+05, 1.003E+05, 9.216E+04,
+     7 8.489E+04, 7.836E+04, 7.249E+04, 6.719E+04, 6.239E+04, 5.804E+04,
+     8 5.408E+04, 5.048E+04, 4.719E+04, 4.418E+04, 4.142E+04, 3.888E+04,
+     9 3.655E+04, 3.440E+04, 3.242E+04, 3.058E+04, 2.888E+04, 2.731E+04,
+     A 2.585E+04, 2.449E+04, 2.322E+04, 2.204E+04, 2.094E+04, 1.991E+04,
+     1 1.894E+04, 1.804E+04, 1.720E+04, 1.640E+04, 1.566E+04, 1.496E+04,
+     2 1.430E+04, 1.368E+04, 1.309E+04, 1.254E+04, 1.201E+04, 1.152E+04,
+     3 1.105E+04, 1.061E+04, 1.019E+04, 9.796E+03, 9.419E+03, 9.061E+03,
+     4 8.721E+03, 8.398E+03, 8.091E+03, 7.799E+03, 7.520E+03, 7.255E+03,
+     5 7.002E+03, 6.760E+03, 6.530E+03, 6.310E+03, 6.100E+03, 5.898E+03,
+     6 5.706E+03, 5.522E+03, 5.346E+03, 5.177E+03, 5.015E+03, 4.860E+03,
+     7 4.711E+03, 4.569E+03, 4.432E+03, 4.300E+03/
 C
       DATA N1/0/, M1/0/
 C
 C  Fine structure components for alpha lines in FREQ*10**-7
 C
-      DATA STALPH / -730.0_dp,  370.0_dp,  188.0_dp,  515.0_dp,
-     &    327.0_dp,  619.0_dp, -772.0_dp, -473.0_dp, -369.0_dp,
-     &    120.0_dp,  256.0_dp,  162.0_dp,  285.0_dp, -161.0_dp,
-     &    -38.3_dp,   6.82_dp, -174.0_dp, -147.0_dp, -101.0_dp,
-     &    -77.5_dp,   55.0_dp,  126.0_dp,   75.0_dp,  139.0_dp,
-     &    -60.0_dp,    3.7_dp,   27.0_dp,  -69.0_dp,  -42.0_dp,
-     &    -18.0_dp,   -5.5_dp,   -9.1_dp,  -33.0_dp,   -24._dp /
+      DATA STALPH/ -730.,  370.,  188.,  515.,  327.,  619., -772.,
+     1             -473., -369.,  120.,  256.,  162.,  285., -161.,
+     2             -38.3,  6.82, -174., -147., -101., -77.5,   55.,
+     3              126.,   75.,  139.,  -60.,   3.7,   27.,  -69., 
+     4              -42.,  -18.,  -5.5,  -9.1,  -33.,  -24./
 C
 C  Alpha component weights
 C
-      DATA STWTAL / 1.0_dp,2.0_dp,1.0_dp,2.0_dp,1.0_dp,2.0_dp,1.0_dp,
-     &              2.0_dp,3.0_dp,1.0_dp,2.0_dp,1.0_dp,2.0_dp,1.0_dp,
-     &              4.0_dp,6.0_dp,1.0_dp,2.0_dp,3.0_dp,4.0_dp,1.0_dp,
-     &              2.0_dp,1.0_dp,2.0_dp,1.0_dp,4.0_dp,6.0_dp,1.0_dp,
-     &              7.0_dp,6.0_dp,4.0_dp,4.0_dp,4.0_dp,5.0_dp /
+      DATA STWTAL/1.,2.,1.,2.,1.,2.,1.,2.,3.,1.,2.,1.,2.,1.,4.,6.,1.,
+     1            2.,3.,4.,1.,2.,1.,2.,1.,4.,6.,1.,7.,6.,4.,4.,4.,5./
       DATA ISTAL /1, 3, 10, 21/
       DATA LNGHAL/2, 7, 11, 14/
 C
 C  Fine structure for M.EQ.INFINITY IN FREQ*10**-7
 C
-      DATA STCOMP /  0.0_dp,   0.0_dp,    0.0_dp,    0.0_dp,   0.0_dp,
-     &             468.0_dp, 576.0_dp, -522.0_dp,    0.0_dp,   0.0_dp,
-     &             260.0_dp, 290.0_dp,  -33.0_dp, -140.0_dp,   0.0_dp,
-     &             140.0_dp, 150.0_dp,   18.0_dp,  -27.0_dp,  -51.0_dp /
+      DATA STCOMP/   0.,    0.,    0.,    0.,    0.,
+     2             468.,  576., -522.,    0.,    0.,
+     3             260.,  290.,  -33., -140.,    0.,
+     4             140.,  150.,   18.,  -27.,   -51./
 C
 C  Weights for fine structure components
 C
-      DATA STCPWT/1.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,
-     &            1.0_dp, 1.0_dp, 2.0_dp, 0.0_dp, 0.0_dp,
-     &            1.0_dp, 1.0_dp, 4.0_dp, 3.0_dp, 0.0_dp,
-     &            1.0_dp, 1.0_dp, 4.0_dp, 6.0_dp, 4.0_dp /
-C
+      DATA STCPWT/1., 0., 0., 0., 0.,
+     2            1., 1., 2., 0., 0.,
+     3            1., 1., 4., 3., 0.,
+     4            1., 1., 4., 6., 4./
       DATA LNCOMP/1, 3, 4, 5/
 C
-      DATA XKNMTB / 0.0001716_dp, 0.0090190_dp, 0.1001000_dp,
-     &              0.5820000_dp, 0.0005235_dp, 0.0177200_dp,
-     &              0.1710000_dp, 0.8660000_dp, 0.0008912_dp,
-     &              0.0250700_dp, 0.2230000_dp, 1.0200000_dp /
+      DATA XKNMTB/0.0001716, 0.0090190, 0.1001000, 0.5820000,
+     1            0.0005235, 0.0177200, 0.1710000, 0.8660000,
+     2            0.0008912, 0.0250700, 0.2230000, 1.0200000/
 C
-C  Data for satellites in the wings of hydrogen lines arising from collisions
-C  with H and H+ are taken from N. Allard's web-site:
-C     http://mygepi.obspm.fr/~allard/lymantables.html
-C  I have only including satellites from binary collisions <=> linear in N.
+C  Lyman alpha red wing profiles following Allard et al (1998, A&A 335,
+C  1124). Taken from ATLAS12 code (see Castelli & Kurucz 2001, A&A 372,
+C  260)
+C  
+C  Store log10(I(d omega)) for N(H) = 1e14 cm^-3.
 C
-C  For, e.g., neutral perturbers on Lyman\alpha, the data are stored in LyaH2
-C  with NLyaH2 elements, and cover the wavelength region
-C           \lambda/[\AA] = [xlLyaH2; xlLyaH2+NLyaH2*dlLyaH2]
-C  The data are given for a perturber density of 10^xLNLyaH2. The satellites
-C  are assumed to be independent of temperature.
+C     LYMAN ALPHA QUASI H2+ PROFILE
+C     DELTA WAVENO =  -15000+100*(N-1) N=1,111   UP TO -4000
 C
-C  The transition to the self-broadened profile (for neutral perturbers)
-C  and to the Stark profile (for charged ones) is accomplished with a
-C  linear or sinusoidal bridging function between (the locally defined)
-C  WAVERMP and the blue edge of the data. The self-broadened and Stark
-C  profiles are allowed to increase (linearly from line-center to blue edge
-C  of the satellite data) by a factor up to (the locally defined) XFACMAX
-C  in order to join with the satellite profile - otherwise the satellite is
-C  decreased to join smoothly with the former. 
+      DATA LYMANH2PLUS/
+     1 -15.14, -15.06, -14.97, -14.88, -14.80, -14.71, -14.62, -14.53,
+     2 -14.44, -14.36, -14.27, -14.18, -14.09, -14.01, -13.92, -13.83,
+     3 -13.74, -13.65, -13.57, -13.48, -13.39, -13.30, -13.21, -13.13,
+     4 -13.04, -12.95, -12.86, -12.77, -12.69, -12.60, -12.51, -12.40,
+     5 -12.29, -12.15, -12.02, -11.90, -11.76, -11.63, -11.53, -11.41,
+     6 -11.30, -11.22, -11.15, -11.09, -11.07, -11.06, -11.07, -11.09,
+     7 -11.12, -11.16, -11.19, -11.21, -11.24, -11.27, -11.30, -11.33,
+     8 -11.36, -11.39, -11.42, -11.45, -11.48, -11.48, -11.48, -11.48,
+     9 -11.48, -11.48, -11.48, -11.48, -11.48, -11.48, -11.48, -11.48,
+     A -11.48, -11.48, -11.48, -11.48, -11.41, -11.40, -11.39, -11.38,
+     1 -11.37, -11.36, -11.35, -11.34, -11.33, -11.32, -11.30, -11.29,
+     2 -11.28, -11.27, -11.27, -11.27, -11.26, -11.25, -11.24, -11.23,
+     3 -11.22, -11.21, -11.20, -11.19, -11.18, -11.17, -11.15, -11.14,
+     4 -11.13, -11.12, -11.11, -11.10, -11.09, -11.08, -11.07/
 C
-C  The Ly\alpha and \beta lines are covered in
-C  N.F Allard, A. Royer, J.F. Kielkopf and N. Feautrier,
-C  1999, Phys. Rev. A, 60, 1021, 1033 
-C  http://adsabs.harvard.edu/abs/1999PhRvA..60.1021A
+C     LYMAN ALPHA QUASI H2 PROFILE
+C     DELTA WAVENO = -22000+200*(N-1)  N=1,91  -4000
 C
-C  Lyman \alpha satellites from H collisions  for N(H) = 1e18 cm^-3
-C  wavelength  = 1278.7\AA  + (N-1)*4.    N=1,95   1654.7\AA
-C  Major satellite at 1580\AA and minor ones at 1430 and 1345\AA.
+      DATA LYMANH2/
+     1 -13.43, -13.32, -13.21, -13.10, -12.98, -12.86, -12.79, -12.72,
+     2 -12.65, -12.58, -12.51, -12.47, -12.45, -12.45, -12.48, -12.51,
+     3 -12.53, -12.56, -12.59, -12.62, -12.65, -12.69, -12.73, -12.77,
+     4 -12.81, -12.85, -12.87, -12.89, -12.90, -12.90, -12.90, -12.90,
+     5 -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90,
+     6 -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90,
+     7 -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90,
+     8 -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.90,
+     9 -12.90, -12.90, -12.90, -12.90, -12.90, -12.90, -12.89, -12.88,
+     A -12.87, -12.86, -12.85, -12.84, -12.83, -12.81, -12.80, -12.79,
+     1 -12.78, -12.76, -12.74, -12.72, -12.70, -12.68, -12.65, -12.62,
+     2 -12.59, -12.56, -12.53/
 C
-      DATA LyaH2/
-     & -19.079_dp, -19.127_dp, -19.172_dp, -19.213_dp, -19.247_dp,
-     & -19.271_dp, -19.294_dp, -19.320_dp, -19.345_dp, -19.361_dp,
-     & -19.367_dp, -19.367_dp, -19.369_dp, -19.371_dp, -19.370_dp,
-     & -19.365_dp, -19.359_dp, -19.357_dp, -19.360_dp, -19.366_dp,
-     & -19.372_dp, -19.378_dp, -19.383_dp, -19.388_dp, -19.392_dp,
-     & -19.394_dp, -19.392_dp, -19.386_dp, -19.375_dp, -19.361_dp,
-     & -19.347_dp, -19.332_dp, -19.317_dp, -19.303_dp, -19.289_dp,
-     & -19.275_dp, -19.258_dp, -19.240_dp, -19.232_dp, -19.237_dp,
-     & -19.248_dp, -19.264_dp, -19.281_dp, -19.294_dp, -19.301_dp,
-     & -19.307_dp, -19.312_dp, -19.320_dp, -19.330_dp, -19.340_dp,
-     & -19.352_dp, -19.361_dp, -19.366_dp, -19.362_dp, -19.347_dp,
-     & -19.324_dp, -19.294_dp, -19.261_dp, -19.229_dp, -19.200_dp,
-     & -19.175_dp, -19.154_dp, -19.135_dp, -19.118_dp, -19.101_dp,
-     & -19.084_dp, -19.064_dp, -19.043_dp, -19.019_dp, -18.994_dp,
-     & -18.969_dp, -18.946_dp, -18.927_dp, -18.911_dp, -18.900_dp,
-     & -18.892_dp, -18.890_dp, -18.893_dp, -18.901_dp, -18.915_dp,
-     & -18.933_dp, -18.957_dp, -18.985_dp, -19.018_dp, -19.056_dp,
-     & -19.098_dp, -19.144_dp, -19.193_dp, -19.245_dp, -19.300_dp,
-     & -19.358_dp, -19.420_dp, -19.483_dp, -19.547_dp, -19.609_dp /
-C
-C  Lyman \alpha satellites from H+ collisions  for N(H+) = 1e17 cm^-3
-C  wavelength  = 1290.3\AA  + (N-1)*3.    N=1,45   1654.7\AA
-C  Major satellite at 1390\AA and minor ones at 1295 and 1330\AA.
-C
-      DATA LyaH2p/
-     & -18.553_dp, -18.583_dp, -18.613_dp, -18.641_dp, -18.672_dp,
-     & -18.703_dp, -18.725_dp, -18.736_dp, -18.743_dp, -18.752_dp,
-     & -18.760_dp, -18.764_dp, -18.769_dp, -18.785_dp, -18.814_dp,
-     & -18.845_dp, -18.868_dp, -18.881_dp, -18.895_dp, -18.915_dp,
-     & -18.935_dp, -18.934_dp, -18.906_dp, -18.860_dp, -18.816_dp,
-     & -18.784_dp, -18.761_dp, -18.739_dp, -18.711_dp, -18.672_dp,
-     & -18.633_dp, -18.595_dp, -18.567_dp, -18.564_dp, -18.582_dp,
-     & -18.622_dp, -18.682_dp, -18.759_dp, -18.859_dp, -18.974_dp,
-     &  -19.105_dp, -19.249_dp, -19.400_dp, -19.548_dp, -19.689_dp /
-
-C  Lyman \beta satellites from H collisions  for N(H) = 1e18 cm^-3
-C  wavelength  = 1034.6\AA  + (N-1)*3.    N=1,45   1166.6\AA
-C  Major satellite at 1150 and minor ones at 1087 and 1110\AA.
-C
-      DATA LybH2/
-     & -18.464_dp, -18.632_dp, -18.732_dp, -18.810_dp, -18.925_dp,
-     & -19.006_dp, -19.055_dp, -19.074_dp, -19.094_dp, -19.099_dp,
-     & -19.087_dp, -19.079_dp, -19.059_dp, -19.040_dp, -19.023_dp,
-     & -19.004_dp, -18.988_dp, -19.002_dp, -19.063_dp, -19.116_dp,
-     & -19.106_dp, -19.055_dp, -19.039_dp, -19.052_dp, -19.034_dp,
-     & -18.969_dp, -18.887_dp, -18.839_dp, -18.834_dp, -18.846_dp,
-     & -18.856_dp, -18.843_dp, -18.796_dp, -18.703_dp, -18.572_dp,
-     & -18.449_dp, -18.360_dp, -18.255_dp, -18.180_dp, -18.199_dp,
-     & -18.317_dp, -18.514_dp, -18.778_dp, -19.067_dp, -19.344_dp /
-C
-C  Lyman \beta satellites from H+ collisions  for N(H+) = 1e17 cm^-3
-C  wavelength  = 1032.4\AA  + (N-1)*2.    N=1,26   1082.4\AA
-C  Major satellites at 1060 and 1077\AA.
-C
-      DATA LybH2p/
-     & -15.321_dp, -15.499_dp, -15.648_dp, -16.080_dp, -16.365_dp,
-     & -16.470_dp, -16.540_dp, -16.599_dp, -16.648_dp, -16.702_dp,
-     & -16.741_dp, -16.677_dp, -16.614_dp, -16.541_dp, -16.513_dp,
-     & -16.636_dp, -16.862_dp, -17.092_dp, -17.170_dp, -17.123_dp,
-     & -16.937_dp, -16.827_dp, -16.722_dp, -16.740_dp, -16.978_dp,
-     & -17.356_dp /
-C
-C  Lyman \gamma satellites from H+ collisions  for N(H+) = 1e17 cm^-3
-C  wavelength  = 975.72\AA  + (N-1)*1.    N=1,27   1001.72\AA
-C  Major satellite at 992\AA and a minor one at 976\AA.
-C  N.F. Allard_dp, I. Noselidze and J.W. Kruk_dp, 2009_dp, A&A_dp, 506_dp, 993_dp,
-C  http://adsabs.harvard.edu/abs/2009A%26A...506..993A
-C
-      DATA LygH2p/
-     & -14.173_dp, -14.380_dp, -14.553_dp, -14.751_dp, -14.944_dp,
-     & -15.184_dp, -15.394_dp, -15.496_dp, -15.547_dp, -15.601_dp,
-     & -15.676_dp, -15.748_dp, -15.807_dp, -15.810_dp, -15.812_dp,
-     & -15.805_dp, -15.773_dp, -15.789_dp, -15.863_dp, -15.968_dp,
-     & -16.020_dp, -16.039_dp, -16.152_dp, -16.395_dp, -16.742_dp,
-     & -17.108_dp, -17.444_dp /
-C
-C  Balmer \alpha satellites from H collisions  for N(H) = 1e17 cm^-3
-C  wavelength  = 6649.3\AA  + (N-1)*38.0    N=1,49    8473.3\AA
-C  Broad satellite at 7500\AA.
-C  From J.F. Kielkopf, N.F. Allard and A. Decrette, 2002,
-C  Europ. Phys. J. D, 18(1),51
-C  http://adsabs.harvard.edu/abs/2002EPJD...18...51K
-C
-      DATA HaH2/
-     & -17.092_dp, -17.345_dp, -17.519_dp, -17.682_dp, -17.856_dp,
-     & -17.961_dp, -18.086_dp, -18.186_dp, -18.291_dp, -18.370_dp,
-     & -18.422_dp, -18.501_dp, -18.559_dp, -18.600_dp, -18.632_dp,
-     & -18.638_dp, -18.630_dp, -18.606_dp, -18.585_dp, -18.562_dp,
-     & -18.540_dp, -18.521_dp, -18.509_dp, -18.500_dp, -18.497_dp,
-     & -18.503_dp, -18.515_dp, -18.529_dp, -18.548_dp, -18.573_dp,
-     & -18.607_dp, -18.645_dp, -18.692_dp, -18.736_dp, -18.787_dp,
-     & -18.840_dp, -18.897_dp, -18.961_dp, -19.025_dp, -19.099_dp,
-     & -19.177_dp, -19.262_dp, -19.365_dp, -19.466_dp, -19.569_dp,
-     & -19.685_dp, -19.784_dp, -19.931_dp, -20.145_dp /
-C
-C     Balmer \alpha satellites from H+ collisions  for N(H+) = 1e17 cm^-3
-C     wavelength  = 6819.8\AA  + (N-1)*42.4    N=1,76    9999.8\AA
-C     Major satellite at 8600\AA and smaller ones at 7050 and 9600\AA.
-C
-      DATA HaH2p/
-     & -15.770_dp, -16.020_dp, -16.286_dp, -16.448_dp, -16.516_dp,
-     & -16.551_dp, -16.622_dp, -16.725_dp, -16.841_dp, -16.963_dp,
-     & -17.055_dp, -17.132_dp, -17.180_dp, -17.235_dp, -17.255_dp,
-     & -17.278_dp, -17.305_dp, -17.294_dp, -17.300_dp, -17.301_dp,
-     & -17.278_dp, -17.266_dp, -17.266_dp, -17.254_dp, -17.263_dp,
-     & -17.286_dp, -17.290_dp, -17.301_dp, -17.332_dp, -17.346_dp,
-     & -17.321_dp, -17.290_dp, -17.277_dp, -17.267_dp, -17.228_dp,
-     & -17.164_dp, -17.109_dp, -17.076_dp, -17.055_dp, -17.030_dp,
-     & -17.003_dp, -16.989_dp, -17.002_dp, -17.044_dp, -17.111_dp,
-     & -17.204_dp, -17.321_dp, -17.456_dp, -17.597_dp, -17.730_dp,
-     & -17.849_dp, -17.956_dp, -18.048_dp, -18.119_dp, -18.162_dp,
-     & -18.182_dp, -18.194_dp, -18.206_dp, -18.216_dp, -18.222_dp,
-     & -18.221_dp, -18.212_dp, -18.198_dp, -18.186_dp, -18.179_dp,
-     & -18.178_dp, -18.184_dp, -18.197_dp, -18.217_dp, -18.242_dp,
-     & -18.267_dp, -18.295_dp, -18.321_dp, -18.345_dp /
+      PARAMETER (PI = 3.14159265359, SQRTPI = 1.77245385)
+      PARAMETER (CLIGHT = 2.9979258E18)
+      PARAMETER (CLIGHTCM = 2.99792458E10)
 C
 C  Most model atmosphere codes include Rayleigh scattering by H atoms 
 C  elsewhere, eg. quantum mechanical calculations. This parameter cuts
 C  the Lyman alpha natural absorption at this chosen point.  
 C
-C Changed from 1240 to 1400 by BPz 04/10-2007
-      PARAMETER (RAYLCUT = 1400.0D0) ! in Angstroms
+      PARAMETER (RAYLCUT = 1400.D0) ! in Angstroms
 C
 C  Data for self-broadening from calculations of Barklem, Piskunov and 
 C  O'Mara (2000, A&A 363, 1091).
@@ -503,17 +363,15 @@ C  SIGMA is in m^2.
 C  BALFAC = (4/Pi)**(alf/2) Gamma(2-2/alf) the leading factor for
 C  computing the width.
 C
-      DATA ALF    / 0.677_dp, 0.455_dp, 0.380_dp /
-      DATA BALFAC / 0.97875_dp, 0.97659_dp, 0.97794_dp /
-      DATA SIGMA  / 3.304d-18, 6.497d-18, 1.178d-17 /
+      DATA SIGMA /3.304E-18, 6.497E-18, 1.178E-17/
+      DATA ALF   /    0.677,     0.455,     0.380/
+      DATA BALFAC/  0.97875,   0.97659,   0.97794/
 C
 C  Precompute variables depending on current physical conditions
 C
-      T43  = (T/10000.0_dp)**0.3_dp
-      T3NHE= T43*HE1FRC
-      FO   = 1.25d-9*XNE**0.66667_dp ! Holtsmark normal field strength
-      xLH1FRC=dlog10(H1FRC)
-      XLNE =  dlog10(XNE)
+      T43 = (T/10000.)**0.3
+      T3NHE = T43*HE1FRC
+      FO = 1.25E-9*XNE**0.66667 ! Holtsmark normal field strength
 C
 C  Convert wavelengths to frequencies and compute detunings
 C
@@ -525,8 +383,6 @@ C
 C  Variables dependent on line - compute first time only
 C
       IF((N.NE.N1).OR.(M.NE.M1)) THEN
-c        print '("Stat.Weight:",2I3,4f10.6)',
-c    &      HFNM(1,N),HFNM(1,M),HFNM(N,M),HFNM(M,N)
          N1 = N
          M1 = M
          MMN = M-N
@@ -540,7 +396,7 @@ c    &      HFNM(1,N),HFNM(1,M),HFNM(N,M),HFNM(M,N)
          IF ((MMN.LE.3).AND.(N.LE.4)) THEN
             XKNM = XKNMTB(N,MMN)
          ELSE
-            XKNM = 5.5d-5/GNM*XMN2/(1.0_dp+0.13_dp/FLOAT(MMN))
+            XKNM = 5.5E-5/GNM*XMN2/(1.+.13/FLOAT(MMN))
          END IF
 C
 C  Lyman alpha wings require special treatment
@@ -556,7 +412,7 @@ C
          ELSE
             RADAMP = ASUM(N)+ASUM(M)
          ENDIF
-         RADAMP = RADAMP/FREQNM/(4.0_dp*PI)
+         RADAMP = RADAMP/FREQNM/(4*PI)
 C
 C  Resonance broadening following Ali & Griem (1966, Phys Rev 144, 366).
 C  RESONT is dnu/nu per unit H density. Only the lower state is included 
@@ -565,26 +421,26 @@ C  role, and van der Waals might even dominate, there is however no
 C  available theory for this.  The lower state resonance broadening is
 C  used as a guess.
 C
-         IF (N.NE.1) then
-           RESONT = HFNM(1,N)/(1.0_dp-1.0_dp/ XN2)
-         else
-           resont = hfnm(1,m)/(1.0_dp-1.0_dp/ xm2)
-         endif
-         RESONT = RESONT * 2.07d-24/GNM
-         VDW = 4.45d-26/GNM*(XM2*(7.0_dp*XM2+5.0_dp))**0.4_dp
-         STARK = 1.6678d-18*FREQNM*XKNM
+         IF (N.NE.1) THEN 
+            RESONT = HFNM(1,N)/(1.-1./ XN2)
+         ELSE
+            RESONT = HFNM(1,M)/(1.-1./ XM2)
+         ENDIF
+         RESONT = RESONT * 2.07E-24/GNM
+         VDW = 4.45E-26/GNM*(XM2*(7.*XM2+5.))**0.4
+         STARK = 1.6678E-18*FREQNM*XKNM
 C
 C  Approximately include fine structure.  Exact pattern for alpha lines, 
 C  M infinite pattern used for others.
 C
          IF (N.GT.4 .OR. M.GT.10) THEN
             IFINS = 1
-            FINEST(1) = 0.0_dp
-            FINSWT(1) = 1.0_dp
+            FINEST(1) = 0.
+            FINSWT(1) = 1.
          ELSE IF (MMN.GT.1) THEN
             IFINS = LNCOMP(N)
             DO 1 I = 1,IFINS
-            FINEST(I) = STCOMP(I, N)*1.0D7
+            FINEST(I) = STCOMP(I, N)*1.D7
             FINSWT(I) = STCPWT(I, N)/XN2
    1        CONTINUE
          ELSE
@@ -595,8 +451,8 @@ C
             IPOS = ISTAL(N)
             DO 2 I = 1,IFINS
             K = IPOS-1+I
-            FINEST(I) = STALPH(K)*1.0D7
-            FINSWT(I) = STWTAL(K)/XN2/3.0D0
+            FINEST(I) = STALPH(K)*1.D7
+            FINSWT(I) = STWTAL(K)/XN2/3.D0
    2        CONTINUE
          END IF
       END IF
@@ -614,10 +470,10 @@ C  1091) instead of Ali & Griem for self-broadening. 1E6 factor is due
 C  to SI -> CGS.
 C
       IF ((N.EQ.2) .AND. (M.LE.5)) THEN
-         VBARH = SQRT(42008.0_dp*T)
-         RESONT = BALFAC(M-N) * 1.0d4*SIGMA(M-N) 
-     &                        * (VBARH/1.0d4)**(1.0_dp-ALF(M-N))
-         RESONT = RESONT/FREQNM*1.0d6/2.0_dp/PI
+         VBARH = SQRT(42008.*T)
+         RESONT = BALFAC(M-N) * 1.E4*SIGMA(M-N) 
+     *                        * (VBARH/1.E4)**(1.-ALF(M-N))
+         RESONT = RESONT/FREQNM*1.E6/2./PI
       ENDIF
 C
       HWLOR = RESONT*H1FRC + VDW*T3NHE + RADAMP
@@ -651,7 +507,15 @@ C
 C
 C  HTOTAL is the profile.
 C
-      HTOTAL=0.0D0
+!
+! BPz 2025/03/10   Try to improve line profile calculation in some cases 
+! where some offset appeared between the core and the broader wing.
+! Discovered by Nick Storm
+!
+      HFWID = 0.0
+!
+
+      HTOTAL=0.D0
 C
 C  Case 1: Doppler core including fine structure 
 C
@@ -676,144 +540,84 @@ C
 C  The classical damping constant is frequency dependent. Assume similar 
 C  dependence of quantum mechanical damping (cf. eqn 4-116 Aller).
 C
-         IF (LYMANALF) THEN
+         IF (.NOT.LYMANALF) THEN
+            HHW = HWLOR*FREQNM 
+            HHW = HHW * FREQ*FREQ/(FREQNM*FREQNM)    
+            FREQSQ = FREQ*FREQ
+            XSELF = 4.*FREQSQ*HHW/PI/
+     ;              ((DEL*(FREQNM+FREQ))**2. + FREQSQ*4.*HHW**2.)
 C
 C  Lyman alpha:
 C
-C  Natural broadening of Lyman alpha
+         ELSE
+C
+C  Natural broadening 
+C
 C  This is cut at some specified detuning in the red.
 C
             IF (WAVE.LT.RAYLCUT) THEN 
                HHW = RADAMP*FREQNM   
                HHW = HHW * FREQ*FREQ/(FREQNM*FREQNM)    
                FREQSQ = FREQ*FREQ
-               HTOTAL = HTOTAL + 4.0_dp*FREQSQ*HHW/PI/
-     &           ((DEL*(FREQNM+FREQ))**2.0_dp + FREQSQ*4.*HHW**2.0_dp)
+               HTOTAL = HTOTAL + 4.*FREQSQ*HHW/PI/
+     ;             ((DEL*(FREQNM+FREQ))**2. + FREQSQ*4.*HHW**2.)
             ENDIF
 C
 C  Self broadening of Lyman alpha:
 C 
 C  Red wing of Lyman Alpha before the satellite region and blue wing 
 C  (ie. redward of ~1190 A).
-C
-C  Far red wing of Lyman Alpha in satellite region:
-C
-c  Changed by BPz on 25/09-2007 to stop extrapolation where Doyle's H+H 
-c  CIA takes over in jonabs_vac.dat (detabs.f) : 1750A = 1d8/57142.8571
-c
-c  An analytical fit to Doyle (1968)'s results for 1750\AA:
-c  log10[(H+H)(1750\AA)] =
-c   -256.85471+xLT*(233.23529+xLT*(-76.960342+xLT*(11.304402-xLT*0.62315132)))
-c  for logT > 4.7,  log10[(H+H)(1750\AA)] = 8.8761660 + (xLT-4.7d0)*0.16103775
-c  with xLT = dlog10(T). From ~/convdat/{tables/subs.17elm.dat,tabcode/detabs.f}
-c
-cccc        IF      (FREQ.LT.20000.*CLIGHTCM) THEN 
-            IF      (WAVE.GT.1750.0_dp) THEN                                 IGNORE
-               XSELF = 0.0_dp
-            ELSE IF (WAVE.GT.xlLyaH2) THEN                                INTERP
-c                    wave > 1278.70\AA
-               ICUT   = min0(NLyaH2-2,max0(0,int(
-     &                      (WAVE-xlLyaH2)/dlLyaH2))) + 1
-               GRDWAVE= xlLyaH2 + (ICUT-1)*dlLyaH2
-               XLyaH2 = (LyaH2(ICUT+1)-LyaH2(ICUT))
-     &               /dlLyaH2*(WAVE-GRDWAVE) + LyaH2(ICUT)
-               XLyaH2 = 10.0_dp**(XLyaH2+xLH1FRC+xLNLyaH2)
-               XSELF  = XLyaH2
-            ELSE                                                          SCALE
-C                    wave < 1278.70\AA
 C  
 C  The impact approximation breaks down quickly here validity is ~ 1 A 
 C  at T~5000 K (Lortet & Roueff 1969, A&A 3, 462) but we use Ali & Griem 
 C  anyway (~ Barklem et al for 2p).
 C
-C  A factor 1.17 is needed to match this region to the far red wing 
-C  (below) at 1278.70\AA. We use a linear transition
-C  from the line-center to the bluest point of the wing-table (LyaH2).
-C  01.02.2012 Changed from 1.17 -> 1.0, instead adjusted the (H+H) data/RT
-c              XFAC   = 1.+0.13*(DABS(DELW)/
-c    &                     (1d8/(EHYD(M)-xlLyaH2) - 1d8/EHYD(M)))
-               XFAC   = 1.0
-c              IF (FREQ.GT.FREQNM) XFAC = 1.0
-               HHW    = (XFAC*RESONT*H1FRC + VDW*T3NHE) * FREQNM
-               XSELF  = HHW/PI/(DEL*DEL+HHW*HHW)
-            ENDIF
+C  A factor 1.13 is needed to match this region to the far red wing 
+C  (below) at -4000 cm^-1 (62 A) detuning. A linear transition is used.
 C
-C  Lyman beta satellites
+            IF (FREQ.GT.(82259.105-4000.)*CLIGHTCM) THEN
+               XFAC = 1.+0.13*(DABS(DELW)/62.)
+               IF (FREQ.GT.FREQNM) XFAC = 1.0
+               HHW = (XFAC*RESONT*H1FRC + VDW*T3NHE) * FREQNM
+               XSELF = HHW/PI/(DEL*DEL+HHW*HHW)
 C
-         ELSE IF ((N.EQ.1).AND.(M.EQ.3)) THEN
-            IF (WAVE.LT.RAYLCUT) THEN 
-               HHW = RADAMP*FREQNM   
-               HHW = HHW * FREQ*FREQ/(FREQNM*FREQNM)    
-               FREQSQ = FREQ*FREQ
-               HTOTAL = HTOTAL + 4.0_dp*FREQSQ*HHW/PI/
-     &           ((DEL*(FREQNM+FREQ))**2.0_dp + FREQSQ*4.*HHW**2.0_dp)
-            ENDIF
-            IF      (WAVE.GT.1200.0_dp) THEN
-               XSELF  = 0.
-            ELSE IF (WAVE.GT.xlLybH2) THEN
-               ICUT   = min0(NLybH2-2,max0(0,int(
-     &                      (WAVE-xlLybH2)/dlLybH2))) + 1
-               GRDWAVE= xlLybH2 + (ICUT-1)*dlLybH2
-               XLybH2 = (LybH2(ICUT+1)-LybH2(ICUT))
-     &               /dlLybH2*(WAVE-GRDWAVE) + LybH2(ICUT)
-               XLybH2 = 10.0_dp**(XLybH2+xLH1FRC+xLNLybH2)
-               XSELF  = XLybH2
+C  Far red wing of Lyman Alpha in satellite region:
+C
+C  Self-broadening following Kurucz's implementation of Allard et al 
+C  (A&A 335, 1124, 1998), see Castelli & Kurucz (A&A 372, 260 2001) for 
+C  more details.
+C
+C  Tables LYMANH2() are on a delta wavenumber grid spacing of 200 
+C  waves/cm -22000, -21800, ...., -4000 waves/cm (91 points). The 
+C  profiles store log10(I(d omega)) for N(H) = 1e14 cm^-3. Assumed 
+C  insensitive to T, and linear scaling with N(H).  Note I(d freq) = 
+C  I(d omega)/c 
+C
+            ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN 
+               SPACING = 200.*CLIGHTCM
+               FREQ22000 = (82259.105-22000.)*CLIGHTCM
+C
+C  If redward of last point (1660 -> 5000 Angstrom) extrapolate,
+C  otherwise (1278 -> 1660 Angstrom) linear (in log10 profiles) 
+C  interpolation 
+C  
+               IF (FREQ.LT.FREQ22000) THEN
+                  XLYMANH2 = (LYMANH2(2)-LYMANH2(1))/SPACING*
+     *                         (FREQ-FREQ22000)+LYMANH2(1)
+               ELSE
+                  ICUT = (FREQ-FREQ22000)/SPACING
+                  GRIDFREQ = ICUT*SPACING+FREQ22000
+                  XLYMANH2 = (LYMANH2(ICUT+2)-LYMANH2(ICUT+1))/SPACING*
+     *                         (FREQ-GRIDFREQ)+LYMANH2(ICUT+1)
+               ENDIF
+               XLYMANH2 = (10.**(XLYMANH2-14.))*H1FRC/CLIGHTCM 
+               XSELF = XLYMANH2
             ELSE
-               HHW    = (RESONT*H1FRC + VDW*T3NHE) * FREQNM
-               XSELF  = HHW/PI/(DEL*DEL+HHW*HHW)
-            ENDIF
+               XSELF = 0.
+            END IF
 C
-C  Balmer alpha satellites
+C  End Lyman alpha section
 C
-         ELSE IF ((N.EQ.2).AND.(M.EQ.3)) THEN
-            WAVERMP = 7200.0_dp
-c                  \lambda > 9999.8\AA
-            IF      (WAVE.GT.(xlHaH2+dlHaH2*(NHaH2-1.0_dp))) THEN
-c  Linear extrapolation in logarithmic absorption
-               XHaH2  = HaH2(NHaH2) + (HaH2(NHaH2)-HaH2(NHaH2-1))/dlHaH2
-     &                   *(WAVE - (xlHaH2+dlHaH2*(NHaH2-1.0_dp)))
-               XHaH2  = 10.0_dp**(XHaH2+xLH1FRC+xLNHaH2)
-               XSELF  = XHaH2
-c                  \lambda > 6819.8\AA
-            ELSE IF (WAVE.GT.xlHaH2) THEN
-c  Linear interpolation in logarithmic absorption
-               ICUT   = min0(NHaH2-2,max0(0,int(
-     &                      (WAVE-xlHaH2)/dlHaH2))) + 1
-               GRDWAVE= xlHaH2 + (ICUT-1)*dlHaH2
-               XHaH2  = (HaH2(ICUT+1)-HaH2(ICUT))
-     &                /dlHaH2*(WAVE-GRDWAVE) + HaH2(ICUT)
-               XHaH2  = 10.0_dp**(XHaH2+xLH1FRC+xLNHaH2)
-               XSELF  = XHaH2
-c                  \lambda < 7200.0\AA
-             IF     (WAVE.LT.WAVERMP) THEN
-c
-c  Ramp down that bluest part of the satellite
-               HHW = HWLOR * FREQ*FREQ/FREQNM
-               FREQSQ = FREQ*FREQ
-               XSELF0 = 4.0_dp*FREQSQ*HHW/PI/
-     &         ((DEL*(FREQNM+FREQ))**2.0_dp + FREQSQ*4.0_dp*HHW**2.0_dp)
-               WBRGD  = (WAVERMP - WAVE)/(WAVERMP-xlHaH2)
-               XSELF  = XSELF0*WBRGD + XSELF*(1.0_dp-WBRGD)
-             ENDIF
-c                  \lambda <= 6819.8\AA  - blue side of H+ satellites
-            ELSE
-c              HHW    = (RESONT*H1FRC + VDW*T3NHE) * FREQNM
-c              XSELF  = HHW/PI/(DEL*DEL+HHW*HHW)
-c  This is just copied from the default case, below.
-               HHW    = HWLOR*FREQNM 
-               HHW    = HHW * FREQ*FREQ/(FREQNM*FREQNM)    
-               FREQSQ = FREQ*FREQ
-               XSELF  = 4.0_dp*FREQSQ*HHW/PI/
-     &           ((DEL*(FREQNM+FREQ))**2.0_dp + FREQSQ*4.*HHW**2.0_dp)
-            ENDIF
-         ELSE
-C
-c           HHW = HWLOR*FREQNM 
-c           HHW = HHW * FREQ*FREQ/(FREQNM*FREQNM)    
-            HHW = HWLOR * FREQ*FREQ/FREQNM
-            FREQSQ = FREQ*FREQ
-            XSELF = 4.0_dp*FREQSQ*HHW/PI/
-     &        ((DEL*(FREQNM+FREQ))**2.0_dp + FREQSQ*4.*HHW**2.0_dp)
          ENDIF
 C
          HTOTAL = HTOTAL + XSELF
@@ -823,167 +627,69 @@ C
       ENDIF
 C
 C  Case 3: Stark section
-* Ignore if T<=3000K 2014-08-27
 C
-      IF (T.GE.3000.0_dp.AND.((ABS(DEL).GT.HFWID).OR.(NWID.EQ.3))) THEN
+      IF ((ABS(DEL).GT.HFWID).OR.(NWID.EQ.3)) THEN
 C
-C  Stark wings due to ions and electrons.
+C  Stark wings due to ions and electrons.  If Lyman alpha this is for 
+C  before (blueward of) the satellite region.
 C
-C  Stark wings due to protons in the satellite regions of Lyman alpha,
-C  beta and gamma, as well as Balmer alpha:
+          IF ((.NOT.(LYMANALF)).OR.
+     ;             (FREQ.GT.(82259.105-4000.)*CLIGHTCM)) THEN        
+              XSTARK = STARK1(N,M,WAVE,WAVEH,T,XNE)
 C
-C  Assumed insensitive to T, and to scale linearly with N(H+).
-C  We further assume N(H+) = N(e-).
+C  If Lyman alpha we match the static ion part to the Allard et al 
+C  value at -4000 cm^-1 detuning on red wing.
+C
+              IF ((LYMANALF).AND.(FREQ.LT.(82259.105)*CLIGHTCM)) THEN
+                WAVE4000 = 1.D8/(82259.105-4000.)
+                XHOLT4000 = 0.5 * STARK1(N,M,WAVE4000,WAVEH,T,XNE)
+                IF (XHOLT4000.GT.0.D0) THEN
+                  SAT4000 = (10.**(-11.07-14.))/CLIGHTCM*XNE
+                  XFAC = 1.+(SAT4000/XHOLT4000-1.)*DABS(DELW)/62.
+                  XSTARK = XSTARK * 0.5 * (1. + XFAC)
+                ENDIF
+              ENDIF
+C
+C  Stark wings due to protons in the satellite region:
+C
+C  Following Kurucz's implementation of Allard et al (A&A 335, 1124, 
+C  1998), see Castelli & Kurucz (A&A 372, 260 2001) for more details.
+C
+C  Tables LYMANH2PLUS() are on a delta wavenumber grid spacing of 100 
+C  waves/cm -15000, -14900, ...., -4000 waves/cm (111 points). 
+C
+C  The profiles store log10(I(d omega)) for N(H+) = 1e14 cm^-3. Assumed 
+C  insensitive to T, and linear scaling with N(H+). Note I(d freq) = 
+C  I(d omega)/c and we assume N(H+) = N(e-).
+C
+         ELSE IF (FREQ.GT.20000.*CLIGHTCM) THEN 
+            SPACING=100.*CLIGHTCM
+            FREQ15000=(82259.105-15000.)*CLIGHTCM
+C
+C  If redward of last point (1487 -> 5000 Angstroem) extrapolate,
+C  otherwise (1278 -> 1487 Angstroem) interpolation. 
+C  
+            IF (FREQ.LT.FREQ15000) THEN
+               XLYMANH2PLUS = (LYMANH2PLUS(2)-LYMANH2PLUS(1))/SPACING*
+     ;                      (FREQ-FREQ15000)+LYMANH2PLUS(1)
+            ELSE
+               ICUT = (FREQ-FREQ15000)/SPACING
+               GRIDFREQ = ICUT*SPACING+FREQ15000
+               XLYMANH2PLUS = (LYMANH2PLUS(ICUT+2)-LYMANH2PLUS(ICUT+1))
+     ;                      /SPACING*(FREQ-GRIDFREQ)+LYMANH2PLUS(ICUT+1)
+            ENDIF
+            XLYMANH2PLUS = (10.**(XLYMANH2PLUS-14.))*XNE/CLIGHTCM 
+
 C
 C  There may be a contribution due to electrons also at long range. 
 C  The static Holtsmark profile (1/2 the total STARK1) is used noting 
 C  that the correction for quantum effects suggested by Stehle (1994, 
 C  A&AS 104, 509 eqn 7) has been applied already.
 C
-         XSTARK0= STARK1(N,M,WAVE,WAVEH,T,XNE)
-         IF (LYMANALF.AND.(WAVE.GT.(1.0d8/EHYD(M)))) THEN
-C                    wave >  1215.6701\AA
-            WAVERMP = 1325.0_dp
-            XFACMAX = 5.00_dp
-            IF      (WAVE.GT.5000.0_dp) THEN                              IGNORE
-c                    wave > 1800.00\AA
-               XSTARK = 0.0_dp
-            ELSE IF (WAVE.GT.xlLyaH2p) THEN                               INTERP
-c                    wave > 1290.30\AA
-               ICUT = min0(NLyaH2p-2,max0(0,int(
-     &                      (WAVE-xlLyaH2p)/dlLyaH2p))) + 1
-               GRDWAVE      = xlLyaH2p + (ICUT-1)*dlLyaH2p
-               XLyaH2p = (LyaH2p(ICUT+1)-LyaH2p(ICUT))
-     &               /dlLyaH2p*(WAVE-GRDWAVE) + LyaH2p(ICUT)
-               XLyaH2p = 10.0_dp**(XLyaH2p+XLNE+xLNLyaH2p)
-             IF     (WAVE.LT.WAVERMP) THEN
-               XSTARKb= 0.5_dp * STARK1(N,M,xlLyaH2p,WAVEH,T,XNE)
-               SATb   = 10.0_dp**(LyaH2p(1)+XLNE+xLNLyaH2p)
-c              if (WAVE.LT.1290.4_dp) print *,'XFAC: ',SATb/XSTARKb
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)*
-     &                XSTARKb/SATb-1.0_dp)*(1.0_dp-cos(PI*
-     &                (WAVE-WAVERMP)/(xlLyaH2p-WAVERMP)))*0.5_dp
-               XLyaH2p= XFAC * XLyaH2p
-             ENDIF
-               XSTARK = XLyaH2p + 0.5_dp*XSTARK0
-            ELSE                                                          SCALE
-C                    wave < 1277.80\AA      > 78259/cm
-C  If Lyman alpha we match the static ion part to the Allard et al 
-C  value at the blue end of their data at 1290.30\AA in the red wing.
-               XSTARKb = 0.5_dp * STARK1(N,M,xlLyaH2p,WAVEH,T,XNE)
-               SATb = 10.0_dp**(LyaH2p(1)+XLNE+xLNLyaH2p)
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)-1.)*
-     &                DABS(DELW)/(xlLyaH2p-1.0D8/EHYD(M))
-               XSTARK = XSTARK0 * 0.5 * (1.0_dp + XFAC)
-            ENDIF
-C
-C  Lyman beta satellites
-         ELSE IF((N.EQ.1).AND.(M.EQ.3).AND.WAVE.GT.(1.0D8/EHYD(M)))THEN
-            WAVERMP = 1052.5_dp
-            XFACMAX = 2.39_dp
-            IF      (WAVE.GT.1216.0_dp) THEN
-               XSTARK = 0.0_dp
-            ELSE IF (WAVE.GT.xlLybH2p) THEN
-               ICUT = min0(NLybH2p-2,max0(0,int(
-     &                      (WAVE-xlLybH2p)/dlLybH2p))) + 1
-               GRDWAVE      = xlLybH2p + (ICUT-1)*dlLybH2p
-               XLybH2p = (LybH2p(ICUT+1)-LybH2p(ICUT))
-     &               /dlLybH2p*(WAVE-GRDWAVE) + LybH2p(ICUT)
-               XLybH2p = 10.0_dp**(XLybH2p+XLNE+xLNLybH2p)
-             IF     (WAVE.LT.WAVERMP) THEN
-               XSTARKb= 0.5_dp * STARK1(N,M,xlLybH2p,WAVEH,T,XNE)
-               SATb   = 10.0_dp**(LybH2p(1)+XLNE+xLNLybH2p)
-c              if (WAVE.LT.1032.5_dp) print *,'XFAC: ',SATb/XSTARKb
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)*
-     &                XSTARKb/SATb-1.0_dp)*
-     &                (1.0_dp-cos(PI*(WAVE-WAVERMP)/
-     &                (xlLybH2p-WAVERMP)))*0.5_dp
-               XLybH2p= XFAC * XLybH2p
-             ENDIF
-               XSTARK = XLybH2p + 0.5_dp*XSTARK0
-            ELSE
-               XSTARKb = 0.5_dp * STARK1(N,M,xlLybH2p,WAVEH,T,XNE)
-               SATb = 10.0_dp**(LybH2p(1)+XLNE+xLNLybH2p)
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)-1.0_dp)*
-     &                DABS(DELW)/(xlLybH2p-1D8/EHYD(M))
-               XSTARK = XSTARK0 * 0.5_dp * (1. + XFAC)
-            ENDIF
-C
-C  Lyman gamma satellites
-         ELSE IF ((N.EQ.1).AND.(M.EQ.4).AND.WAVE.GT.(1D8/EHYD(M))) THEN
-            WAVERMP = 1002.0_dp
-C  Limit to how much larger than XSTARK0 at xlLygH2p the satellites can be
-            XFACMAX = 2.1_dp
-            IF      (WAVE.GT.1026.0_dp) THEN
-               XSTARK = 0.0_dp
-            ELSE IF (WAVE.GT.xlLygH2p) THEN
-               ICUT = min0(NLygH2p-2,max0(0,int(
-     &                      (WAVE-xlLygH2p)/dlLygH2p))) + 1
-               GRDWAVE      = xlLygH2p + (ICUT-1)*dlLygH2p
-               XLygH2p = (LygH2p(ICUT+1)-LygH2p(ICUT))
-     &               /dlLygH2p*(WAVE-GRDWAVE) + LygH2p(ICUT)
-               XLygH2p = 10.0_dp**(XLygH2p+XLNE+xLNLygH2p)
-             IF     (WAVE.LT.WAVERMP) THEN
-               XSTARKb= 0.5_dp * STARK1(N,M,xlLygH2p,WAVEH,T,XNE)
-               SATb   = 10.0_dp**(LygH2p(1)+XLNE+xLNLygH2p)
-               XFAC   = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)*
-     &                  XSTARKb/SATb-1.0_dp)*(1.0_dp-cos(PI*
-     &                  (WAVE-WAVERMP)/(xlLygH2p-WAVERMP0)))*0.5_dp
-c    &                            (WAVE-WAVERMP)/(xlLygH2p-WAVERMP)
-               XLygH2p= XFAC * XLygH2p
-             ENDIF
-               XSTARK = XLygH2p + 0.5*XSTARK0
-            ELSE
-               XSTARKb= 0.5_dp * STARK1(N,M,xlLygH2p,WAVEH,T,XNE)
-               SATb = 10.0_dp**(LygH2p(1)+XLNE+xLNLygH2p)
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)-1.)*
-     &                DABS(DELW)/(xlLygH2p-1D8/EHYD(M))
-               XSTARK = XSTARK0 * 0.5_dp * (1.0_dp + XFAC)
-            ENDIF
-C
-C  Balmer alpha satellites
-         ELSE IF ((N.EQ.2).AND.(M.EQ.3).AND.
-     &            WAVE.GT.(1.0D8/(EHYD(M)-EHYD(N)))) THEN
-            WAVERMP = 7275.0_dp
-            XFACMAX = 2.34_dp
-C  Beyond the satellites: lambda > 9915.\AA
-            IF      (WAVE.GT.(xlHaH2p+dlHaH2p*(NHaH2p-1.))) THEN
-               XSTARK = 0.0_dp
-c                  \lambda > 6819.8\AA
-            ELSE IF (WAVE.GT.xlHaH2p) THEN
-               ICUT = min0(NHaH2p-2,max0(0,int(
-     &                      (WAVE-xlHaH2p)/dlHaH2p))) + 1
-               GRDWAVE      = xlHaH2p + (ICUT-1)*dlHaH2p
-               XHaH2p = (HaH2p(ICUT+1)-HaH2p(ICUT))
-     &               /dlHaH2p*(WAVE-GRDWAVE) + HaH2p(ICUT)
-               XHaH2p = 10.0_dp**(XHaH2p+XLNE+xLNHaH2p)
-c                  \lambda < 7275.\AA
-             IF     (WAVE.LT.WAVERMP) THEN
-               XSTARKb= 0.5_dp * STARK1(N,M,xlHaH2p,WAVEH,T,XNE)
-               SATb   = 10.0_dp**(HaH2p(1)+XLNE+xLNHaH2p)
-c              if (WAVE.LT.6820.5) print *,'XFAC: ',SATb/XSTARKb
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)*
-     &                XSTARKb/SATb-1.0_dp)*(1.0_dp-cos(PI*
-     &                (WAVE-WAVERMP)/(xlHaH2p-WAVERMP)))*0.5_dp
-c    &                            (WAVE-WAVERMP)/(xlHaH2p-WAVERMP)
-               XHaH2p = XFAC * XHaH2p
-             ENDIF
-               XSTARK = XHaH2p + 0.5_dp*XSTARK0
-            ELSE
-C
-C  Ramp down from satellite to Stark wing over 80\AA from blue edge of
-C  satellite data, xlHaH2p, using a differentiable cosine-bridge.
-C  WARNING: This gives a rather prominent peak at log(Ne) >~ 19.
-               XSTARKb= 0.5_dp * STARK1(N,M,xlHaH2p,WAVEH,T,XNE)
-               SATb   = 10.0_dp**(HaH2p(1)+XLNE+xLNHaH2p)
-               XFAC = 1.0_dp+(dmin1(SATb/XSTARKb,XFACMAX)-1.0_dp)*
-     &                DABS(DELW)/(xlHaH2p-1D8/(EHYD(M)-EHYD(N)))
-               XSTARK = XSTARK0 * 0.5_dp * (1.0_dp + XFAC)
-            ENDIF
+            XSTARK = XLYMANH2PLUS + 0.5 * STARK1(N,M,WAVE,WAVEH,T,XNE)  
          ELSE
-            XSTARK = XSTARK0
-         ENDIF
-
+            XSTARK = 0.
+         END IF
          HTOTAL = HTOTAL + XSTARK
 C
 C  End Stark section
@@ -1011,10 +717,10 @@ C
       integer, parameter :: dp = selected_real_kind(15, 307)
       integer, parameter :: sp = selected_real_kind(6, 37)
       integer :: m, m1, mmn, mp, n, n1, np
-      real(dp), PARAMETER :: K = 1.380649E-16  !Boltzmann in cgs
-      real(dp), PARAMETER :: CLIGHT = 2.99792458E18
-      real(dp), PARAMETER :: H = 6.6260715E-27  !Planck in cgs
-      real(dp), PARAMETER :: PI = 3.14159265359, SQRTPI = 1.77245385
+      real(dp), PARAMETER :: K = 1.380649d-16  !Boltzmann in cgs
+      real(dp), PARAMETER :: CLIGHT = 2.99792458d18
+      real(dp), PARAMETER :: H = 6.6260715d-27  !Planck in cgs
+      real(dp), PARAMETER :: PI = 3.14159265359d0, SQRTPI = 1.77245385d0
       real(dp) :: beta, c1, c1con, c1d, c2, c2con, c2d, dbeta, DEL
       real(dp) :: DELW, F, FO, fns, FREQ, FREQNM, g, g1, gam, gcon1
       real(dp) :: gcon2, gnm, he1frc, p1, pp, prqs, sofbet, stark1p
@@ -1030,37 +736,28 @@ C  Knm constants as defined by Griem (1960, ApJ 132, 883) for the long
 C  range Holtsmark profile (due to ions only). Lyman and Balmer series 
 C  are from VCS, higher series from elsewhere.
 C
-      DATA XKNMTB /
-     &     0.0001716_dp, 0.0090190_dp, 0.1001000_dp, 0.5820000_dp,
-     &     0.0005235_dp, 0.0177200_dp, 0.1710000_dp, 0.8660000_dp,
-     &     0.0008912_dp, 0.0250700_dp, 0.2230000_dp, 1.0200000_dp /
+      DATA XKNMTB/0.0001716, 0.0090190, 0.1001000, 0.5820000,
+     1            0.0005235, 0.0177200, 0.1710000, 0.8660000,
+     2            0.0008912, 0.0250700, 0.2230000, 1.0200000/
 C
-      DATA Y1WTM / 1.0d18, 1.0d17, 1.0d16, 1.0d14 /
-      DATA N1 / 0 /, M1 / 0 /
+      DATA Y1WTM/1.E18, 1.E17, 1.E16, 1.E14/
+      DATA N1/0/, M1/0/
 C
 C
 C  Variables depending on conditions
 C
-
-c we try to save time  BPz 12/10-2007
-      if (n.eq.np .and. m.eq.mp .and. wave.eq.wavep .and. 
-     &     waveh.eq.wavehp .and. t.eq.tp .and. xne.eq.xnep) then
-         stark1=stark1p
-         return
-      endif
-
-      T4 = T/10000.0_dp
-      T43 = T4**0.3_dp
+      T4 = T/10000.
+      T43 = T4**0.3
       T3NHE = T43*HE1FRC
-      XNE16 = XNE**0.1666667_dp
-      PP = XNE16*0.08989_dp/SQRT(T) ! the shielding parameter 
-      FO = XNE16**4*1.25d-9      ! Holtsmark normal field strength
-      Y1B = 2.0_dp/(1.0_dp+0.012_dp/T*SQRT(XNE/T))
+      XNE16 = XNE**0.1666667
+      PP = XNE16*0.08989/SQRT(T) ! the shielding parameter 
+      FO = XNE16**4*1.25E-9      ! Holtsmark normal field strength
+      Y1B = 2./(1.+0.012/T*SQRT(XNE/T))
       Y1S = T43/XNE16
-      C1D = FO*78940.0_dp/ T
-      C2D = FO**2/5.96d-23/XNE
-      GCON1 = 0.2_dp+0.09_dp*SQRT(T4)/(1.0_dp+XNE/1.0d13)
-      GCON2 = 0.2_dp/(1.0_dp+XNE/1.0d15)
+      C1D = FO*78940./ T
+      C2D = FO**2/5.96E-23/XNE
+      GCON1 = 0.2+0.09*SQRT(T4)/(1.+XNE/1.E13)
+      GCON2 = 0.2/(1.+XNE/1.E15)
 C
       DELW = WAVE-WAVEH
       FREQNM = CLIGHT/WAVEH
@@ -1088,7 +785,7 @@ C
          IF ((MMN.LE.3).AND.(N.LE.4)) THEN
             XKNM = XKNMTB(N,MMN)
          ELSE
-            XKNM = 5.5d-5/GNM*XMN2/(1.0_dp+0.13_dp/FLOAT(MMN))
+            XKNM = 5.5E-5/GNM*XMN2/(1.+.13/FLOAT(MMN))
          END IF
 C
 C  Some weighting factors which relate to y1, which is the velocity at 
@@ -1097,18 +794,18 @@ C  theory breaks down) and the Lewis cutoff (the limit of validity of
 C  the impact approximation) are the same.
 C
          IF(M.EQ.2) THEN
-            Y1NUM = 550.0_dp
+            Y1NUM = 550.
          ELSE IF (M.EQ.3) THEN
-            Y1NUM = 380.0_dp
+            Y1NUM = 380.
          ELSE
-            Y1NUM = 320.0_dp
+            Y1NUM = 320.
          END IF
          IF (MMN.LE.2 .AND. N.LE.2) THEN
             Y1WHT = Y1WTM(N,MMN)
          ELSE IF (MMN.LE.3) THEN
-            Y1WHT = 1.0d14
+            Y1WHT = 1.E14
          ELSE
-            Y1WHT = 1.0d13
+            Y1WHT = 1.E13
          END IF
 C
          C1CON = XKNM/WAVEH*GNM*XM2MN2
@@ -1125,22 +822,20 @@ C
 C  First compute the width of the impact electron profile roughly Griem
 C  (1967, ApJ 147, 1092) eqn for w.
 C
-      WTY1 = 1.0_dp/(1.0_dp+XNE/Y1WHT)
-      Y1SCAL = Y1NUM*Y1S*WTY1+Y1B*(1.0_dp-WTY1)
+      WTY1 = 1./(1.+XNE/Y1WHT)
+      Y1SCAL = Y1NUM*Y1S*WTY1+Y1B*(1.-WTY1)
       C1 = C1D*C1CON*Y1SCAL
       C2 = C2D*C2CON
-      G1 = 6.77_dp*SQRT(C1)
+      G1 = 6.77*SQRT(C1)
       BETA = DABS(DELW)/FO/XKNM
       Y1 = C1*BETA
       Y2 = C2*BETA**2
-      IF ((Y2.LE.1.0d-4).AND.(Y1.LE.1.0d-5)) THEN
-         GAM = G1*dMAX1(0.0_dp,0.2114_dp+LOG(SQRT(C2)/C1))*
-     &         (1.0_dp-GCON1-GCON2)
+      IF ((Y2.LE.1.E-4).AND.(Y1.LE.1.E-5)) THEN
+         GAM = G1*AMAX1(0.,0.2114+LOG(SQRT(C2)/C1))*(1.-GCON1-GCON2)
       ELSE
-         GAM = G1*(0.5_dp*EXP(-MIN(80.0_dp,Y1))+VCSE1F(Y1)-0.5_dp*
-     &         VCSE1F(Y2))*(1.0_dp-GCON1/(1.0_dp+(90.0_dp*Y1)**3)-
-     &         GCON2/(1.0_dp+2000.0_dp*Y1))
-         IF (GAM.LE.1.0d-20) GAM = 0.0_dp
+         GAM = G1*(0.5*EXP(-MIN(80.,Y1))+VCSE1F(Y1)-0.5*VCSE1F(Y2))*
+     *            (1.-GCON1/(1.+(90.*Y1)**3)-GCON2/(1.+2000.*Y1))
+         IF (GAM.LE.1.E-20) GAM = 0.
       END IF
 C
 C  Compute individual quasistatic and impact profiles.
@@ -1149,43 +844,34 @@ C
       IF (GAM.GT.0.) THEN
          F = GAM/PI/(GAM*GAM+BETA*BETA)
       ELSE
-         F = 0.0D0
+	 F = 0.D0
       ENDIF
 C
 C  Fraction of electrons which count as quasistatic. A fit to eqn 8 
 C  (2nd term) of Griem (1967, ApJ 147, 1092).
 C
-      P1 = (0.9_dp*Y1)**2
-      FNS = (P1+0.03_dp*SQRT(Y1))/(P1+1.0_dp)
+      P1 = (0.9*Y1)**2
+      FNS = (P1+0.03*SQRT(Y1))/(P1+1.)
 C
 C  DBETA (=dBeta/dfreq) changes the area normalisation. 
 C  DSQRT(WAVE/WAVEH) corrects the long range part to dfreq**-5/2
 C  asymptote, (see Stehle and Hutcheon 1999, A&AS 140, 93).
 C
       DBETA = CLIGHT/FREQ/FREQ/XKNM/FO
-      STARK1 = (PRQS*(1.0_dp+FNS)+F)*DBETA * DSQRT(WAVE/WAVEH)
+      STARK1 = (PRQS*(1.+FNS)+F)*DBETA * DSQRT(WAVE/WAVEH)
 C
 C  The red wing is multiplied by the Boltzmann factor to roughly account
 C  for quantum effects (Stehle 1994, A&AS 104, 509 eqn 7). Assume 
 C  absorption case.  If emission do for DEL.GT.0.
 C
-      IF (DEL.LT.0.0d0) STARK1 = STARK1 * DEXP(-DABS(H*DEL)/K/T)
-      
-      np=n
-      mp=m
-      wavep=wave
-      wavehp=waveh
-      tp=t
-      xnep=xne
-      stark1p=stark1
-
-      return
+      IF (DEL.LT.0.d0) STARK1 = STARK1 * DEXP(-DABS(H*DEL)/K/T)
 C
       END
 
 
 C***********************************************************************
       real*8 FUNCTION HFNM(N,M)
+
 C
 C  HFNM calculates hydrogen oscillator strengths
 C
@@ -1197,32 +883,33 @@ C
       integer :: m, mstr, n, nstr
       real(dp) :: fk, fkn, fnm, gca, ginf, wt, wtc
       real(dp) :: xm, xmn, xmn12, xn
-      SAVE
-      DATA NSTR / 0 /, MSTR / 0 /
 C
-      HFNM=0.0_dp
+      SAVE
+      DATA NSTR/0/,MSTR/0/
+C
+      HFNM=0.
       IF(M.LE.N) RETURN
       IF(N.NE.NSTR) THEN
         XN=N
-        GINF=0.2027_dp/XN**0.71_dp
-        GCA=0.124_dp/XN
-        FKN=XN*1.9603_dp
-        WTC=0.45_dp-2.4_dp/XN**3*(XN-1.0_dp)
+        GINF=0.2027/XN**0.71
+        GCA=0.124/XN
+        FKN=XN*1.9603
+        WTC=0.45-2.4/XN**3*(XN-1.)
         NSTR=N
         XM=M
         XMN=M-N
         FK=FKN*(XM/(XMN*(XM+XN)))**3
-        XMN12=XMN**1.2_dp
-        WT=(XMN12-1.0_dp)/(XMN12+WTC)
-        FNM=FK*(1.0_dp-WT*GINF-(0.222_dp+GCA/XM)*(1.0_dp-WT))
+        XMN12=XMN**1.2
+        WT=(XMN12-1.)/(XMN12+WTC)
+        FNM=FK*(1.-WT*GINF-(0.222+GCA/XM)*(1.-WT))
         MSTR=M
       ELSE IF(M.NE.MSTR) THEN
         XM=M
         XMN=M-N
         FK=FKN*(XM/(XMN*(XM+XN)))**3
-        XMN12=XMN**1.2_dp
-        WT=(XMN12-1.0_dp)/(XMN12+WTC)
-        FNM=FK*(1.0_dp-WT*GINF-(0.222_dp+GCA/XM)*(1.0_dp-WT))
+        XMN12=XMN**1.2
+        WT=(XMN12-1.)/(XMN12+WTC)
+        FNM=FK*(1.-WT*GINF-(0.222+GCA/XM)*(1.-WT))
         MSTR=M
       END IF
       HFNM=FNM
@@ -1244,18 +931,18 @@ C
       integer, parameter :: dp = selected_real_kind(15, 307)
       integer, parameter :: sp = selected_real_kind(6, 37)
       real(dp) :: x
-      VCSE1F = 0.0_dp
-      IF(X.LE.0.0_dp) RETURN
-      IF(X.LE.0.01_dp) THEN
-        VCSE1F = -LOG(X)-0.577215_dp+X
-      ELSE IF(X.LE.1.0_dp) THEN
-        VCSE1F = -LOG(X)-0.57721566_dp+
-     &           X*(0.99999193_dp+X*(-0.24991055_dp+
-     &           X*(0.05519968_dp+X*(-0.00976004_dp+
-     &           X*0.00107857_dp))))
-      ELSE IF(X.LE.300.0_dp) THEN
-        VCSE1F = (X*(X+2.334733_dp)+0.25062_dp)/(X*(X+3.330657_dp)+
-     &           1.681534_dp)/X*dEXP(-X)
+
+      VCSE1F=0.0
+      IF(X.LE.0.0) RETURN
+      IF(X.LE.0.01) THEN
+        VCSE1F=-LOG(X)-0.577215+X
+      ELSE IF(X.LE.1.0) THEN
+        VCSE1F=-LOG(X)-0.57721566+X*(0.99999193+X*(-0.24991055+
+     +                            X*(0.05519968+X*(-0.00976004+
+     +                            X*0.00107857))))
+      ELSE IF(X.LE.30.) THEN
+        VCSE1F=(X*(X+2.334733)+0.25062)/(X*(X+3.330657)+
+     +         1.681534)/X*EXP(-X)
       END IF
 C
       RETURN
@@ -1300,159 +987,110 @@ C
 C  Lyman alpha
 C
       DATA PROB1/
-     & -0.980_dp, -0.967_dp, -0.948_dp, -0.918_dp, -0.873_dp,
-     & -0.968_dp, -0.949_dp, -0.921_dp, -0.879_dp, -0.821_dp,
-     & -0.950_dp, -0.922_dp, -0.883_dp, -0.830_dp, -0.764_dp,
-     & -0.922_dp, -0.881_dp, -0.830_dp, -0.770_dp, -0.706_dp,
-     & -0.877_dp, -0.823_dp, -0.763_dp, -0.706_dp, -0.660_dp,
-     & -0.806_dp, -0.741_dp, -0.682_dp, -0.640_dp, -0.625_dp,
-     & -0.691_dp, -0.628_dp, -0.588_dp, -0.577_dp, -0.599_dp,
-     & -0.511_dp, -0.482_dp, -0.484_dp, -0.514_dp, -0.568_dp,
-     & -0.265_dp, -0.318_dp, -0.382_dp, -0.455_dp, -0.531_dp,
-     & -0.013_dp, -0.167_dp, -0.292_dp, -0.394_dp, -0.478_dp,
-     &  0.166_dp, -0.056_dp, -0.216_dp, -0.332_dp, -0.415_dp,
-     &  0.251_dp,  0.035_dp, -0.122_dp, -0.237_dp, -0.320_dp,
-     &  0.221_dp,  0.059_dp, -0.068_dp, -0.168_dp, -0.247_dp,
-     &  0.160_dp,  0.055_dp, -0.037_dp, -0.118_dp, -0.189_dp,
-     &  0.110_dp,  0.043_dp, -0.022_dp, -0.085_dp, -0.147_dp /
-      DATA C1 /-18.396_dp, 84.674_dp, -96.273_dp, 3.927_dp,  55.191_dp /
-      DATA D1 / 11.801_dp, 9.079_dp, -0.651_dp, -11.071_dp, -26.545_dp /
+     1-.980,-.967,-.948,-.918,-.873,-.968,-.949,-.921,-.879,-.821,
+     2-.950,-.922,-.883,-.830,-.764,-.922,-.881,-.830,-.770,-.706,
+     3-.877,-.823,-.763,-.706,-.660,-.806,-.741,-.682,-.640,-.625,
+     4-.691,-.628,-.588,-.577,-.599,-.511,-.482,-.484,-.514,-.568,
+     5-.265,-.318,-.382,-.455,-.531,-.013,-.167,-.292,-.394,-.478,
+     6 .166,-.056,-.216,-.332,-.415, .251, .035,-.122,-.237,-.320,
+     7 .221, .059,-.068,-.168,-.247, .160, .055,-.037,-.118,-.189,
+     8 .110, .043,-.022,-.085,-.147/
+      DATA C1 /-18.396, 84.674,-96.273,  3.927, 55.191/
+      DATA D1 / 11.801,  9.079, -0.651,-11.071,-26.545/
 C
 C  Lyman beta
 C
       DATA PROB2/
-     & -0.242_dp,  0.060_dp,  0.379_dp,  0.671_dp,  0.894_dp,
-     &  0.022_dp,  0.314_dp,  0.569_dp,  0.746_dp,  0.818_dp,
-     &  0.273_dp,  0.473_dp,  0.605_dp,  0.651_dp,  0.607_dp,
-     &  0.432_dp,  0.484_dp,  0.489_dp,  0.442_dp,  0.343_dp,
-     &  0.434_dp,  0.366_dp,  0.294_dp,  0.204_dp,  0.091_dp,
-     &  0.304_dp,  0.184_dp,  0.079_dp, -0.025_dp, -0.135_dp,
-     &  0.167_dp,  0.035_dp, -0.082_dp, -0.189_dp, -0.290_dp,
-     &  0.085_dp, -0.061_dp, -0.183_dp, -0.287_dp, -0.374_dp,
-     &  0.032_dp, -0.127_dp, -0.249_dp, -0.344_dp, -0.418_dp,
-     & -0.024_dp, -0.167_dp, -0.275_dp, -0.357_dp, -0.420_dp,
-     & -0.061_dp, -0.170_dp, -0.257_dp, -0.327_dp, -0.384_dp,
-     & -0.047_dp, -0.124_dp, -0.192_dp, -0.252_dp, -0.306_dp,
-     & -0.043_dp, -0.092_dp, -0.142_dp, -0.190_dp, -0.238_dp,
-     & -0.038_dp, -0.070_dp, -0.107_dp, -0.146_dp, -0.187_dp,
-     & -0.030_dp, -0.049_dp, -0.075_dp, -0.106_dp, -0.140_dp /
-      DATA C2 / 95.740_dp,  18.489_dp, 14.902_dp, 24.466_dp, 42.456_dp /
-      DATA D2 / -6.665_dp, -7.136_dp, -10.605_dp,-15.882_dp,-23.632_dp /
+     1-.242, .060, .379, .671, .894, .022, .314, .569, .746, .818,
+     2 .273, .473, .605, .651, .607, .432, .484, .489, .442, .343,
+     3 .434, .366, .294, .204, .091, .304, .184, .079,-.025,-.135,
+     4 .167, .035,-.082,-.189,-.290, .085,-.061,-.183,-.287,-.374,
+     5 .032,-.127,-.249,-.344,-.418,-.024,-.167,-.275,-.357,-.420,
+     6-.061,-.170,-.257,-.327,-.384,-.047,-.124,-.192,-.252,-.306,
+     7-.043,-.092,-.142,-.190,-.238,-.038,-.070,-.107,-.146,-.187,
+     8-.030,-.049,-.075,-.106,-.140/
+      DATA C2 / 95.740, 18.489, 14.902, 24.466, 42.456/
+      DATA D2 / -6.665, -7.136,-10.605,-15.882,-23.632/
 C
 C  Balmer alpha
 C
       DATA PROB3/
-     & -0.484_dp, -0.336_dp, -0.206_dp, -0.111_dp, -0.058_dp,
-     & -0.364_dp, -0.264_dp, -0.192_dp, -0.154_dp, -0.144_dp,
-     & -0.299_dp, -0.268_dp, -0.250_dp, -0.244_dp, -0.246_dp,
-     & -0.319_dp, -0.333_dp, -0.337_dp, -0.336_dp, -0.337_dp,
-     & -0.397_dp, -0.414_dp, -0.415_dp, -0.413_dp, -0.420_dp,
-     & -0.456_dp, -0.455_dp, -0.451_dp, -0.456_dp, -0.478_dp,
-     & -0.446_dp, -0.441_dp, -0.446_dp, -0.469_dp, -0.512_dp,
-     & -0.358_dp, -0.381_dp, -0.415_dp, -0.463_dp, -0.522_dp,
-     & -0.214_dp, -0.288_dp, -0.360_dp, -0.432_dp, -0.503_dp,
-     & -0.063_dp, -0.196_dp, -0.304_dp, -0.394_dp, -0.468_dp,
-     &  0.063_dp, -0.108_dp, -0.237_dp, -0.334_dp, -0.409_dp,
-     &  0.151_dp, -0.019_dp, -0.148_dp, -0.245_dp, -0.319_dp,
-     &  0.149_dp,  0.016_dp, -0.091_dp, -0.177_dp, -0.246_dp,
-     &  0.115_dp,  0.023_dp, -0.056_dp, -0.126_dp, -0.189_dp,
-     &  0.078_dp,  0.021_dp, -0.036_dp, -0.091_dp, -0.145_dp /
-      DATA C3 / -25.088_dp, 145.882_dp,-50.165_dp, 7.902_dp, 51.003_dp /
-      DATA D3 / 7.872_dp,  5.592_dp, -2.716_dp, -12.180_dp, -25.661_dp /
+     1-.484,-.336,-.206,-.111,-.058,-.364,-.264,-.192,-.154,-.144,
+     2-.299,-.268,-.250,-.244,-.246,-.319,-.333,-.337,-.336,-.337,
+     3-.397,-.414,-.415,-.413,-.420,-.456,-.455,-.451,-.456,-.478,
+     4-.446,-.441,-.446,-.469,-.512,-.358,-.381,-.415,-.463,-.522,
+     5-.214,-.288,-.360,-.432,-.503,-.063,-.196,-.304,-.394,-.468,
+     6 .063,-.108,-.237,-.334,-.409, .151,-.019,-.148,-.245,-.319,
+     7 .149, .016,-.091,-.177,-.246, .115, .023,-.056,-.126,-.189,
+     8 .078, .021,-.036,-.091,-.145/
+      DATA C3 /-25.088,145.882,-50.165,  7.902, 51.003/
+      DATA D3 /  7.872,  5.592, -2.716,-12.180,-25.661/
 C
 C  Balmer beta
 C
       DATA PROB4/
-     & -0.082_dp,  0.163_dp,  0.417_dp,  0.649_dp,  0.829_dp,
-     &  0.096_dp,  0.316_dp,  0.515_dp,  0.660_dp,  0.729_dp,
-     &  0.242_dp,  0.393_dp,  0.505_dp,  0.556_dp,  0.534_dp,
-     &  0.320_dp,  0.373_dp,  0.394_dp,  0.369_dp,  0.290_dp,
-     &  0.308_dp,  0.274_dp,  0.226_dp,  0.152_dp,  0.048_dp,
-     &  0.232_dp,  0.141_dp,  0.052_dp, -0.046_dp, -0.154_dp,
-     &  0.148_dp,  0.020_dp, -0.094_dp, -0.200_dp, -0.299_dp,
-     &  0.083_dp, -0.070_dp, -0.195_dp, -0.299_dp, -0.385_dp,
-     &  0.031_dp, -0.130_dp, -0.253_dp, -0.348_dp, -0.422_dp,
-     & -0.023_dp, -0.167_dp, -0.276_dp, -0.359_dp, -0.423_dp,
-     & -0.053_dp, -0.165_dp, -0.254_dp, -0.326_dp, -0.384_dp,
-     & -0.038_dp, -0.119_dp, -0.190_dp, -0.251_dp, -0.306_dp,
-     & -0.034_dp, -0.088_dp, -0.140_dp, -0.190_dp, -0.239_dp,
-     & -0.032_dp, -0.066_dp, -0.103_dp, -0.144_dp, -0.186_dp,
-     & -0.027_dp, -0.048_dp, -0.075_dp, -0.106_dp, -0.142_dp /
-      DATA C4 / 93.783_dp, 10.066_dp,  9.224_dp, 20.685_dp, 40.136_dp /
-      DATA D4 / -5.918_dp, -6.501_dp,-10.130_dp,-15.588_dp,-23.570_dp /
+     1-.082, .163, .417, .649, .829, .096, .316, .515, .660, .729,
+     2 .242, .393, .505, .556, .534, .320, .373, .394, .369, .290,
+     3 .308, .274, .226, .152, .048, .232, .141, .052,-.046,-.154,
+     4 .148, .020,-.094,-.200,-.299, .083,-.070,-.195,-.299,-.385,
+     5 .031,-.130,-.253,-.348,-.422,-.023,-.167,-.276,-.359,-.423,
+     6-.053,-.165,-.254,-.326,-.384,-.038,-.119,-.190,-.251,-.306,
+     7-.034,-.088,-.140,-.190,-.239,-.032,-.066,-.103,-.144,-.186,
+     8-.027,-.048,-.075,-.106,-.142/
+      DATA C4 / 93.783, 10.066,  9.224, 20.685, 40.136/
+      DATA D4 / -5.918, -6.501,-10.130,-15.588,-23.570/
 C
 C  Paschen alpha
 C
       DATA PROB5/
-     & -0.819_dp, -0.759_dp, -0.689_dp, -0.612_dp, -0.529_dp,
-     & -0.770_dp, -0.707_dp, -0.638_dp, -0.567_dp, -0.498_dp,
-     & -0.721_dp, -0.659_dp, -0.595_dp, -0.537_dp, -0.488_dp,
-     & -0.671_dp, -0.617_dp, -0.566_dp, -0.524_dp, -0.497_dp,
-     & -0.622_dp, -0.582_dp, -0.547_dp, -0.523_dp, -0.516_dp,
-     & -0.570_dp, -0.545_dp, -0.526_dp, -0.521_dp, -0.537_dp,
-     & -0.503_dp, -0.495_dp, -0.496_dp, -0.514_dp, -0.551_dp,
-     & -0.397_dp, -0.418_dp, -0.448_dp, -0.492_dp, -0.547_dp,
-     & -0.246_dp, -0.315_dp, -0.384_dp, -0.453_dp, -0.522_dp,
-     & -0.080_dp, -0.210_dp, -0.316_dp, -0.406_dp, -0.481_dp,
-     &  0.068_dp, -0.107_dp, -0.239_dp, -0.340_dp, -0.418_dp, 
-     &  0.177_dp, -0.006_dp, -0.143_dp, -0.246_dp, -0.324_dp,
-     &  0.184_dp,  0.035_dp, -0.082_dp, -0.174_dp, -0.249_dp,
-     &  0.146_dp,  0.042_dp, -0.046_dp, -0.123_dp, -0.190_dp,
-     &  0.103_dp,  0.036_dp, -0.027_dp, -0.088_dp, -0.146_dp /
-      DATA C5 / -19.819_dp, 94.981_dp, -79.606_dp, 3.159_dp, 52.106_dp /
-      DATA D5 / 10.938_dp, 8.028_dp, -1.267_dp, -11.375_dp, -26.047_dp /
+     1-.819,-.759,-.689,-.612,-.529,-.770,-.707,-.638,-.567,-.498,
+     2-.721,-.659,-.595,-.537,-.488,-.671,-.617,-.566,-.524,-.497,
+     3-.622,-.582,-.547,-.523,-.516,-.570,-.545,-.526,-.521,-.537,
+     4-.503,-.495,-.496,-.514,-.551,-.397,-.418,-.448,-.492,-.547,
+     5-.246,-.315,-.384,-.453,-.522,-.080,-.210,-.316,-.406,-.481,
+     6 .068,-.107,-.239,-.340,-.418, .177,-.006,-.143,-.246,-.324,
+     7 .184, .035,-.082,-.174,-.249, .146, .042,-.046,-.123,-.190,
+     8 .103, .036,-.027,-.088,-.146/
+      DATA C5 /-19.819, 94.981,-79.606,  3.159, 52.106/
+      DATA D5 / 10.938,  8.028, -1.267,-11.375,-26.047/
 C
 C  Paschen beta
 C
       DATA PROB6/
-     & -0.073_dp,  0.169_dp,  0.415_dp,  0.636_dp,  0.809_dp,  0.102_dp,
-     &  0.311_dp,  0.499_dp,  0.639_dp,  0.710_dp,  0.232_dp,  0.372_dp,
-     &  0.479_dp,  0.531_dp,  0.514_dp,  0.294_dp,  0.349_dp,  0.374_dp,
-     &  0.354_dp,  0.279_dp,  0.278_dp,  0.253_dp,  0.212_dp,  0.142_dp,
-     &  0.040_dp,  0.215_dp,  0.130_dp,  0.044_dp, -0.051_dp, -0.158_dp,
-     &  0.141_dp,  0.015_dp, -0.097_dp, -0.202_dp, -0.300_dp,  0.080_dp,
-     & -0.072_dp, -0.196_dp, -0.299_dp, -0.385_dp,  0.029_dp, -0.130_dp,
-     & -0.252_dp, -0.347_dp, -0.421_dp, -0.022_dp, -0.166_dp, -0.275_dp,
-     & -0.359_dp, -0.423_dp, -0.050_dp, -0.164_dp, -0.253_dp, -0.325_dp,
-     & -0.384_dp, -0.035_dp, -0.118_dp, -0.189_dp, -0.252_dp, -0.306_dp,
-     & -0.032_dp, -0.087_dp, -0.139_dp, -0.190_dp, -0.240_dp, -0.029_dp,
-     & -0.064_dp, -0.102_dp, -0.143_dp, -0.185_dp, -0.025_dp, -0.046_dp,
-     & -0.074_dp, -0.106_dp, -0.142_dp /
-      DATA C6 / 111.107_dp, 11.910_dp, 9.857_dp, 21.371_dp, 41.006_dp /
-      DATA D6 / -5.899_dp, -6.381_dp,-10.044_dp,-15.574_dp,-23.644_dp /
+     1-.073, .169, .415, .636, .809, .102, .311, .499, .639, .710,
+     2 .232, .372, .479, .531, .514, .294, .349, .374, .354, .279,
+     3 .278, .253, .212, .142, .040, .215, .130, .044,-.051,-.158,
+     4 .141, .015,-.097,-.202,-.300, .080,-.072,-.196,-.299,-.385,
+     5 .029,-.130,-.252,-.347,-.421,-.022,-.166,-.275,-.359,-.423,
+     6-.050,-.164,-.253,-.325,-.384,-.035,-.118,-.189,-.252,-.306,
+     7-.032,-.087,-.139,-.190,-.240,-.029,-.064,-.102,-.143,-.185,
+     8-.025,-.046,-.074,-.106,-.142/
+      DATA C6 /111.107, 11.910,  9.857, 21.371, 41.006/
+      DATA D6 / -5.899, -6.381,-10.044,-15.574,-23.644/
 C
 C  Balmer 18
 C
       DATA PROB7/
-     &  0.005_dp,  0.128_dp,  0.260_dp,  0.389_dp,  0.504_dp,
-     &  0.004_dp,  0.109_dp,  0.220_dp,  0.318_dp,  0.389_dp,
-     & -0.007_dp,  0.079_dp,  0.162_dp,  0.222_dp,  0.244_dp,
-     & -0.018_dp,  0.041_dp,  0.089_dp,  0.106_dp,  0.080_dp,
-     & -0.026_dp, -0.003_dp,  0.003_dp, -0.023_dp, -0.086_dp,
-     & -0.025_dp, -0.048_dp, -0.087_dp, -0.148_dp, -0.234_dp,
-     & -0.008_dp, -0.085_dp, -0.165_dp, -0.251_dp, -0.343_dp,
-     &  0.018_dp, -0.111_dp, -0.223_dp, -0.321_dp, -0.407_dp,
-     &  0.032_dp, -0.130_dp, -0.255_dp, -0.354_dp, -0.431_dp,
-     &  0.014_dp, -0.148_dp, -0.269_dp, -0.359_dp, -0.427_dp,
-     & -0.005_dp, -0.140_dp, -0.243_dp, -0.323_dp, -0.386_dp,
-     &  0.005_dp, -0.095_dp, -0.178_dp, -0.248_dp, -0.307_dp,
-     & -0.002_dp, -0.068_dp, -0.129_dp, -0.187_dp, -0.241_dp,
-     & -0.007_dp, -0.049_dp, -0.094_dp, -0.139_dp, -0.186_dp,
-     & -0.010_dp, -0.036_dp, -0.067_dp, -0.103_dp, -0.143_dp /
-      DATA C7 / 511.318_dp, 1.532_dp,  4.044_dp,  19.266_dp, 41.812_dp /
-      DATA D7 / -6.070_dp, -4.528_dp, -8.759_dp, -14.984_dp,-23.956_dp /
-      DATA PP / 0.0_dp, 0.2_dp, 0.4_dp, 0.6_dp, 0.8_dp /
-      DATA BETA /
-     & 1.000_dp, 1.259_dp, 1.585_dp, 1.995_dp, 2.512_dp, 3.162_dp,
-     & 3.981_dp, 5.012_dp, 6.310_dp, 7.943_dp, 10.00_dp, 12.59_dp,
-     & 15.85_dp, 19.95_dp, 25.12_dp /
+     1 .005, .128, .260, .389, .504, .004, .109, .220, .318, .389,
+     2-.007, .079, .162, .222, .244,-.018, .041, .089, .106, .080,
+     3-.026,-.003, .003,-.023,-.086,-.025,-.048,-.087,-.148,-.234,
+     4-.008,-.085,-.165,-.251,-.343, .018,-.111,-.223,-.321,-.407,
+     5 .032,-.130,-.255,-.354,-.431, .014,-.148,-.269,-.359,-.427,
+     6-.005,-.140,-.243,-.323,-.386, .005,-.095,-.178,-.248,-.307,
+     7-.002,-.068,-.129,-.187,-.241,-.007,-.049,-.094,-.139,-.186,
+     8-.010,-.036,-.067,-.103,-.143/
+      DATA C7 /511.318,  1.532,  4.044, 19.266, 41.812/
+      DATA D7 / -6.070, -4.528, -8.759,-14.984,-23.956/
+      DATA PP/0.,.2,.4,.6,.8/
+      DATA BETA/1.,1.259,1.585,1.995,2.512,3.162,3.981,5.012,6.310,
+     1          7.943,10.,12.59,15.85,19.95,25.12/
 C
       IF(B.GT.500.) THEN
 C
 C  Very large B
 C
         B2=B*B
-        SOFBET=(1.5_dp/SQRT(B)+27.0_dp/B2)/B2
+        SOFBET=(1.5/SQRT(B)+27./B2)/B2
         RETURN
       END IF
 C
@@ -1467,41 +1105,41 @@ C
 C
 C  Determine relevant Debye range
 C
-      IM=MIN(INT(5.0_dp*P)+1,4)
+      IM=MIN(INT(5.*P)+1,4)
       IP=IM+1
-      WTPP=50.0_dp*(P-PP(IM))
-      WTPM=1.0_dp-WTPP
-      IF(B.LE.25.12_dp) THEN
+      WTPP=5.*(P-PP(IM))
+      WTPM=1.-WTPP
+      IF(B.LE.25.12) THEN
 C
         JP=2
-   1    IF(B.GT.BETA(JP) .AND. JP.LT.15) THEN
+   1    IF(B.GT.BETA(JP).AND.JP.LT.15) THEN
           JP=JP+1
           GO TO 1
         END IF
         JM=JP-1
 C
         WTBP=(B-BETA(JM))/(BETA(JP)-BETA(JM))
-        WTBM=1.0_dp-WTBP
+        WTBM=1.-WTBP
         CBP=PROPBM(IP,JP,INDX)*WTPP+PROPBM(IM,JP,INDX)*WTPM
         CBM=PROPBM(IP,JM,INDX)*WTPP+PROPBM(IM,JM,INDX)*WTPM
-        CORR=1.0_dp+CBP*WTBP+CBM*WTBM
+        CORR=1.+CBP*WTBP+CBM*WTBM
 C
 C  Get approximate profile for the inner part
 C
-        PR1=0.0_dp
-        PR2=0.0_dp
-        WT=dMAX1(MIN(0.5_dp*(10.0_dp-B),1.0_dp),0.0_dp)
-        IF(B.LE.10.0_dp) PR1=8.0_dp/(83.0_dp+(2.0_dp+0.95_dp*B2)*B)
-        IF(B.GE.8.0_dp)  PR2=(1.5_dp/SB+27.0_dp/B2)/B2
-        SOFBET=(PR1*WT+PR2*(1.0_dp-WT))*CORR
+        PR1=0.
+        PR2=0.
+        WT=AMAX1(MIN(0.5*(10.-B),1.),0.)
+        IF(B.LE.10.) PR1=8./(83.+(2.+0.95*B2)*B)
+        IF(B.GE.8.)  PR2=(1.5/SB+27./B2)/B2
+        SOFBET=(PR1*WT+PR2*(1.-WT))*CORR
       ELSE
 C
 C  Asymptotic part for medium B's
 C
         CC=C(IP,INDX)*WTPP+C(IM,INDX)*WTPM
         DD=D(IP,INDX)*WTPP+D(IM,INDX)*WTPM
-        CORR=1.0_dp+DD/(CC+B*SB)
-        SOFBET=(1.5_dp/SB+27.0_dp/B2)/B2*CORR
+        CORR=1.+DD/(CC+B*SB)
+        SOFBET=(1.5/SB+27./B2)/B2*CORR
       END IF
 C
       RETURN
@@ -1510,23 +1148,20 @@ C
 
 C***********************************************************************
       REAL*8 FUNCTION AIRVAC(W)
+      REAL*8 W, WAVEN, WNEW
 C
 C  W is air wavelength in Angstroms. WAVEN is air wavenumber which is 
 C  usually good enough, must iterate for exact solution
 C
-      implicit none
-      integer, parameter :: dp = selected_real_kind(15, 307)
-      integer, parameter :: sp = selected_real_kind(6, 37)
-      REAL(dp) :: W, WAVEN, WNEW
-      WAVEN = 1.0D8 / W
-      WNEW = W * (1.0000834213D0 + 2406030.0D0 / (1.30D10 - WAVEN**2) +
-     &       15997.0D0 / (3.89D9 - WAVEN**2))
-      WAVEN = 1.0D8 / WNEW
-      WNEW = W * (1.0000834213D0 + 2406030.0D0 / (1.30D10 - WAVEN**2) +
-     &       15997.0D0 / (3.89D9 - WAVEN**2))
-      WAVEN = 1.0D8 / WNEW
-      AIRVAC = W*(1.0000834213D0 + 2406030.0D0 / (1.30D10 - WAVEN**2) +
-     &         15997.0D0 / (3.89D9 - WAVEN**2))
+      WAVEN = 1.D8 / W
+      WNEW = W * (1.0000834213D0 + 2406030.D0 / (1.30D10 - WAVEN**2) +
+     +       15997.D0 / (3.89D9 - WAVEN**2))
+      WAVEN = 1.D8 / WNEW
+      WNEW = W * (1.0000834213D0 + 2406030.D0 / (1.30D10 - WAVEN**2) +
+     +       15997.D0 / (3.89D9 - WAVEN**2))
+      WAVEN = 1.D8 / WNEW
+      AIRVAC = W * (1.0000834213D0 + 2406030.D0 / (1.30D10 - WAVEN**2) +
+     +         15997.D0 / (3.89D9 - WAVEN**2))
 C
       RETURN
       END
@@ -1534,20 +1169,15 @@ C
 
 C***********************************************************************
       REAL*8 FUNCTION VACAIR(W)
+      REAL*8 W, WAVEN
 C
 C  W is vacuum wavelength in Angstroms
 C
-      implicit none
-      integer, parameter :: dp = selected_real_kind(15, 307)
-      integer, parameter :: sp = selected_real_kind(6, 37)
-      REAL(dp) :: W, WAVEN
-      WAVEN = 1.0D8 / W
-      VACAIR = W/(1.0000834213D0 + 2406030.0D0 / (1.30D10 - WAVEN**2) +
-     &       15997.0D0 / (3.89D9 - WAVEN**2))
+      WAVEN = 1.D8 / W
+      VACAIR = W / (1.0000834213D0 + 2406030.D0 / (1.30D10 - WAVEN**2) +
+     +       15997.D0 / (3.89D9 - WAVEN**2))
 C
       RETURN
       END
 
 
-C***********************************************************************
-*
