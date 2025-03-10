@@ -40,8 +40,10 @@ babsma_luobj =  \
       ../$(SOURCE)/CIAh2he.f \
       ../$(SOURCE)/heborysowopac.f \
       ../$(SOURCE)/h2borysowopac.f \
+      ../$(SOURCE)/hbop_auto.f \
       ../$(SOURCE)/hbop.f \
-      ../$(SOURCE)/hlinprof.f \
+      ../$(SOURCE)/hlinop.f \
+      ../$(SOURCE)/wcalc.f \
       ../$(SOURCE)/eqmol_pe_lu.f \
       ../$(SOURCE)/die_pe_lu.f \
       ../$(SOURCE)/funcv.f \
@@ -60,57 +62,6 @@ babsma_luobj =  \
       ../$(SOURCE)/lowercase_conversion.f90 \
       ../$(SOURCE)/molfys.f 
 
-eqwidt_luobj = \
-      ../$(SOURCE)/anstee.f \
-      ../$(SOURCE)/bpl.f \
-      ../$(SOURCE)/eqwidtb.f \
-      ../$(SOURCE)/eqwidtbplatt.f \
-      ../$(SOURCE)/eqwidt.f \
-      ../$(SOURCE)/clock-gf.f \
-      ../$(SOURCE)/depth.f \
-      ../$(SOURCE)/gausi.f \
-      ../$(SOURCE)/getinfospecies.f \
-      ../$(SOURCE)/getlele.f \
-      ../$(SOURCE)/hydropac.f \
-      ../$(SOURCE)/hbop.f \
-      ../$(SOURCE)/hlinprof.f \
-      ../$(SOURCE)/inp3.f \
-      ../$(SOURCE)/input.f \
-      ../$(SOURCE)/lenstr.f \
-      ../$(SOURCE)/eqmol_pe_lu.f \
-      ../$(SOURCE)/die_pe_lu.f \
-      ../$(SOURCE)/funcv.f \
-      ../$(SOURCE)/ludcmp.f \
-      ../$(SOURCE)/lubksb.f \
-      ../$(SOURCE)/makeabund.f \
-      ../$(SOURCE)/getisotopmass.f \
-      ../$(SOURCE)/molfys.f \
-      ../$(SOURCE)/takemolec.f \
-      ../$(SOURCE)/readmo.f \
-      ../$(SOURCE)/readfilt.f \
-      ../$(SOURCE)/tint.f \
-      ../$(SOURCE)/lint.f \
-      ../$(SOURCE)/traneq.f \
-      ../$(SOURCE)/traneqplatt.f \
-      ../$(SOURCE)/tranw.f \
-      ../$(SOURCE)/newvoigt.f \
-      ../$(SOURCE)/molmat.f \
-      ../$(SOURCE)/tranfr.f \
-      ../$(SOURCE)/tranfrplatt.f \
-      ../$(SOURCE)/trrays.f \
-      ../$(SOURCE)/trqua2.f \
-      ../$(SOURCE)/transc.f \
-      ../$(SOURCE)/transcplatt.f \
-      ../$(SOURCE)/partf.f \
-      ../$(SOURCE)/molecpartf.f \
-      ../$(SOURCE)/partffordepth.f \
-      ../$(SOURCE)/h2opartf.f \
-      ../$(SOURCE)/h2opartf2001.f \
-      ../$(SOURCE)/partfamesh2o.f \
-      ../$(SOURCE)/partfBarberH2O.f \
-      ../$(SOURCE)/weightlimb.f 
-
-
 bsyn_luobj = \
       ../$(SOURCE)/anstee.f \
       ../$(SOURCE)/bpl.f \
@@ -124,8 +75,10 @@ bsyn_luobj = \
       ../$(SOURCE)/getinfospecies.f \
       ../$(SOURCE)/getlele.f \
       ../$(SOURCE)/hydropac.f \
+      ../$(SOURCE)/hbop_auto.f \
       ../$(SOURCE)/hbop.f \
-      ../$(SOURCE)/hlinprof.f \
+      ../$(SOURCE)/hlinop.f \
+      ../$(SOURCE)/wcalc.f \
       ../$(SOURCE)/inp3.f \
       ../$(SOURCE)/input.f \
       ../$(SOURCE)/Iplus_calc.f \
@@ -170,10 +123,9 @@ bsyn_luobj = \
 
 
 #clean : 
-#	rm *.o bsyn_lu babsma_lu eqwidt_lu 
+#	rm *.o bsyn_lu babsma_lu 
 
 all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu
-#  eqwidt_lu 
 
 cubint_module.o : ../${SOURCE}/cubint_module.f90
 	$(F)  -c ../${SOURCE}/cubint_module.f90
@@ -192,7 +144,4 @@ babsma_lu : $(babsma_luobj) $(include1) $(include2)
 
 bsyn_lu: $(bsyn_luobj) $(include1) $(include2)
 	$(F) $(LINKOPT) -o bsyn_lu  $(bsyn_luobj)
- 
-eqwidt_lu: $(eqwidt_luobj) $(include1) $(include2)
-	$(F) $(LINKOPT) -o eqwidt_lu  $(eqwidt_luobj)
  

@@ -191,6 +191,10 @@
 ! the continuum opacity is not included in abso
 
           x(k)=abso(k,j)+absocont(k,j)
+
+          if (k == 25 ) print*,'bsynb',xlsingle,
+     &          absocont(k,j),abso(k,j),x(k)
+
 ! test            x(k)=abso(k,j)
 ! test 
           s(k)=absos(k,j)+absoscont(k,j)

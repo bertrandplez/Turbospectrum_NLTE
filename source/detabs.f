@@ -184,6 +184,7 @@ C        H-
       fakt(19)=pe(ntp)*presneutral(ntp,1)*(1.d-26/rhokt)
 !
 !  Suppress HI bf, as it is now integrated in hydropac.f   BPz 03/04-2019
+!  Integarted in hbop.f now    BPz 2025/03/10
 !
 C        HI
       TETA31=31.30364*TETA

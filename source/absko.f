@@ -279,29 +279,32 @@ cc      print*,'absko, back from detabs'
 ! Must add HI bf absorption with improved treatment from Barklem&Piskunov
 ! BPz 03/04-2019
 !
-      if (firsth) then
-!       read file
-        lunit=77
-        open(lunit,file='DATA/Hlinedata', status='old')
-        read(lunit,*) species,ioniz,nline
-        read(lunit,*) comment
-*        print*,species,ioniz,nline,comment
-        if (species(1:6) /= '01.000' .or. ioniz /= 1) then
-          print*, 'wrong H line data file!'
-          print*,species,ioniz
-          stop 'ERROR!'
-        endif
+! BPz 2025/03/10
+! use hbop_auto, which better models dissolved states
+!
+!      if (firsth) then
+!!       read file
+!        lunit=77
+!        open(lunit,file='DATA/Hlinedata', status='old')
+!        read(lunit,*) species,ioniz,nline
+!        read(lunit,*) comment
+!*        print*,species,ioniz,nline,comment
+!        if (species(1:6) /= '01.000' .or. ioniz /= 1) then
+!          print*, 'wrong H line data file!'
+!          print*,species,ioniz
+!          stop 'ERROR!'
+!        endif
 c babsma uses air wavelengths, and so does hbop.f, except for Lyman series
 c
-        if (nline > 150 ) stop 'increase nline dimension in babsma!'
-        do i=1,nline
-!         oscillator strengths are computed in hbop.f
-          read(lunit,*) hlambda(i),nlo(i),nup(i),xlo(i),xup(i),gf(i),
-     &                lname(i)
-        enddo
-        close(lunit)
-        firsth=.false.
-      endif
+!        if (nline > 150 ) stop 'increase nline dimension in babsma!'
+!        do i=1,nline
+!!         oscillator strengths are computed in hbop.f
+!          read(lunit,*) hlambda(i),nlo(i),nup(i),xlo(i),xup(i),gf(i),
+!     &                lname(i)
+!        enddo
+!        close(lunit)
+!        firsth=.false.
+!      endif
 *
       ne=pe(ntp)/(t(ntp)*1.38066e-16)
       nh1=sngl(presneutral(ntp,1))/(t(ntp)*1.38066e-16)
@@ -312,10 +315,13 @@ c
 
 ! COMPUTE in LTE. CAN BE CHANGED LATER.
 
-      call hbop(xlambda,nline,nlo,nup,hlambda,
-     &         nh1,nhe1,ne,t(ntp),dopple,npop,
-     &         b_departure,0,1.,1.,1.,1.,
-     &         total,cont,contonly,lineonly,.false.,.false.)
+!      call hbop(xlambda,nline,nlo,nup,hlambda,
+!     &         nh1,nhe1,ne,t(ntp),dopple,npop,
+!     &         b_departure,0,1.,1.,1.,1.,
+!     &         total,cont,contonly,lineonly,.false.,.false.)
+
+      call hbop_auto(xlambda,100,nh1,nhe1,ne,t(ntp),dopple,total,cont,
+     &               contonly,lineonly)
 
       sumabs=sumabs+cont/rosav(ntp)
 !

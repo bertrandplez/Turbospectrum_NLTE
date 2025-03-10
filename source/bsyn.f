@@ -221,6 +221,11 @@
       data debug/.false./
       data nat/92/
       logical newformat,starkformat,nlteformat
+      logical contonly,lineonly
+      doubleprecision ne(ndp),nh1(ndp),nhe1(ndp),total,cont,dopple(ndp),
+     &                tdouble(ndp)
+      data contonly /.false./
+      data lineonly /.true./
       character oneline*256
 
 ccc      external commn_handler
@@ -422,12 +427,12 @@ cc     &     RECL=412)
       IWRIT=6
       IP=1
 *
-      BOLTZ=1.38066E-16
+      BOLTZ=1.380649e-16
       MH=1.6735E-24
       M=9.1091E-28
-      C=2.9979E10
+      C=2.99792458E10
       E=4.80298E-10
-      H=6.6256E-27
+      H=6.6260715E-27
       constant=SQRT(4.*ATAN(1.))*E*E/M/C
       IDAMP=2
       IELP=0
@@ -935,13 +940,43 @@ cc          call Hlineadd(lunit,nline,xlboff)
 ! for hydrogen lines a different cut is chosen
           epsmem=eps
           eps=1.e-4
-! B Plez 2024-02-12: this cut is not used anymore for H lines. It did not save time.
-! include departure coefficients for hydrogen. BPz 17/11-2020
+!! B Plez 2024-02-12: this cut is not used anymore for H lines. It did not save time.
+!! include departure coefficients for hydrogen. BPz 17/11-2020
           print*,'bsyn nlte, nlte_species',nlte,nlte_species
-          call hydropac(lunit,xlboff,nlte,
-     &                  nlte_species,maxlevel,modnlevel,
-     &                  b_departure,modenergy,
-     &                  modg,modion,modid)
+!          call hydropac(lunit,xlboff,nlte,
+!     &                  nlte_species,maxlevel,modnlevel,
+!     &                  b_departure,modenergy,
+!     &                  modg,modion,modid)
+!
+! hbop_auto is used instead    BPz 2025/03/10
+!
+! COMPUTE in LTE. CAN BE CHANGED LATER.
+
+      do j=1,ntau
+        ne(j)=pe(j)/(t(j)*1.38066e-16)
+        nh1(j)=presneutral(j,1)/(t(j)*1.38066e-16)
+        nhe1(j)=presneutral(j,2)/(t(j)*1.38066e-16)
+        dopple(j)=sqrt( xi(j)**2 * 1. +
+     &                 2.*boltz*t(j)/mh) /
+     &                 2.99792458d10
+        tdouble(J)=dble(t(j))
+        print*,'for HBOP',j,nh1(j),nhe1(j),ne(j),T(j),dopple(j),
+     &          ross(j)
+        do i=1,maxlam
+          call hbop_auto(xlambda(i),100,nh1(j),nhe1(j),ne(j),
+     &                   tdouble(j),
+     &                   dopple(j),total,cont,contonly,lineonly)
+
+            total = total/ross(j)/ro(j)
+            ABSO(j,i)=ABSO(j,i)+total*absfrac
+            ABSOS(j,i)=ABSOS(j,i)+total*scattfrac
+          if (j == 25) 
+     &          print*,j,sngl(xlambda(i)),abso(j,i),
+     &          absocont(j,i)
+        enddo
+      enddo
+
+!
           eps=epsmem
           goto 9874
         endif
