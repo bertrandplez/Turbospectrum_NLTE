@@ -128,6 +128,7 @@ c
 !
       enddo
 *
+! add opacity
       do k=1,ntau
         ne(k)=pe(k)/(t(k)*kbcgs)
         nh1(k)=sngl(presneutral(k,1))/(t(k)*kbcgs)
@@ -137,9 +138,6 @@ c
         dopple(k)=sqrt( xi(k)**2 * 1. + 
      &                 2.*kbcgs*t(k)/1.6738e-24) /
      &                 sngl(clight*1.d2)
-      enddo
-! add opacity
-      do k=1,ntau
         fact = 1.0 / ro(k) / xkapr(k)
 ! departure coefficients for that depth
         if (nlte_species) then
