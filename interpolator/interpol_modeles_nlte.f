@@ -294,6 +294,8 @@ c      allocate(n_dummy(nlte_file))
       open(unit=199, file=nlte_model_list,  form='formatted')
       read(199,'(A)') n_comment
 
+      last_model_idx = 0
+
       do cnt1=1, nlte_file
          read(199, '(A)') n_comment
          ! skip comments
