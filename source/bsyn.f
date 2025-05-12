@@ -934,7 +934,7 @@ cc        print*,'opened file '
 cc          call Hlineadd(lunit,nline,xlboff)
 ! for hydrogen lines a different cut is chosen
           epsmem=eps
-          eps=1.e-3
+          eps=1.e-4
 ! B Plez 2024-02-12: this cut is not used anymore for H lines. It did not save time.
 ! include departure coefficients for hydrogen. BPz 17/11-2020
           print*,'bsyn nlte, nlte_species',nlte,nlte_species
