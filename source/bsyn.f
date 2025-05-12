@@ -1178,6 +1178,8 @@ cc          call Hlineadd(lunit,nline,xlboff)
               print*,'wavelength=',sngl(xlb)
               print*,'continuing with departure coefficient = 1. ',
      &               'for that level'
+              ilevlo=0
+              ilevup=0
             else if (ilevlo.lt.0.or.ilevup.lt.0) then
               stop 'bsyn.f; level identification (<0) is wrong'
             endif
