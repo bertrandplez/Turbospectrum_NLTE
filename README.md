@@ -16,3 +16,6 @@ A wrapper can be found there:
 https://github.com/EkaterinaSe/TurboSpectrum-Wrapper/
 and another one there:
 https://github.com/JGerbs13/TSFitPy
+
+Molecular line lists can be found at: 
+https://box.in2p3.fr/s/Sn72KPCmC8rYQqa
