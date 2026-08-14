@@ -9,16 +9,18 @@
 ! BPz: inclusion of nlte case. Necessary regardless of case for HI lines, as 
 ! we need emissivity (stored in source_function), and not only extinction coefficient.
 
+      use opac_module
+
       implicit none
 
       include 'spectrum.inc'
 
       character comment*100,species*20
       integer ion,nline,ntau,l,k,i,
-     &        nmy,nlbldu,iint,iweak,lunit,maxlam,
+     &        nmy,nlbldu,iint,iweak,lunit,
      ,        jlcont, nlcont
-      doubleprecision xl1,xl2,del,xlboff,xlambda
-      doubleprecision source_function,source_f
+      doubleprecision xl1,xl2,del,xlboff
+      doubleprecision source_f
 
 ! 150 is the max allowed number of H lines
       doubleprecision hlambda(150)
@@ -28,10 +30,8 @@
       character*9 lname(150)
 !
       real pe,t,pg,xi,mum,ro,eps,xmyc,
-     &     ne(ndp),fact,
-     &     nh1(ndp),nhe1(ndp),
-     &     hckt(ndp),abso,absos,absocont,
-     &     dopple(ndp),xkapr,cross,absoscont
+     &     ne(ndp),fact,nh1(ndp),nhe1(ndp),
+     &     hckt(ndp),dopple(ndp),xkapr,cross
       logical  contonly
       logical  lineonly
 ! NLTE
@@ -49,9 +49,6 @@
       common /orderedpress/ presneutral(ndp,100),presion(ndp,100),
      &                      presion2(ndp,100),presion3(ndp,100)
       common /pieces/ xl1,xl2,del,eps,nmy,nlbldu,iint,xmyc,iweak
-      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
-     & maxlam,abso(ndp,lpoint),
-     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
       common/rossc/ xkapr(ndp),cross(ndp)
       common/continuum/nlcont,jlcont(lpoint)
       

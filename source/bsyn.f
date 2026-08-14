@@ -25,6 +25,8 @@
 *-----------------------------------------------------------------------
 *
       use strings_module
+      use opac_module
+
       INCLUDE 'spectrum.inc'
       include 'tsuji.par'
 *
@@ -57,6 +59,11 @@
       real xlsingle
       CHARACTER*20 lele,lel
       real newvoigt
+      logical fastline,kept
+      integer nfastrej,nfastkeep,nfastcall,nfastprof
+      parameter (maxprof=81)
+      data fastline/.false./
+
 
 * special version NLTE
       logical nlte_species,nlte
@@ -120,11 +127,9 @@
       integer     isotope(5),atom(5)
       character*26   species,blabla
 
-      doubleprecision xlambda,dist
-      doubleprecision  emissivity(ndp),source_function
-      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
-     & maxlam,ABSO(NDP,lpoint),
-     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
+      doubleprecision dist
+      doubleprecision  emissivity(ndp)
+
       logical oldpart,Ames,scan2001,oldscan,Barber
       common/oldpart/oldpart
       common/h2ochoice/Ames,scan2001,oldscan,Barber
@@ -406,15 +411,12 @@ CCCconvert='big_endian')
 *
       OPEN(UNIT=7,FILE=DETOUT,STATUS='UNKNOWN')
       call clock
-cc      OPEN(UNIT=12,FILE=INMOD,STATUS='OLD',recl=4*2*200)
       OPEN(UNIT=12,FILE=INMOD,STATUS='OLD')
-cc      OPEN(UNIT=15,FILE=INSPEC,STATUS='OLD')
-cc      open(unit=16,file=inabun,status='old')
-cc      OPEN(UNIT=27,STATUS='SCRATCH',FORM='FORMATTED')
-ccc      OPEN(UNIT=20,FILE=OUTFIL,STATUS='UNKNOWN',FORM='UNFORMATTED')
-cc      OPEN(UNIT=20,FILE=OUTFIL,STATUS='UNKNOWN',FORM='UNFORMATTED',
-cc     &     RECL=412)
       OPEN(UNIT=23,STATUS='SCRATCH',FORM='FORMATTED')
+! read number of layers in model to prepare for allocation of opacity arrays
+      read(12,*) mcode,ntau
+      print*,'model ',mcode,' has ',ntau,' layers'
+      rewind(12)
 *
 * Initiate
 *
@@ -579,6 +581,9 @@ ccc          stop
         xl2r=0.
         j=1
         nltot=0
+! first approximate allocation
+        allocate(xlambda(500000))
+
         do i=1,nsegment
           xl1l=min(xl1l,xlsegmin(i))
           xl2r=max(xl2r,xlsegmax(i))
@@ -590,6 +595,7 @@ ccc          stop
 !          print*,'j',j,xlambda(j),jj
           do while (xlambda(j).lt.xlsegmax(i))
             j=j+1
+            if (j > 500000) stop 'increase size of xlambda in bsyn.f'
             jj=jj+1
             xlambda(j)=xlsegmin(i)+dlambda*jj
 !           print*,'j',j,xlambda(j),jj
@@ -603,30 +609,54 @@ ccc          stop
 !         print*,i,'lam(nlseg)',xlambda(nltot)
 !         print*,(jj,xlambda(jj),jj=nltot-nlseg(i)+1,nltot)
         enddo
-        maxlam=nltot
+
+! do it again with proper size
+        deallocate(xlambda)
+        call allocate_lambdaarray(nltot)
+!        maxlam=nltot
+        j=1
+        nltot=0
+        do i=1,nsegment
+! define lambdas for each segment
+          nlseg(i)=0
+          dlambda=(xlsegmax(i)+xlsegmin(i))*0.5/resolution
+          xlambda(j)=xlsegmin(i)
+          jj=0
+          do while (xlambda(j).lt.xlsegmax(i))
+            j=j+1
+            jj=jj+1
+            xlambda(j)=xlsegmin(i)+dlambda*jj
+          enddo
+          j=j+1
+          nlseg(i)=jj+1
+          nltot=nltot+nlseg(i)
+        enddo        
+
       else
 ! ordinary setup, constant lambda step, single spectral segment
         nsegment=1
-        maxlam=int((xl2-xl1)/del)+1
-        do j=1,min(maxlam+100,lpoint)
-* concerning this min() see readmo, set up of the continuum opacities ! obsolete ??? BPz 15/07-2020
+        nltot=int((xl2-xl1)/del)+1
+        call allocate_lambdaarray(nltot)
+!        maxlam = nltot
+!!!!        do j=1,min(maxlam+100,lpoint)
+!!!!* concerning this min() see readmo, set up of the continuum opacities ! obsolete ??? BPz 15/07-2020
+        do j=1,maxlam
           xlambda(J)=XL1+FLOAT(J-1)*DEL
         enddo
         xlsegmin(1)=xlambda(1)
         xlsegmax(1)=xlambda(maxlam)
         nlseg(1)=maxlam
       endif
+
+      print*,'computing spectrum for ',maxlam,' wavelength points'
 !
-      if (maxlam.gt.lpoint) stop 'bsyn: too many wavelengths'
-      do j=1,maxlam
-        do k=1,ndp
-          abso(k,j)=0.0
-          absos(k,j)=0.0
-          absocont(k,j)=0.0
-          absoscont(k,j)=0.0
-          source_function(k,j)=0.0
-        enddo
-      enddo
+      call allocate_opacarrays(ntau,maxlam)
+
+      abso=0.0
+      absos=0.0
+      absocont=0.0
+      absoscont=0.0
+      source_function=0.0
 *
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 *
@@ -1493,6 +1523,18 @@ cc      DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 * Start wavelength loop for this line
 *
 ccc      print*,xlb
+        if (fastline) then
+          call fast_line_profile(ntau,lstart,lstop,EPS,
+     &         xlb,xl,calf,plez,emissivity,a,dnud,
+     &         xlb_vshifted,T,absfrac,scattfrac,nlte,
+     &         nfastcall,nfastprof,kept)
+          if (.not.kept) then
+            nfastrej=nfastrej+1
+            goto 255
+          endif
+          nfastkeep=nfastkeep+1
+          numberoflines=numberoflines+1
+        else
         zap=(xlb-xlambda(lstart))/del
         IF (zap.le.0.) THEN
 !
@@ -1644,6 +1686,7 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
 22      continue
 *
         ENDIF
+        endif
 *
 255     continue
 *
@@ -1665,6 +1708,12 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
 *
         print*,'Approximate number of lines included in synthesis: ',
      &        numberoflines
+        if (fastline) then
+          print*,' Fast line profile: kept/rejected = ',
+     &          nfastkeep,nfastrej
+          print*,' Fast hvoigt calls = ',nfastcall,
+     &          ' sampled profile points = ',nfastprof
+        endif
         print*,' Total number of lines read: ', iline
 *
 ******************************************************
@@ -1801,3 +1850,335 @@ cc         CALL VOIGT(A(j),V,HVOIGT)
      & 1PE9.2)
 *
       END
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*
+* Fast line profile calculation.
+*
+* The line is first tested at its exact depth-dependent line centres.
+* If retained, the extent is found from kappa_line/kappa_cont=eps.
+* The Voigt function is then evaluated at sparse points in an asinh
+* wavelength coordinate and interpolated quadratically to the spectrum grid.
+*
+      subroutine fast_line_profile(ntau,lstart,lstop,eps,
+     &     xlb,xl,calf,plez,emissivity,a,dnud,
+     &     xlb_vshifted,t,absfrac,scattfrac,nlte,
+     &     nfastcall,nfastprof,kept)
+
+      use opac_module
+
+      implicit none
+
+      include 'spectrum.inc'
+
+      integer ntau,lstart,lstop
+      integer nfastcall,nfastprof
+      integer i,j,k,ilo,ihi,imid,i1,i2,kptr
+      integer ic,nprof
+      integer maxprof
+      parameter (maxprof=81)
+
+      real eps,xl,calf
+      real plez(ndp),a(ndp),dnud(ndp)
+      real t(ndp)
+      doubleprecision  emissivity(ndp)
+      real absfrac,scattfrac
+      real abscoef
+      logical nlte
+      real phv(ndp,maxprof)
+      real hcenter(ndp)
+      real h0,hv,htarget,hmid
+      real bpl,newvoigt
+      real q,q1,q2,q3,hinterp
+      real dcore,dlamdop
+      real cconst
+      real xlsingle
+      real xcmin,xcmax
+      real center_ratio,maxratio
+      real cont
+      doubleprecision xlb
+      doubleprecision xlb_vshifted(ndp)
+      doubleprecision plam(maxprof),qnode(maxprof)
+      doubleprecision left,right,xc,qleft,qright,dq
+      doubleprecision ulo,uhi,umid,target
+      doubleprecision dgrid
+      logical kept,coverall
+
+      common/CONST/ BOLTZ,MH,H,C,E,M
+      real BOLTZ,MH,H,C,E,M
+
+      kept=.false.
+      nprof=0
+      maxratio=0.0
+      xcmin=1.e30
+      xcmax=-1.e30
+      dcore=1.e30
+      coverall=.false.
+
+      if (lstart.ge.lstop) return
+
+      dgrid=abs(xlambda(lstart+1)-xlambda(lstart))
+      if (dgrid.le.0.d0) return
+
+*
+* First pass: exact line-centre opacity.  The continuum is sampled at
+* the nearest wavelength point to the depth-dependent line centre.
+*
+      do j=1,ntau
+
+        if (plez(j).le.0.0) cycle
+
+        if (xlb_vshifted(j).lt.xlambda(lstart)) then
+          ic=lstart
+        else if (xlb_vshifted(j).gt.xlambda(lstop)) then
+          ic=lstop
+        else
+          ilo=lstart
+          ihi=lstop
+  10      if (ilo.le.ihi) then
+            imid=(ilo+ihi)/2
+            if (xlambda(imid).lt.xlb_vshifted(j)) then
+              ilo=imid+1
+            else
+              ihi=imid-1
+            endif
+            goto 10
+          endif
+          ic=ilo
+          if (ic.gt.lstop) ic=lstop
+          if (ic.gt.lstart) then
+            if (abs(xlambda(ic-1)-xlb_vshifted(j)).lt.
+     &          abs(xlambda(ic)-xlb_vshifted(j))) ic=ic-1
+          endif
+        endif
+
+        cont=absocont(j,ic)
+        h0=newvoigt(a(j),0.0)
+        hcenter(j)=h0
+        nfastcall=nfastcall+1
+
+        if (cont.gt.0.0) then
+          center_ratio=calf*h0*plez(j)/cont
+        else
+          center_ratio=1.e30
+        endif
+
+        maxratio=max(maxratio,center_ratio)
+        xcmin=min(xcmin,real(xlb_vshifted(j)))
+        xcmax=max(xcmax,real(xlb_vshifted(j)))
+
+        dlamdop=abs(dnud(j)*xl*xl/(C*1.e-8))
+        if (dlamdop.gt.0.0) dcore=min(dcore,dlamdop)
+
+        if (center_ratio.ge.eps) then
+          kept=.true.
+        endif
+      enddo
+
+      if (.not.kept) return
+
+      if (dcore.ge.1.e29) return
+
+*
+* Determine the profile cutoff independently at each depth.  The Voigt
+* profile is monotonic away from its centre, so a bracket followed by
+* bisection is cheap compared with evaluating it on every wavelength.
+*
+      left=1.d30
+      right=-1.d30
+
+      do j=1,ntau
+        if (plez(j).le.0.0) cycle
+
+        if (xlb_vshifted(j).lt.xlambda(lstart)) then
+          ic=lstart
+        else if (xlb_vshifted(j).gt.xlambda(lstop)) then
+          ic=lstop
+        else
+          ilo=lstart
+          ihi=lstop
+  20      if (ilo.le.ihi) then
+            imid=(ilo+ihi)/2
+            if (xlambda(imid).lt.xlb_vshifted(j)) then
+              ilo=imid+1
+            else
+              ihi=imid-1
+            endif
+            goto 20
+          endif
+          ic=ilo
+          if (ic.gt.lstop) ic=lstop
+          if (ic.gt.lstart) then
+            if (abs(xlambda(ic-1)-xlb_vshifted(j)).lt.
+     &          abs(xlambda(ic)-xlb_vshifted(j))) ic=ic-1
+          endif
+        endif
+
+        cont=absocont(j,ic)
+        h0=hcenter(j)
+
+        if (cont.le.0.0) then
+          coverall=.true.
+          cycle
+        endif
+
+        target=eps*cont/(calf*plez(j))
+        if (target.ge.h0) then
+          goto 25
+        endif
+
+        ulo=0.d0
+        uhi=1.d0
+
+  21    hv=newvoigt(a(j),real(uhi))
+        nfastcall=nfastcall+1
+        if (hv.le.real(target)) goto 22
+        uhi=2.d0*uhi
+        if (uhi.gt.1.d6) then
+          coverall=.true.
+          goto 25
+        endif
+        goto 21
+
+  22    do k=1,7
+          umid=0.5d0*(ulo+uhi)
+          hmid=newvoigt(a(j),real(umid))
+          nfastcall=nfastcall+1
+          if (hmid.gt.real(target)) then
+            ulo=umid
+          else
+            uhi=umid
+          endif
+        enddo
+
+        dlamdop=abs(dnud(j)*xl*xl/(C*1.e-8))
+        left=min(left,xlb_vshifted(j)-uhi*dlamdop)
+        right=max(right,xlb_vshifted(j)+uhi*dlamdop)
+        goto 26
+
+  25    left=min(left,xlb_vshifted(j))
+        right=max(right,xlb_vshifted(j))
+
+  26    continue
+      enddo
+
+      if (coverall) then
+        left=xlambda(lstart)
+        right=xlambda(lstop)
+      else
+        left=max(left,xlambda(lstart))
+        right=min(right,xlambda(lstop))
+      endif
+
+      if (left.gt.right) return
+
+*
+* Locate the actual wavelength-grid interval which receives opacity.
+*
+      ilo=lstart
+      ihi=lstop
+  30  if (ilo.lt.ihi) then
+        imid=(ilo+ihi)/2
+        if (xlambda(imid).lt.left) then
+          ilo=imid+1
+        else
+          ihi=imid
+        endif
+        goto 30
+      endif
+      i1=ilo
+      if (i1.gt.lstop) return
+
+      ilo=lstart
+      ihi=lstop
+  31  if (ilo.lt.ihi) then
+        imid=(ilo+ihi+1)/2
+        if (xlambda(imid).le.right) then
+          ilo=imid
+        else
+          ihi=imid-1
+        endif
+        goto 31
+      endif
+      i2=ilo
+      if (i2.lt.i1) return
+
+*
+* Sparse sampling coordinate.  asinh keeps the core densely sampled
+* while making the far damping wings increasingly sparse.
+*
+      xc=0.5d0*(left+right)
+      if (dcore.le.0.0) dcore=real(dgrid)
+
+      qleft=asinh((left-xc)/dcore)
+      qright=asinh((right-xc)/dcore)
+      nprof=int((qright-qleft)/0.25d0)+1
+      nprof=max(3,min(maxprof,nprof))
+
+      dq=(qright-qleft)/real(nprof-1)
+
+      do k=1,nprof
+        qnode(k)=qleft+real(k-1)*dq
+        plam(k)=xc+dcore*sinh(qnode(k))
+        plam(k)=max(left,min(right,plam(k)))
+      enddo
+
+      nfastprof=nfastprof+nprof
+
+*
+* Evaluate hvoigt only at the sparse profile points.
+*
+      do k=1,nprof
+        do j=1,ntau
+          hv=newvoigt(a(j),
+     &      real(C*(plam(k)-xlb_vshifted(j))*1.d-8/
+     &      (xl*xl*dnud(j))))
+          phv(j,k)=hv
+          nfastcall=nfastcall+1
+        enddo
+      enddo
+
+*
+* Quadratic interpolation in q=asinh((lambda-xc)/dcore).
+*
+      kptr=1
+      do i=i1,i2
+        q=asinh((xlambda(i)-xc)/dcore)
+
+        do while (kptr.lt.nprof-1 .and.
+     &            q.gt.qnode(kptr+1))
+          kptr=kptr+1
+        enddo
+
+        k=max(2,min(nprof-1,kptr))
+
+        q1=real(qnode(k-1))
+        q2=real(qnode(k))
+        q3=real(qnode(k+1))
+
+        xlsingle=real(xlambda(i))
+
+        do j=1,ntau
+          hinterp=phv(j,k-1)*(q-q2)*(q-q3)/
+     &            ((q1-q2)*(q1-q3))+
+     &            phv(j,k)*(q-q1)*(q-q3)/
+     &            ((q2-q1)*(q2-q3))+
+     &            phv(j,k+1)*(q-q1)*(q-q2)/
+     &            ((q3-q1)*(q3-q2))
+
+          if (hinterp.lt.0.0) hinterp=0.0
+
+          hv=hinterp
+          abscoef=calf*hv*plez(j)
+
+          abso(j,i)=abso(j,i)+abscoef*absfrac
+          absos(j,i)=absos(j,i)+abscoef*scattfrac
+
+          if (nlte) then
+            source_function(j,i)=source_function(j,i)+
+     &        emissivity(j)*bpl(t(j),xlsingle)*calf*hv
+          endif
+        enddo
+      enddo
+
+      return
+      end

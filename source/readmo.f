@@ -11,6 +11,8 @@
 *
 *-----------------------------------------------------------------------
 *
+      use opac_module
+
       INCLUDE 'spectrum.inc'
 *
 * for the dimensions, refer to babsma
@@ -31,20 +33,13 @@
       COMMON/MODID/ MCODE
       COMMON/CSPHER/NCORE,DIFLOG,RADIUS,RR(NDP)
       COMMON/RHOC/RHO(NDP)
-* extension for large number of wavelengths and lines (monster II)
-      doubleprecision xlambda
-      doubleprecision  source_function
-      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
-     & maxlam,ABSO(NDP,lpoint),
-     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
 *
-ccc      READ(12,100) MCODE,NTAU,XLS
-      READ(12,*) MCODE,NTAU,XLS
+      read(12,*) mcode,ntau,xls
       if (ntau.gt.ndp) then
         print*,'model has more layers than allowed by array dimensions'
         stop 'Increase NDP in spectrum.inc parameter file and recompile'
       endif
-      READ(12,103) NLQ
+      read(12,103) nlq
       if (nlq.gt.20*numbset) then
          print*,'readmo: nlq= ',nlq,' larger than numbset*20= ',
      &    numbset*20

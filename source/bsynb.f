@@ -13,6 +13,7 @@
 *-----------------------------------------------------------------------
 *
       use cubint_module
+      use opac_module
 
       include 'spectrum.inc'
 *
@@ -25,13 +26,13 @@
       doubleprecision xl1,xl2
       doubleprecision del
       common/atmos/ t(ndp),pe(ndp),pg(ndp),xi(ndp),mum(ndp),ro(ndp),
-     & nnntau
+     & ntau
 *
 * Special for spherical
 *
       COMMON /CTRAN/X(NDP),S(NDP),BPLAN(NDP),XJ(NDP),HFLUX(NDP),XK(NDP)
      & ,FJ(NDP),SOURCE(NDP),TAUS(NDP),DTAUS(NDP),JTAU0,JTAU1,ISCAT
-      COMMON /TAUC/TAU(NDP),DTAULN(NDP),NTAU   
+      COMMON /TAUC/TAU(NDP),DTAULN(NDP),jtau   
       COMMON /ROSSC/ROSS(NDP),CDUMM(NDP) 
       COMMON /RHOC/RHO(NDP)
       COMMON /CSPHER/NCORE,DIFLOG,RADIUS,RR(NDP)
@@ -51,13 +52,6 @@
 *
       COMMON/CSURF/ HSURF,Y1(NRAYS)
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
-*
-* extension for large number of wavelengths and lines (monster II)
-      doubleprecision xlambda
-      doubleprecision source_function
-      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
-     & maxlam,ABSO(NDP,lpoint),
-     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
 *
       character*256 filterfil
       character*80 filttitle

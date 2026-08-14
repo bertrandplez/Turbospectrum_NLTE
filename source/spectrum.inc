@@ -14,13 +14,11 @@
 *             300.00
 *             15
 *             1.30
-*   lpoint is the maximum number of wavelength over which the spectrum
-*          will be computed
-* As there is no dynamic allocation of memory (old fortran!), you may want
-* to decrease these numbers, as arrays will be of size 
-* real*4: NDP*lpoint
+* lpoint is the number of wavelengths used for the continuum opacity points
+* it is in principle smaller than the number of wavelengths points used to 
+* calculate the spectrum which is now dynamically allocated. See opac_module.f90
 *
-      PARAMETER (NDP=150,NRAYS=180,lpoint=500000)
+      PARAMETER (NDP=150,NRAYS=180,lpoint=50000)
 *
 *  equation of state parameters   (for tabs and absko)
 *

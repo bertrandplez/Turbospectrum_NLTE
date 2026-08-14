@@ -13,6 +13,7 @@
 *-----------------------------------------------------------------------
 *
       use cubint_module
+      use opac_module
 
       include 'spectrum.inc'
 *
@@ -23,28 +24,19 @@
       doubleprecision XL1,XL2,eqwidth
       doubleprecision XLBEG,XLEND,DEL
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),
-     &  nnNTAU
+     &  NTAU
 *
       COMMON /CTRAN/X(NDP),S(NDP),BPLAN(NDP),XJ(NDP),HFLUX(NDP),XK(NDP)
      & ,FJ(NDP),SOURCE(NDP),TAUS(NDP),DTAUS(NDP),JTAU0,JTAU1,ISCAT
       COMMON/CSURF/ HSURF,Y1(NRAYS)
       COMMON/CANGLE/ NMY,XMY(nrays),XMY2(nrays),WMY(nrays)
-      COMMON/TAUC/ TAU(ndp),DTAULN(ndp),NTAU
+      COMMON/TAUC/ TAU(ndp),DTAULN(ndp),JTAU
       COMMON/PIECES/ XL1,XL2,DEL,EPS,NMX,NLBLDU,IINT,XMYC,IWEAK
       COMMON/ROSSC/ ROSS(NDP),cross(ndp)
 !
       COMMON/SPACE3/ SOURCEplatt(ndp),ERROR(ndp),
      &               tomatch(7*nrays*ndp+8*ndp+1+3*nrays)
 !
-*
-* extension for large number of wavelengths and lines (monster II)
-      doubleprecision xlambda
-      doubleprecision source_function
-      common/large/ xlambda(lpoint),source_function(ndp,lpoint),
-     & maxlam,ABSO(NDP,lpoint),
-     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
-*
-*
       real fcfc(lpoint),y1cy1c(lpoint),y1y1(nrays,lpoint),
      & xlm(lpoint)
 

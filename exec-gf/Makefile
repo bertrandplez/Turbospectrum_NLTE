@@ -11,7 +11,10 @@ include2 = ../$(SOURCE)/tsuji.par
 
 #LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -Wall -Wsurprising -ffpe-trap=zero,invalid -fbacktrace -std=legacy
 
-LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -fbacktrace -std=legacy -mcmodel=small
+#LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -fbacktrace -std=legacy -mcmodel=small
+
+LINKOPT =  -fconvert=big-endian -O1 -g -fno-automatic -fbacktrace -std=legacy
+
 # -fno-sign-zero
 #-ffpe-trap=zero,invalid 
 
@@ -118,6 +121,7 @@ bsyn_luobj = \
       ../$(SOURCE)/bsynb.f \
       ../$(SOURCE)/bsynbplatt.f \
       ../$(SOURCE)/clock-gf.f \
+      ../$(SOURCE)/opac_module.f90 \
       ../$(SOURCE)/cubint_module.f90 \
       ../$(SOURCE)/depth.f \
       ../$(SOURCE)/gausi.f \
@@ -172,8 +176,14 @@ bsyn_luobj = \
 #clean : 
 #	rm *.o bsyn_lu babsma_lu eqwidt_lu 
 
-all : cubint_module.mod strings_module.mod babsma_lu bsyn_lu
+all : cubint_module.mod strings_module.mod opac_module.mod babsma_lu bsyn_lu
 #  eqwidt_lu 
+
+opac_module.o : ../${SOURCE}/opac_module.f90
+	$(F)  -c ../${SOURCE}/opac_module.f90
+
+opac_module.mod : ../$(SOURCE)/opac_module.f90 opac_module.o
+	$(F)  -c ../$(SOURCE)/opac_module.f90
 
 cubint_module.o : ../${SOURCE}/cubint_module.f90
 	$(F)  -c ../${SOURCE}/cubint_module.f90

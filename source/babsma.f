@@ -44,10 +44,8 @@
       parameter (spunit=44)
       doubleprecision xl1,xl2,del,xlmarg,xl1l,xl2r
       common/pieces/ xl1,xl2,del,eeps,nmy,nlbldu,iint,xmyc,iweak
+      integer maxlam
       doubleprecision xlambda(lpoint)
-cc      common/large/ xlambda,maxlam,ABSO(NDP,lpoint),
-cc     & absos(ndp,lpoint),absocont(ndp,lpoint),absoscont(ndp,lpoint)
-
 ********
       COMMON/CFIL/   IRESET(numbset),ISLASK,IREAT
       COMMON/UTPUT/  IREAD,IWRIT
@@ -215,11 +213,6 @@ c bsyn uses air wavelengths:
 * concerning this min() see readmo, set up of the continuum opacities
       do j=1,jmax
         xlambda(J)=XL1+dble(J-1)*DEL
-cc        do k=1,ndp
-cc          abso(k,j)=0.0
-cc          absos(k,j)=0.0
-cc          absocont(k,j)=0.0
-cc        enddo
       enddo
 
 * Try to avoid erroneous interpolation of continuum opacity near H I edges
