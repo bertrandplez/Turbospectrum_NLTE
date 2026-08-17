@@ -209,7 +209,8 @@ c bsyn uses air wavelengths:
 ************ !!! ******************
       maxlam=int((xl2-xl1)/del)+1
       if (maxlam.gt.lpoint) stop 'babsma: too many wavelengths'
-      jmax=min(maxlam+100,lpoint)
+!!!!      jmax=min(maxlam+100,lpoint)
+      jmax=min(maxlam,lpoint)
 * concerning this min() see readmo, set up of the continuum opacities
       do j=1,jmax
         xlambda(J)=XL1+dble(J-1)*DEL

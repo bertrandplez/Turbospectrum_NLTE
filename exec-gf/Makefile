@@ -9,11 +9,7 @@ include2 = ../$(SOURCE)/tsuji.par
 
 #LINKOPT = -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -fconvert=big-endian -O3 -fno-automatic -mcmodel=small -std=legacy -Wall -Wsurprising
 
-#LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -Wall -Wsurprising -ffpe-trap=zero,invalid -fbacktrace -std=legacy
-
-#LINKOPT =  -fconvert=big-endian -O3 -fno-automatic -fbacktrace -std=legacy -mcmodel=small
-
-LINKOPT =  -fconvert=big-endian -O1 -g -fno-automatic -fbacktrace -std=legacy
+LINKOPT =  -fconvert=big-endian -O3 -g -fno-automatic -fbacktrace -std=legacy
 
 # -fno-sign-zero
 #-ffpe-trap=zero,invalid 

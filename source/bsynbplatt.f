@@ -19,8 +19,8 @@
 *
       character*50 mcode
       real ETAD(ndp),XC(ndp),maxetad
-      real fluxme(lpoint),icenter(lpoint),prof(lpoint)
-      real mum,prf,iprf(lpoint)
+      real fluxme(maxlam),icenter(maxlam),prof(maxlam)
+      real mum,prf,iprf(maxlam)
       doubleprecision XL1,XL2,eqwidth
       doubleprecision XLBEG,XLEND,DEL
       COMMON/ATMOS/ T(NDP),PE(NDP),PG(NDP),XI(NDP),MUM(NDP),RO(NDP),
@@ -37,8 +37,8 @@
       COMMON/SPACE3/ SOURCEplatt(ndp),ERROR(ndp),
      &               tomatch(7*nrays*ndp+8*ndp+1+3*nrays)
 !
-      real fcfc(lpoint),y1cy1c(lpoint),y1y1(nrays,lpoint),
-     & xlm(lpoint)
+      real fcfc(maxlam),y1cy1c(maxlam),y1y1(nrays,maxlam),
+     & xlm(maxlam)
 
 * icsurf is for continuum intensity and isurf for absolute intensity
 * muoutp are mu-points for output intensities
@@ -74,8 +74,8 @@
         muout(i)=muoutp(i)
       enddo
 
-      allocate(isurf(nangles,lpoint))
-      allocate(icsurf(nangles,lpoint))
+      allocate(isurf(nangles,maxlam))
+      allocate(icsurf(nangles,maxlam))
 
       NMY=NMX
       CALL GAUSI(NMY,0.,1.,WMY,XMY)
@@ -106,6 +106,7 @@
         endif
         nmy=nmy+1
         xmy(nmy)=xmyc
+        xmy2(nmy)=xmyc*xmyc
         wmy(nmy)=0.
         WRITE(6,200) XMYC,XL1,XL2,DEL
       end iF

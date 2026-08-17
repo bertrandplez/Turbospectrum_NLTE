@@ -47,7 +47,7 @@
       logical debug,write_radius
       real fluxme
       dimension y1c(nrays),xmuc(nrays)
-      dimension fcfc(lpoint),xlm(lpoint),jlcont(lpoint)
+      dimension fcfc(maxlam),xlm(maxlam),jlcont(maxlam)
       real sx(5000),slambda(5000),xshifted(2*ndp)
 *
       COMMON/CSURF/ HSURF,Y1(NRAYS)
@@ -95,8 +95,8 @@
         muout(i)=-muoutp(nangles+1-i)
       enddo
 
-      allocate(isurf(nangles,lpoint))
-      allocate(icsurf(nangles,lpoint))
+      allocate(isurf(nangles,maxlam))
+      allocate(icsurf(nangles,maxlam))
 
       PI=4.*atan(1.)
 ! 3.141593
