@@ -219,7 +219,7 @@
       real absave(100),symmfactor
 ***********************************************
       integer version
-      data version /201/
+      data version /202/
 ***********************************************
       data debug/.false./
       data nat/92/
@@ -1557,7 +1557,7 @@ ccc      print*,xlb
 cc                       CALL VOIGT(A(j),V,HVOIGT)
                         hvoigt=newvoigt(a(j),v)
                         l=calf*hvoigt*plez(j)
-                        nvoigtcall = nvoigtcall + 1
+cc                        nvoigtcall = nvoigtcall + 1
 *
 * NLTE
                         if (nlte) then
@@ -1605,7 +1605,7 @@ cc                       CALL VOIGT(A(j),V,HVOIGT)
 cc                      CALL VOIGT(A(j),V,HVOIGT)
                         hvoigt=newvoigt(a(j),v)
                         l=calf*hvoigt*plez(j)
-                        nvoigtcall = nvoigtcall + 1
+cc                        nvoigtcall = nvoigtcall + 1
 *
 * NLTE
                         if (nlte) then
@@ -1640,7 +1640,7 @@ ccc         endif
 cc                        CALL VOIGT(A(j),V,HVOIGT)
                         hvoigt=newvoigt(a(j),v)
                         l=calf*hvoigt*plez(j)
-                        nvoigtcall = nvoigtcall + 1
+cc                        nvoigtcall = nvoigtcall + 1
 *
 * NLTE
                         if (nlte) then
@@ -1701,7 +1701,7 @@ ccc         endif
 *
         print*,'Approximate number of lines included in synthesis: ',
      &        nallin - nrejct
-        print*,' calls to newvoigt = ',nvoigtcall
+cc        print*,' calls to newvoigt = ',nvoigtcall
         print*,' Total number of lines read: ', nallin
 *
 ******************************************************
