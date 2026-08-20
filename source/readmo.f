@@ -45,26 +45,26 @@
      &    numbset*20
          stop
       endif
-      READ(12,104) (XLP(I), I=1,NLQ)
+      read(12,104) (xlp(i), i=1,nlq)
       mmm=-1
-      DO 11 K=1,NTAU
+      do 11 k=1,ntau
         if (hydrovelo) then
-          READ(12,*,err=99) RR(K),TAU(K),T(K),PE(K),PG(K),
-     &                          RO(K),XI(K),
-     &                          ROSS(K),velocity(k)
+          read(12,*,err=99) rr(k),tau(k),t(k),pe(k),pg(k),
+     &                          ro(k),xi(k),
+     &                          ross(k),velocity(k)
         else
-          READ(12,*) RR(K),TAU(K),T(K),PE(K),PG(K),RO(K),XI(K),
-     &                 ROSS(K)
+          read(12,*) rr(k),tau(k),t(k),pe(k),pg(k),ro(k),xi(k),
+     &                 ross(k)
           velocity(k)=0.0
         endif
 * ross is standard opacity (not rosseland)
-        READ(12,102) (XS(J),SS(J),J=1,NLQ)
+        read(12,102) (xs(j),ss(j),j=1,nlq)
 *
 * INTERPOLATE TO WAVELENGTH XL
 *
          xxll=xl
-         CALL LINT(NLQ,XLP,XS,xxll,X(K))
-         CALL LINT(NLQ,XLP,SS,xxll,S(K))
+         call lint(nlq,xlp,xs,xxll,x(k))
+         call lint(nlq,xlp,ss,xxll,s(k))
 * interpolate to all wavelengths
         if (xlambda(1).lt.xlp(1).or.xlambda(maxlam).gt.xlp(nlq)) then
           print*,' ERROR !! continuous opacity file wavelength range ',
@@ -73,8 +73,8 @@
         endif
         do j=1,maxlam
          xxll=xlambda(j)
-         CALL LINT(NLQ,XLP,XS,xxll,absocont(K,j))
-         CALL LINT(NLQ,XLP,SS,xxll,absoscont(K,j))
+         call lint(nlq,xlp,xs,xxll,absocont(k,j))
+         call lint(nlq,xlp,ss,xxll,absoscont(k,j))
         enddo
 *        
         XI(K)=XI(K)*1.E5

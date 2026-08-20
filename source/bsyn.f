@@ -683,7 +683,7 @@ cc      if (xlboff.lt.1.e-6) xlboff=0.0
 * were used in babsma for the calculation of the cont. opacities
 * are put into xlp.
 *
-      CALL READMO(XLM,X,S)
+      call readmo(xlm,x,s)
       if ( (rr(1).eq.0. .or. abs((rr(1)-rr(2))/rr(1)).lt.1.e-8) 
      &                 .and.spherical) then
         print*,
@@ -983,7 +983,7 @@ cc            call Hlineadd(lunit,nline,xlboff)
           endif
 
           g=1.
-* new element. we must compute more in depth
+* new element. we must compute more things in depth.f
           oldpart=.false.
           symmfactor=1.e0
           IF(IEL.LE.0) GOTO 9874
@@ -1166,35 +1166,29 @@ cc            call Hlineadd(lunit,nline,xlboff)
 *
 * NLTE format includes also 2 more integers for lower and upper level identification
 
-            read(lunit,'(a)') oneline
             if (newformat) then
               if (starkformat) then
                 if (nlteformat) then
 ! Stark + NLTE level identification
-                  read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
+                  read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
      &                      levlo,levup,eqw,eqwerr,comment_line,
      &                      ilevlo,ilevup,idlevlo,idlevup
                 else
 ! Stark without NLTE level identification 
-                  read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
+                  read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,gamst,
      &                      levlo,levup
                   ilevlo=0
                   ilevup=0
                 endif
-              else if (oldmolecformat) then
-                read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp
-                ilevlo=0
-                ilevup=0
-                gamst=0.
               else
                 if (nlteformat) then
 ! no Stark, but NLTE level identification
-                  read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp,
+                  read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,
      &                      levlo,levup,eqw,eqwerr,comment_line,
      &                      ilevlo,ilevup,idlevlo,idlevup
                 else
 ! no Stark, no NLTE level identification
-                  read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,
+                  read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp,levlo,
      &                          levup
                   ilevlo=0
                   ilevup=0
@@ -1236,7 +1230,7 @@ cc            call Hlineadd(lunit,nline,xlboff)
      &          ' Bsyn: old format incompatible with NLTE line lists'
                 stop
               endif
-              read(oneline,*) xlb,chie,gfelog,fdamp,gu,raddmp
+              read(lunit,*) xlb,chie,gfelog,fdamp,gu,raddmp
               gamst=0.
             endif
 *
@@ -1398,7 +1392,6 @@ ccc          lshift(k)=1.d0-velocity(k)/2.99792458d10
                     endif
                   enddo
                 enddo
- 
               endif
 *
 * Print line information
@@ -1500,9 +1493,10 @@ ccc              recipe='T'
 * Calculate occupation numbers
 *
               if (.not.lskip) then
-                CALL DEPTH(IEL)
+                call depth(iel)
                 IELP=IEL
                 IONP=ION
+
 cc              DBVK=XL*1.E-05
 cc              DO 6 JJ=1,NTAU,10
 cc                DBV=DBVK*DNUD(JJ)
@@ -1517,7 +1511,7 @@ cc              DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 *
 * Constants
 *
-                CALF=constant*F
+                calf=constant*f
 *
                 do j=1,ntau
                   if (nlte) then
@@ -1537,14 +1531,14 @@ cc              DLAMB0=DOPPLC*DNUD(JLEV0)*XL**2/C
 *
 ccc      print*,xlb
                   zap=(xlb-xlambda(lstart))/del
-                  IF (zap.le.0.) THEN
+                  if (zap.le.0.) then
 !
 * treatment of the lines lying between xl1l and xl1
 * This happens only if we have a single spectral interval
 !
-                    do k=1,ntau
-                      contop(k)=absocont(k,lstart)
-                    enddo 
+!                    do k=1,ntau
+!                      contop(k)=absocont(k,lstart)
+!                    enddo 
                     i = lstart
                     xkmax = eps + 1.0
                     do while (xkmax >= eps .and. i <= lstop)
@@ -1573,7 +1567,8 @@ cc                        nvoigtcall = nvoigtcall + 1
 * we compare the line absorption to the continuum x at the rightmost
 * lambda of the interval to set the limit of inclusion of this line 
 * kappa. We take this continuum x just for convenience.
-                        xkmax=max(xkmax,l/contop(j))
+!                        xkmax=max(xkmax,l/contop(j))
+                        xkmax=max(xkmax,l/absocont(j,i))
                       enddo
                       i = i + 1
                     enddo
@@ -1585,16 +1580,13 @@ cc                        nvoigtcall = nvoigtcall + 1
 * the line
                     lindex=lstart+int(zap)+1
                     lindex=min(lstop,lindex)
-                    do k=1,ntau
-                       contop(k)=absocont(k,min(lstop,lindex))
-                    enddo 
+!                    do k=1,ntau
+!                       contop(k)=absocont(k,min(lstop,lindex))
+!                    enddo 
                     iii=0
                     xkmax = eps + 1.
                     i = lindex
                     do while (xkmax >= eps .and. i <= lstop)
-
-!                    do i=lindex,lstop
-
                       xlsingle=sngl(xlambda(i))
                       xkmax=0.
                       iii=iii+1
@@ -1618,7 +1610,8 @@ cc                        nvoigtcall = nvoigtcall + 1
 *
                         ABSO(j,i)=ABSO(j,i)+l*absfrac
                         ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
-                        xkmax=max(xkmax,l/contop(j))
+!                        xkmax=max(xkmax,l/contop(j))
+                        xkmax=max(xkmax,l/absocont(j,i))
 *
 ccc         if(iprint.eq.1.and.j.eq.1) then
 ccc          print*,xlambda(i),hvoigt,xkmax,a(1),v
@@ -1653,7 +1646,7 @@ cc                        nvoigtcall = nvoigtcall + 1
 *
                         ABSO(j,i)=ABSO(j,i)+l*absfrac
                         ABSOS(j,i)=ABSOS(j,i)+l*scattfrac
-                        xkmax=max(xkmax,l/contop(j))
+                        xkmax=max(xkmax,l/absocont(j,i))
 *
 ccc         if(iprint.eq.1.and.j.eq.1) then
 ccc          print*,xlambda(i),hvoigt,xkmax,a(1),v
@@ -1663,9 +1656,9 @@ ccc         endif
                       i = i-1
                     enddo
                   ENDIF
-! second if(.not.lskip) finishes here
+! second if (line not skipped for some reason) finishes here
               endif
-! first if(.not.lskip) finishes here
+! first if (in wavelength range of interest) finishes here
             endif
 *
 * End of line calculation

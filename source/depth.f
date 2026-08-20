@@ -36,7 +36,7 @@
 *
       implicit none
 
-      INCLUDE 'spectrum.inc'
+      include 'spectrum.inc'
 *
       integer iel,i,idamp,idum,ijon,ipress,nat,ndepth,nmol
       real x,a,algh,alogc6,anjon,aq1,aq2,aq3,boltz,c,chi,chi2,chi3,chie,
@@ -46,9 +46,9 @@
      &     relvel,ro,saha,saha1,saha2,sigma,stim,t,temp,tlim1,
      &     tlim2,tlim3,tqa,xi,xite,xl,gammln,ex10
       character*1 recipe
-      REAL N,MA,MH,M
-      REAL NTOT,NTT
-      REAL MUM,gamvdw10000,gamst,gamstark,xne,eudiff
+      real n,ma,mh,m
+      real ntot,ntt
+      real mum,gamvdw10000,gamst,gamstark,xne,eudiff
       real tempstark,chiu,eion
       doubleprecision ionpot
       real q(ndp),theta(ndp),xi0(ndp)
@@ -91,23 +91,23 @@
 *  store q(i),ntt(i) and goto after 20 (move up q=q1...)
       DO I=1,NDEPTH
 *
-        if (oldpart) goto 21
+        if (.not.oldpart) then
 
-        TEMP = T(I)
-        XITE=XI(I)
-        THETA(i) = 5040./TEMP
+          TEMP = T(I)
+          XITE=XI(I)
+          THETA(i) = 5040./TEMP
+          q(i)=fpartition(i)
 *
 * ntt < 0 means element not present in chemical equilibrium. 
 * ntt computed here. Otherwise uses ntt from eqmol (as well as partf, chi).
 * When ntt computed here, only neutral, first and second ion considered.
 
-        q(i)=fpartition(i)
-        if (ntt(i).ge.0.) goto 30
+          if (ntt(i).lt.0.) then
 
-        NTT(i) = NTOT(I)
-        CALL INP3(TQA,AQ1,T(I),Q1(I))
-        Q1(I)=EXP(Q1(I))
-        IF(TEMP.LE.TLIM1) Q1(I)=Q1LIM
+            ntt(i) = ntot(i)
+            CALL INP3(TQA,AQ1,T(I),Q1(I))
+            Q1(I)=EXP(Q1(I))
+            IF(TEMP.LE.TLIM1) Q1(I)=Q1LIM
 *
 * Irwin used for atoms and molecules. Some molecules might not
 * be included in his data. ZrO and HF are from Sauval.
@@ -116,43 +116,44 @@
 *  identified by Irwin like: 900.00. Our getinfospecies is
 *  fooled by 00 in atoms.
 *
-        call partf(IEL,1,T(I),1,Q1(I),ionpot)
-        chi=sngl(ionpot)
-        IF(IEL.GT.NAT) GOTO 20
-        CALL INP3(TQA,AQ2,T(I),Q2(I))
-        Q2(I)=EXP(Q2(I))
-        IF(TEMP.LE.TLIM2) Q2(I)=Q2LIM
-        call partf(IEL,2,T(I),1,Q2(I),ionpot)
-        chi2=sngl(ionpot)
-        CALL INP3(TQA,AQ3,T(I),Q3(I))
-        Q3(I)=EXP(Q3(I))
-        IF(TEMP.LE.TLIM3) Q3(I)=Q3LIM
-        call partf(IEL,3,T(I),1,Q3(I),ionpot)
-        chi3=sngl(ionpot)
-        SAHA = 2.5*ALOG10(TEMP) - ALOG10(PE(I)) - 0.1761
-        SAHA1 = SAHA + ALOG10(Q2(I)/Q1(I)) - THETA(i)*CHI
-        SAHA2 = SAHA + ALOG10(Q3(I)/Q2(I)) - THETA(i)*CHI2
-        SAHA1 = EX10(SAHA1)
-        SAHA2 = EX10(SAHA2)
-        IF(IJON.NE.1) GOTO 4
-        NTT(i) = NTT(i)/(1. + SAHA1*(1. + SAHA2))
-        GOTO 20
-    4   IF(IJON.NE.2) GOTO 2
-        NTT(i) = NTT(i)*SAHA1/(1. + SAHA1*(1. + SAHA2))
-        GOTO 20
-    2   PRINT 900, IJON
+            call partf(IEL,1,T(I),1,Q1(I),ionpot)
+            chi=sngl(ionpot)
+            if (iel.LE.nat) then
+              CALL INP3(TQA,AQ2,T(I),Q2(I))
+              Q2(I)=EXP(Q2(I))
+              if (temp.le.tlim2) q2(i)=q2lim
+              call partf(IEL,2,T(I),1,Q2(I),ionpot)
+              chi2=sngl(ionpot)
+              CALL INP3(TQA,AQ3,T(I),Q3(I))
+              Q3(I)=EXP(Q3(I))
+              if (temp.le.tlim3) q3(i)=q3lim
+              call partf(IEL,3,T(I),1,Q3(I),ionpot)
+              chi3=sngl(ionpot)
+              SAHA = 2.5*ALOG10(TEMP) - ALOG10(PE(I)) - 0.1761
+              SAHA1 = SAHA + ALOG10(Q2(I)/Q1(I)) - THETA(i)*CHI
+              SAHA2 = SAHA + ALOG10(Q3(I)/Q2(I)) - THETA(i)*CHI2
+              SAHA1 = EX10(SAHA1)
+              SAHA2 = EX10(SAHA2)
+              if (ijon.eq.1) then
+                ntt(I) = ntt(I)/(1. + saha1*(1. + saha2))
+              else if (ijon.eq.2) then
+                ntt(I) = ntt(I)*saha1/(1. + saha1*(1. + saha2))
+              else
+                PRINT 900, IJON
   900   FORMAT(' STOP|    IJON =',I2,'  IN SUBR. DEPTH **********')
-        STOP
-   20   CONTINUE
-        IF(IJON.EQ.1) Q(I) = Q1(I)
-        IF(IJON.EQ.2) Q(I) = Q2(I)
-   30   continue
-        XI0(i) = SQRT(2.*BOLTZ*TEMP/MA + XITE*XITE)
+                STOP
+              endif
+            endif
+            if (ijon.eq.1) q(i) = q1(i)
+            if (ijon.eq.2) q(i) = q2(i)
+          endif
+
+          XI0(i) = SQRT(2.*BOLTZ*TEMP/MA + XITE*XITE)
 *
-   21   continue
+        endif
 *
         DNUD(I) = XI0(i)/XL
-        IF(DBVCON.GT.1.E-6) DNUD(I)=DBVCON/(XL*1.E-5)
+        IF (DBVCON.GT.1.E-6) DNUD(I)=DBVCON/(XL*1.E-5)
 *
 * NTOT(I) = NO OF CURRENT NUCLEI / GRAM *-MATTER
 * NTT(i) = NO OF ATOMS IN THIS IONISATION STATE/ GRAM *-MATTER
@@ -160,7 +161,7 @@
 * ANJON(I) =  RELATIVE NO OF ATOMS IN THIS EXCITATION STATE / ALL
 *             EXCITATION AND IONISATION STATES
 *
-        N(I) = G*NTT(i)*EX10(-CHIE*THETA(i))/Q(I)
+        n(i) = g*ntt(I)*ex10(-chie*theta(I))/q(i)
         ANJON(I) = N(I)/NTOT(I)
         STIM(I) = 1. - EXP(-CONSTA/T(i))
 
